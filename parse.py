@@ -28,9 +28,6 @@ def get_frequency_stats(cost_data: list[float], n_samples: int):
     cost_data.sort()
     cost_data = np.array(cost_data)
     keys, frequency = frequency_calc2(cost_data, n_samples)
-    # plt.plot(keys, frequency)
-    # plt.grid(True)
-    # plt.show()
     math_ozh = 0
     clear_frequency = np.array([x for x in frequency if x != 0])
     for freq in clear_frequency:
@@ -52,13 +49,16 @@ def get_frequency_stats(cost_data: list[float], n_samples: int):
             else:
                 break
         keys, frequency = frequency_calc2(np.array(left_costs), n_samples - 1)
-        # keys.append(right_key) TODO uncomment after binary search of math mean
+        # keys.append(right_key) # TODO uncomment after binary search of math mean
         # frequency.append(right_frequency)
+        # plt.plot(keys, frequency)
+        # plt.grid(True)
+        # plt.show()
         return keys, frequency
 
 
 if __name__ == '__main__':
-    get_frequency_stats(data, 10)  # just like unit test
+    get_frequency_stats(data, 100)  # just like unit test
 
 
 
