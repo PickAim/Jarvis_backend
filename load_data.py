@@ -2,10 +2,11 @@ import requests
 import argparse
 import sys
 import re
+
 from os import listdir
 from os.path import isfile, join
-
 from datetime import datetime, timedelta
+from parse import get_frequency_stats
 
 
 def create_parser():
@@ -67,14 +68,17 @@ if __name__ == '__main__':
     namespace = parser.parse_args(sys.argv[1:])
     text_to_search = namespace.text.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
-    # text_to_search = "кофе зерновой"
     data_path = "data"
     only_files = [f.split('.')[0] for f in listdir(data_path) if isfile(join(data_path, f))]
     if not only_files.__contains__(text_to_search):
         get_all_product_niche(text_to_search)
     filename = str(join(data_path, text_to_search + ".txt"))
     cost_data = load_data(filename)
-    print(cost_data)
+    n_samples = int(len(cost_data) * 0.02)  # todo think about number of samples
+    x, y = get_frequency_stats(cost_data, n_samples)
+    with (open("out.txt", "w")) as file:
+        for i in range(len(x)):
+            file.write(f'{x[i]}, {y[i]}\n')
 
 
 
