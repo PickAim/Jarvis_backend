@@ -8,6 +8,8 @@ from os.path import isfile, join
 from datetime import datetime, timedelta
 from parse import get_frequency_stats
 
+data_path = "data"
+
 
 def create_parser():
     r = argparse.ArgumentParser()
@@ -45,7 +47,7 @@ def get_all_product_niche(text: str):
                 sum += obj['price']['RUB']
                 count += 1
         avr_mass.append(sum / count)
-    with open(text + ".txt", 'w+', encoding='utf-8') as f:
+    with open(join(data_path, text + ".txt"), 'w+', encoding='utf-8') as f:
         for i in range(len(avr_mass)):
             if i % 10 == 0:
                 f.write("\n")
@@ -68,7 +70,6 @@ if __name__ == '__main__':
     namespace = parser.parse_args(sys.argv[1:])
     text_to_search = namespace.text.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
-    data_path = "data"
     only_files = [f.split('.')[0] for f in listdir(data_path) if isfile(join(data_path, f))]
     if not only_files.__contains__(text_to_search):
         get_all_product_niche(text_to_search)
