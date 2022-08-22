@@ -6,7 +6,7 @@ import re
 from os import listdir
 from os.path import isfile, join
 from datetime import datetime, timedelta
-from parse import get_frequency_stats
+from calc import get_frequency_stats
 
 data_path = "data"
 
@@ -33,6 +33,7 @@ def get_all_product_niche(text: str):
         for product in json_code['data']['products']:
             mass.append((product['name'], product['id']))
         iterator_page += 1
+        break
     for data in mass:
         request = requests.get('https://wbx-content-v2.wbstatic.net/price-history/' + str(data[1]) + '.json?')
         if request.status_code != 200:
@@ -54,7 +55,7 @@ def get_all_product_niche(text: str):
             f.write(str(avr_mass[i]) + ",")
 
 
-def load_data(filename:str) -> list[float]:
+def load_data(filename: str) -> list[float]:
     result = []
     with (open(filename, "r")) as file:
         lines = file.readlines()
@@ -66,16 +67,17 @@ def load_data(filename:str) -> list[float]:
 
 
 if __name__ == '__main__':
-    parser = create_parser()
-    namespace = parser.parse_args(sys.argv[1:])
-    text_to_search = namespace.text.lower()
+    # parser = create_parser()
+    # namespace = parser.parse_args(sys.argv[1:])
+    # text_to_search = namespace.text.lower()
+    text_to_search = "куртка"
     text_to_search = re.sub(' +', ' ', text_to_search)
     only_files = [f.split('.')[0] for f in listdir(data_path) if isfile(join(data_path, f))]
     if not only_files.__contains__(text_to_search):
         get_all_product_niche(text_to_search)
     filename = str(join(data_path, text_to_search + ".txt"))
     cost_data = load_data(filename)
-    n_samples = int(len(cost_data) * 0.02)  # todo think about number of samples
+    n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
     x, y = get_frequency_stats(cost_data, n_samples)
     with (open("out.txt", "w")) as file:
         for i in range(len(x)):

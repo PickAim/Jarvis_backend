@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scipy.stats import entropy
 from tests.some_tests_data import data
 
 
@@ -33,8 +32,9 @@ def get_mean(lst: list[int]) -> int:
     return int(result)
 
 
-def get_frequency_stats(cost_data: list[float], n_samples: int):
-    precision = 0.00001
+def get_frequency_stats(cost_data: list[float], n_samples: int) -> (list[float], list[float]):
+    if len(cost_data) <= 0:
+        return [], []
     cost_data.sort()
     cost_data = np.array(cost_data)
     base_keys, base_frequency = frequency_calc(cost_data, n_samples)
@@ -45,7 +45,9 @@ def get_frequency_stats(cost_data: list[float], n_samples: int):
     # plt.show()
     math_ozh = get_mean(frequency)
     interesting_part_ind = 0
-    while frequency[interesting_part_ind] > math_ozh//2:
+    if len(frequency) < 2:
+        return keys, frequency
+    while frequency[interesting_part_ind] > math_ozh//2 and interesting_part_ind < len(frequency):
         interesting_part_ind += 1
     while True:
         if 0 < interesting_part_ind < len(frequency):
