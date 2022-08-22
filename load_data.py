@@ -1,5 +1,4 @@
 import requests
-import argparse
 import sys
 import re
 
@@ -7,14 +6,9 @@ from os import listdir
 from os.path import isfile, join
 from datetime import datetime, timedelta
 from calc import get_frequency_stats
+from jarvis_utils import create_parser
 
 data_path = "data"
-
-
-def create_parser():
-    r = argparse.ArgumentParser()
-    r.add_argument('-t', '--text')
-    return r
 
 
 def get_all_product_niche(text: str):
@@ -33,7 +27,7 @@ def get_all_product_niche(text: str):
         for product in json_code['data']['products']:
             mass.append((product['name'], product['id']))
         iterator_page += 1
-        break
+        break  # todo uncomment after TECHNOPROM
     for data in mass:
         request = requests.get('https://wbx-content-v2.wbstatic.net/price-history/' + str(data[1]) + '.json?')
         if request.status_code != 200:
@@ -67,10 +61,9 @@ def load_data(filename: str) -> list[float]:
 
 
 if __name__ == '__main__':
-    # parser = create_parser()
-    # namespace = parser.parse_args(sys.argv[1:])
-    # text_to_search = namespace.text.lower()
-    text_to_search = "куртка"
+    parser = create_parser([('-t', '--text')])
+    namespace = parser.parse_args(sys.argv[1:])
+    text_to_search = namespace.text.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
     only_files = [f.split('.')[0] for f in listdir(data_path) if isfile(join(data_path, f))]
     if not only_files.__contains__(text_to_search):
