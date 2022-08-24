@@ -20,21 +20,30 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=1.0)
 
     partial_unit_cost = (unit_cost + logistic_price +
                          unit_storage_cost) * (1 + commission)
-    partial_unit_transit_cost = partial_unit_cost + \
-        (transit_price / unit_count) * (1 + commission)
+    if unit_cost > 0:
+        partial_unit_transit_cost = partial_unit_cost + \
+                                    (transit_price / unit_count) * (1 + commission)
+    else:
+        partial_unit_transit_cost = 0
 
     margin = (1 - commission) * mid_cost - partial_unit_cost
     concurrent_margin = get_concurrent_margin(
         mid_cost, unit_cost, pack_price, unit_storage_cost)
     margin = margin * buy_price / concurrent_margin
-    transit_margin = (1 - commission) * mid_cost - partial_unit_transit_cost
+    if unit_cost > 0:
+        transit_margin = (1 - commission) * mid_cost - partial_unit_transit_cost
+    else:
+        transit_margin = 0
 
     cost = (1 + commission) * (unit_cost +
                                logistic_price + margin + unit_storage_cost)
-    transit_cost = cost + (transit_price / unit_count) * (1 + commission)
+    if unit_cost > 0:
+        transit_cost = cost + (transit_price / unit_count) * (1 + commission)
+    else:
+        transit_cost = 0
 
     full_commission = commission * \
-        (unit_cost + logistic_price + margin + unit_storage_cost)
+                      (unit_cost + logistic_price + margin + unit_storage_cost)
     return {
         "Pcost": (unit_cost, unit_cost / cost),  # Закупочная себестоимость
         "Pack": (pack_price, pack_price / cost),  # Упаковка
@@ -55,9 +64,9 @@ def get_concurrent_margin(mid_cost, unit_cost, pack_price, unit_storage_cost):
 def get_mean(cost_data: np.array, buy_price, pack_price) -> float:
     unit_cost = buy_price + pack_price
     unit_storage_cost = wrep * storage_price
-    lower = cost_data[0: len(cost_data)//3]
-    middle = cost_data[len(cost_data)//3: 2 * len(cost_data)//3]
-    high = cost_data[2 * len(cost_data)//3:]
+    lower = cost_data[0: len(cost_data) // 3]
+    middle = cost_data[len(cost_data) // 3: 2 * len(cost_data) // 3]
+    high = cost_data[2 * len(cost_data) // 3:]
     l_concurrent_margin = get_concurrent_margin(
         lower.mean(), unit_cost, pack_price, unit_storage_cost)
     if buy_price * 100 < l_concurrent_margin:
