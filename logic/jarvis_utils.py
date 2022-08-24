@@ -17,4 +17,3 @@ def load_data(filename: str) -> list[float]:
                 if cost != "" and cost != "\n":
                     result.append(float(cost))
     return result
-

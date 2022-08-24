@@ -10,15 +10,15 @@ from .calc import get_frequency_stats
 from .jarvis_utils import create_parser, load_data
 
 
-def get_all_product_niche(text: str):
+def get_all_product_niche(text: str, output_dir: str):
     iterator_page = 1
     temp_mass = []
     mass = []
     avr_mass = []
     while True:
         request = requests.get(
-            f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&curr=rub&emp=0&lang=ru&locale=ru&page={iterator_page}\
-                &pricemarginCoeff=1.0&query={text}&resultset=catalog&spp=0')
+            f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&curr=rub&emp=0&lang=ru&locale=ru&\
+                page={str(iterator_page)}&pricemarginCoeff=1.0&query={text}&resultset=catalog&spp=0')
         json_code = request.json()
         temp_mass.append(str(json_code))
         if 'data' not in json_code:
@@ -42,7 +42,7 @@ def get_all_product_niche(text: str):
                 sum += obj['price']['RUB']
                 count += 1
         avr_mass.append(sum / count)
-    with open(join(constants.data_path, text + ".txt"), 'w+', encoding='utf-8') as f:
+    with open(join(output_dir, text + ".txt"), 'a', encoding='utf-8') as f:
         for i in range(len(avr_mass)):
             if i % 10 == 0:
                 f.write("\n")
