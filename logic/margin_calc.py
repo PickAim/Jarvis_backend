@@ -1,10 +1,10 @@
 import sys
-import constants
+from . import constants
 import numpy as np
 import json
 import re
 
-from jarvis_utils import create_parser, load_data
+from .jarvis_utils import create_parser, load_data
 from os.path import join
 
 # now it's just constants
@@ -18,27 +18,33 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=1.0)
     unit_cost = buy_price + pack_price
     unit_storage_cost = wrep * storage_price
 
-    partial_unit_cost = (unit_cost + logistic_price + unit_storage_cost) * (1 + commission)
-    partial_unit_transit_cost = partial_unit_cost + (transit_price / unit_count) * (1 + commission)
+    partial_unit_cost = (unit_cost + logistic_price +
+                         unit_storage_cost) * (1 + commission)
+    partial_unit_transit_cost = partial_unit_cost + \
+        (transit_price / unit_count) * (1 + commission)
 
     margin = (1 - commission) * mid_cost - partial_unit_cost
-    concurrent_margin = get_concurrent_margin(mid_cost, unit_cost, pack_price, unit_storage_cost)
+    concurrent_margin = get_concurrent_margin(
+        mid_cost, unit_cost, pack_price, unit_storage_cost)
     margin = margin * buy_price / concurrent_margin
     transit_margin = (1 - commission) * mid_cost - partial_unit_transit_cost
 
-    cost = (1 + commission) * (unit_cost + logistic_price + margin + unit_storage_cost)
+    cost = (1 + commission) * (unit_cost +
+                               logistic_price + margin + unit_storage_cost)
     transit_cost = cost + (transit_price / unit_count) * (1 + commission)
 
-    full_commission = commission * (unit_cost + logistic_price + margin + unit_storage_cost)
+    full_commission = commission * \
+        (unit_cost + logistic_price + margin + unit_storage_cost)
     return {
         "Pcost": (unit_cost, unit_cost / cost),  # Закупочная себестоимость
         "Pack": (pack_price, pack_price / cost),  # Упаковка
-        "Mcomm": (full_commission, full_commission / cost),  # Комиссия маркетплейса
+        # Комиссия маркетплейса
+        "Mcomm": (full_commission, full_commission / cost),
         "Log": (logistic_price, logistic_price / cost),  # Логистика
         "Store": (unit_storage_cost, unit_storage_cost / cost),  # Хранение
         "Margin": (margin, margin / cost),  # Маржа
         "Price": (cost, unit_cost / cost * 100 + full_commission / cost * 100 + logistic_price / cost * 100 +
-                 unit_storage_cost / cost * 100 + margin / cost * 100)  # Цена
+                  unit_storage_cost / cost * 100 + margin / cost * 100)  # Цена
     }
 
 
@@ -52,13 +58,16 @@ def get_mean(cost_data: np.array, buy_price, pack_price) -> float:
     lower = cost_data[0: len(cost_data)//3]
     middle = cost_data[len(cost_data)//3: 2 * len(cost_data)//3]
     high = cost_data[2 * len(cost_data)//3:]
-    l_concurrent_margin = get_concurrent_margin(lower.mean(), unit_cost, pack_price, unit_storage_cost)
+    l_concurrent_margin = get_concurrent_margin(
+        lower.mean(), unit_cost, pack_price, unit_storage_cost)
     if buy_price * 100 < l_concurrent_margin:
         return lower.mean()
-    m_concurrent_margin = get_concurrent_margin(middle.mean(), unit_cost, pack_price, unit_storage_cost)
+    m_concurrent_margin = get_concurrent_margin(
+        middle.mean(), unit_cost, pack_price, unit_storage_cost)
     if buy_price * 100 < m_concurrent_margin:
         return middle.mean()
-    h_concurrent_margin = get_concurrent_margin(high.mean(), unit_cost, pack_price, unit_storage_cost)
+    h_concurrent_margin = get_concurrent_margin(
+        high.mean(), unit_cost, pack_price, unit_storage_cost)
     if buy_price * 100 < h_concurrent_margin:
         return high.mean()
     return cost_data.mean()
