@@ -1,8 +1,9 @@
 import requests
 import sys
 import re
-from . import constants
 
+from . import constants
+from os.path import abspath
 from os import listdir
 from os.path import isfile, join
 from datetime import datetime, timedelta
@@ -16,9 +17,12 @@ def get_all_product_niche(text: str, output_dir: str):
     mass = []
     avr_mass = []
     while True:
+        uri = f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&couponsGeo=2,12,7,3,6,21,16' \
+              f'&curr=rub&dest=-1221148,-140294,-1751445,-364763&emp=0&lang=ru&locale=ru&pricemarginCoeff=1.0' \
+              f'&query={text}&resultset=catalog&sort=popular&spp=0&suppressSpellcheck=false&page={str(iterator_page)}'
         request = requests.get(
-            f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&curr=rub&emp=0&lang=ru&locale=ru&\
-                page={str(iterator_page)}&pricemarginCoeff=1.0&query={text}&resultset=catalog&spp=0')
+            uri
+        )
         json_code = request.json()
         temp_mass.append(str(json_code))
         if 'data' not in json_code:
@@ -44,7 +48,7 @@ def get_all_product_niche(text: str, output_dir: str):
         avr_mass.append(sum / count)
     with open(join(output_dir, text + ".txt"), 'a', encoding='utf-8') as f:
         for i in range(len(avr_mass)):
-            if i % 10 == 0:
+            if i % 10 == 0 and i != 0:
                 f.write("\n")
             f.write(str(avr_mass[i]) + ",")
 
@@ -57,11 +61,11 @@ if __name__ == '__main__':
     only_files = [f.split('.')[0] for f in listdir(
         constants.data_path) if isfile(join(constants.data_path, f))]
     if not only_files.__contains__(text_to_search):
-        get_all_product_niche(text_to_search)
+        get_all_product_niche(text_to_search, abspath(constants.data_path))
     filename = str(join(constants.data_path, text_to_search + ".txt"))
     cost_data = load_data(filename)
     n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
-    x, y = get_frequency_stats(cost_data, n_samples)
+    x, y = get_frequency_stats(cost_data, n_samples + 1)
     with (open(join(constants.out_path, "out.txt"), "w")) as file:
         for i in range(len(x)):
             file.write(f'{x[i]}, {y[i]}\n')

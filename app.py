@@ -1,7 +1,7 @@
-from multiprocessing.spawn import old_main_modules
 import uvicorn
 import re
 import numpy as np
+
 from logic import constants
 from logic.margin_calc import load_data
 from logic.margin_calc import get_mean
@@ -51,7 +51,7 @@ async def upload_data(niche: str):
     )
     cost_data = load_data(filename)
     n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
-    x, y = get_frequency_stats(cost_data, n_samples)
+    x, y = get_frequency_stats(cost_data, n_samples + 1)
     return {'x': x, 'y': y}
 
 

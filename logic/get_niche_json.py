@@ -18,6 +18,7 @@ def get_niche():
     category = get_parent()
     dict_niche_by_category = dict()
     for i in category:
+
         request = requests.get('https://suppliers-api.wildberries.ru/api/v1/config/object/byparent?parent=' + i,
                                headers={
                                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
@@ -26,11 +27,10 @@ def get_niche():
         niche = []
         for j in json_code['data']:
             niche.append(j['name'])
+        niche.sort()
         dict_niche_by_category[i] = niche
     with open("data_file.json", "w", encoding='utf-8') as write_file:
-        for chunk in json.JSONEncoder(ensure_ascii=False).iterencode(dict_niche_by_category):
-            write_file.write(chunk)
-
+        json.dump(dict_niche_by_category,write_file, ensure_ascii=False)
 
 if __name__ == '__main__':
     get_niche()
