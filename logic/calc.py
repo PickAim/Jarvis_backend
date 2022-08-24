@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from tests.some_tests_data import data
+from .tests.some_tests_data import data
 
 
 def frequency_calc(costs: np.array, n_samples: int):
@@ -32,7 +32,7 @@ def get_mean(lst: list[int]) -> int:
     return int(result)
 
 
-def get_frequency_stats(cost_data: list[float], n_samples: int) -> (list[float], list[float]):
+def get_frequency_stats(cost_data: list[float], n_samples: int) -> tuple[list[float], list[float]]:
     if len(cost_data) <= 0:
         return [], []
     cost_data.sort()
@@ -62,7 +62,8 @@ def get_frequency_stats(cost_data: list[float], n_samples: int) -> (list[float],
                     left_costs.append(cost)
                 else:
                     break
-            keys, frequency = frequency_calc(np.array(left_costs), n_samples - 1)
+            keys, frequency = frequency_calc(
+                np.array(left_costs), n_samples - 1)
             keys.append(right_key)
             frequency.append(right_frequency)
             if right_frequency > get_mean(frequency):
@@ -81,7 +82,3 @@ def get_frequency_stats(cost_data: list[float], n_samples: int) -> (list[float],
 
 if __name__ == '__main__':
     get_frequency_stats(data, 100)  # just like unit test
-
-
-
-
