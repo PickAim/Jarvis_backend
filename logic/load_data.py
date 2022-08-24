@@ -16,9 +16,12 @@ def get_all_product_niche(text: str, output_dir: str):
     mass = []
     avr_mass = []
     while True:
+        uri = f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&couponsGeo=2,12,7,3,6,21,16' \
+              f'&curr=rub&dest=-1221148,-140294,-1751445,-364763&emp=0&lang=ru&locale=ru&pricemarginCoeff=1.0' \
+              f'&query={text}&resultset=catalog&sort=popular&spp=0&suppressSpellcheck=false&page={str(iterator_page)}'
         request = requests.get(
-            f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&curr=rub&emp=0&lang=ru&locale=ru&\
-                page={str(iterator_page)}&pricemarginCoeff=1.0&query={text}&resultset=catalog&spp=0')
+            uri
+        )
         json_code = request.json()
         temp_mass.append(str(json_code))
         if 'data' not in json_code:
