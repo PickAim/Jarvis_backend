@@ -27,9 +27,7 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=1.0)
         partial_unit_transit_cost = 0
 
     margin = (1 - commission) * mid_cost - partial_unit_cost
-    concurrent_margin = get_concurrent_margin(
-        mid_cost, unit_cost, pack_price, unit_storage_cost)
-    margin = margin * buy_price / concurrent_margin
+
     if unit_cost > 0:
         transit_margin = (1 - commission) * mid_cost - partial_unit_transit_cost
     else:
@@ -44,21 +42,27 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=1.0)
 
     full_commission = commission * \
                       (unit_cost + logistic_price + margin + unit_storage_cost)
+    old_margin = margin
+    margin = margin * (1 - commission)
     return {
-        "Pcost": (unit_cost, unit_cost / cost),  # Закупочная себестоимость
-        "Pack": (pack_price, pack_price / cost),  # Упаковка
+        "Pcost": (buy_price, buy_price / (cost - commission * old_margin)),  # Закупочная себестоимость
+        "Pack": (pack_price, pack_price / (cost - commission * old_margin)),  # Упаковка
         # Комиссия маркетплейса
-        "Mcomm": (full_commission, full_commission / cost),
-        "Log": (logistic_price, logistic_price / cost),  # Логистика
-        "Store": (unit_storage_cost, unit_storage_cost / cost),  # Хранение
-        "Margin": (margin, margin / cost),  # Маржа
-        "Price": (cost, unit_cost / cost * 100 + full_commission / cost * 100 + logistic_price / cost * 100 +
-                  unit_storage_cost / cost * 100 + margin / cost * 100)  # Цена
+        "Mcomm": (full_commission, full_commission / (cost - commission * old_margin)),
+        "Log": (logistic_price, logistic_price / (cost - commission * old_margin)),  # Логистика
+        "Store": (unit_storage_cost, unit_storage_cost / (cost - commission * old_margin)),  # Хранение
+        "Margin": (margin, margin / (cost - commission * old_margin)),  # Маржа
+        "Price": (cost, unit_cost / (cost - commission * old_margin) * 100
+                  + full_commission / (cost - commission * old_margin) * 100
+                  + logistic_price / (cost - commission * old_margin) * 100
+                  + unit_storage_cost / (cost - commission * old_margin) * 100
+                  + margin / (cost - commission * old_margin) * 100),  # Цена
+        "Commission": cost * commission
     }
 
 
-def get_concurrent_margin(mid_cost, unit_cost, pack_price, unit_storage_cost):
-    return (mid_cost - unit_cost - pack_price - commission * mid_cost - logistic_price - unit_storage_cost) / 0.5
+def get_concurrent_margin(mid_cost, unit_cost, unit_storage_cost):
+    return (mid_cost - unit_cost - commission * mid_cost - logistic_price - unit_storage_cost) / 0.5
 
 
 def get_mean(cost_data: np.array, buy_price, pack_price) -> float:
@@ -68,18 +72,18 @@ def get_mean(cost_data: np.array, buy_price, pack_price) -> float:
     middle = cost_data[len(cost_data) // 3: 2 * len(cost_data) // 3]
     high = cost_data[2 * len(cost_data) // 3:]
     l_concurrent_margin = get_concurrent_margin(
-        lower.mean(), unit_cost, pack_price, unit_storage_cost)
+        lower.mean(), unit_cost, unit_storage_cost)
     if buy_price * 100 < l_concurrent_margin:
-        return lower.mean()
+        return lower.mean()/100
     m_concurrent_margin = get_concurrent_margin(
-        middle.mean(), unit_cost, pack_price, unit_storage_cost)
+        middle.mean(), unit_cost, unit_storage_cost)
     if buy_price * 100 < m_concurrent_margin:
-        return middle.mean()
+        return middle.mean()/100
     h_concurrent_margin = get_concurrent_margin(
-        high.mean(), unit_cost, pack_price, unit_storage_cost)
+        high.mean(), unit_cost, unit_storage_cost)
     if buy_price * 100 < h_concurrent_margin:
-        return high.mean()
-    return cost_data.mean()
+        return high.mean()/100
+    return cost_data.mean()/100
 
 
 if __name__ == '__main__':
