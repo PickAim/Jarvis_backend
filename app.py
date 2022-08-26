@@ -56,4 +56,4 @@ async def upload_data(niche: str):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, port=8080)
+    uvicorn.run(app, port=8090)
