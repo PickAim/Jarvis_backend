@@ -57,7 +57,10 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=1.0)
                   + logistic_price / (cost - commission * old_margin) * 100
                   + unit_storage_cost / (cost - commission * old_margin) * 100
                   + margin / (cost - commission * old_margin) * 100),  # Цена
-        "Commission": cost * commission
+        "Commis": cost * commission,
+        "tr_margin": transit_margin,
+        "tr_cost": transit_cost,
+        "tr_delta": transit_cost - cost
     }
 
 
