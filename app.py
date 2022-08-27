@@ -34,8 +34,8 @@ async def calc_margin(margin_item: MarginItem):
     return result_dict
 
 
-@app.get('/data/{niche}')
-async def upload_data(niche: str):
+@app.get('/data/{niche}')  # todo add parameter (is_update) in request
+async def upload_data(niche: str, is_update: bool):
     text_to_search = niche.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
     only_files = []
@@ -44,7 +44,7 @@ async def upload_data(niche: str):
             constants.data_path) if isfile(join(constants.data_path, f))]
     else:
         mkdir(constants.data_path)
-    if not text_to_search in only_files:
+    if not text_to_search in only_files or is_update:
         get_all_product_niche(text_to_search, abspath(constants.data_path))
     filename = abspath(
         str(join(constants.data_path, text_to_search + ".txt"))

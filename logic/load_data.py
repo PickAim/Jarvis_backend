@@ -54,13 +54,14 @@ def get_all_product_niche(text: str, output_dir: str):
 
 
 if __name__ == '__main__':
-    parser = create_parser([('-t', '--text')])
+    parser = create_parser([('-t', '--text'), ('-u', '--update')])
     namespace = parser.parse_args(sys.argv[1:])
+    is_update = namespace.update.lower() == 'true' or namespace.update == '1'
     text_to_search = namespace.text.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
     only_files = [f.split('.')[0] for f in listdir(
         constants.data_path) if isfile(join(constants.data_path, f))]
-    if not only_files.__contains__(text_to_search):
+    if not only_files.__contains__(text_to_search) or is_update:
         get_all_product_niche(text_to_search, abspath(constants.data_path))
     filename = str(join(constants.data_path, text_to_search + ".txt"))
     cost_data = load_data(filename)
