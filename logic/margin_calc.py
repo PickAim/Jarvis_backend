@@ -1,11 +1,4 @@
-import sys
-from . import constants
 import numpy as np
-import json
-import re
-
-from .jarvis_utils import create_parser, load_data
-from os.path import join
 
 # now it's just constants
 commission = 0.1
@@ -88,19 +81,3 @@ def get_mean(cost_data: np.array, buy_price, pack_price) -> float:
         return high.mean()/100
     return cost_data.mean()/100
 
-
-if __name__ == '__main__':
-    parser = create_parser([('-b', '--buy'), ('-p', '--pack'),
-                            ('-u', '--unit_count'), ('-tr', '--transit'), ('-t', '--text')])
-    namespace = parser.parse_args(sys.argv[1:])
-    niche = namespace.text.lower()
-    niche = re.sub(' +', ' ', niche)
-    filename = str(join(constants.data_path, niche + ".txt"))
-    costs = np.array(load_data(filename))
-    costs.sort()
-
-    mid_cost = get_mean(costs, float(namespace.buy), float(namespace.pack))
-    result_dict = all_calc(float(namespace.buy), float(namespace.pack), mid_cost, float(namespace.transit),
-                           float(namespace.unit_count))
-    with open(join(constants.out_path, 'price.json'), 'w', encoding="UTF-8") as out_json:
-        json.dump(result_dict, out_json, indent=4)
