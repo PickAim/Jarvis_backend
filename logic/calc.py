@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .tests.some_tests_data import data
-
 
 def frequency_calc(costs: np.array, n_samples: int):
     keys = []
@@ -78,7 +76,3 @@ def get_frequency_stats(cost_data: list[float], n_samples: int) -> tuple[list[fl
     # plt.grid(True)
     # plt.show()
     return keys, frequency
-
-
-if __name__ == '__main__':
-    get_frequency_stats(data, 100)  # just like unit test
