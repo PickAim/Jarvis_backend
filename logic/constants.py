@@ -1,2 +1,2 @@
-data_path = "data"
-out_path = "out"
+data_path = "./logic/data"
+out_path = "./logic/out"
