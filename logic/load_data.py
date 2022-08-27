@@ -9,7 +9,7 @@ from os.path import isfile, join
 from datetime import datetime, timedelta
 
 
-def get_all_product_niche(text: str, output_dir: str):
+def get_all_product_niche(text: str, output_dir: str, pages_num: int):
     iterator_page = 1
     temp_mass = []
     mass = []
@@ -28,7 +28,8 @@ def get_all_product_niche(text: str, output_dir: str):
         for product in json_code['data']['products']:
             mass.append((product['name'], product['id']))
         iterator_page += 1
-        break  # todo uncomment after TECHNOPROM
+        if pages_num != -1 and iterator_page > pages_num:
+            break
     for data in mass:
         request = requests.get(
             f'https://wbx-content-v2.wbstatic.net/price-history/{data[1]}.json?')
@@ -51,7 +52,7 @@ def get_all_product_niche(text: str, output_dir: str):
             f.write(str(avr_mass[i]) + ",")
 
 
-def load(text, update):
+def load(text: str, update: bool, pages_num: int = -1):
     only_files = []
     if exists(constants.data_path):
         only_files = [f.split('.')[0] for f in listdir(
@@ -59,6 +60,4 @@ def load(text, update):
     else:
         mkdir(constants.data_path)
     if not (text in only_files) or update:
-        get_all_product_niche(text, abspath(constants.data_path))
-
-
+        get_all_product_niche(text, abspath(constants.data_path), pages_num)

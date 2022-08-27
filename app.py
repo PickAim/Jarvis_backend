@@ -30,11 +30,11 @@ async def calc_margin(margin_item: MarginItem):
     return result_dict
 
 
-@app.get('/data/{niche}')  # todo add parameter (is_update) in request
+@app.get('/data/{niche}')
 async def upload_data(niche: str, is_update: bool):
     text_to_search = niche.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
-    load(text_to_search, is_update)
+    load(text_to_search, is_update, 1)  # now it's just first page of products
     filename = abspath(
         str(join(constants.data_path, text_to_search + ".txt"))
     )
