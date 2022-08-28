@@ -14,11 +14,13 @@ def get_all_product_niche(text: str, output_dir: str, pages_num: int):
     temp_mass = []
     mass = []
     avr_mass = []
+    session = requests.Session()
+
     while True:
         uri = f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&couponsGeo=2,12,7,3,6,21,16' \
               f'&curr=rub&dest=-1221148,-140294,-1751445,-364763&emp=0&lang=ru&locale=ru&pricemarginCoeff=1.0' \
               f'&query={text}&resultset=catalog&sort=popular&spp=0&suppressSpellcheck=false&page={str(iterator_page)}'
-        request = requests.get(
+        request = session.get(
             uri
         )
         json_code = request.json()
@@ -31,7 +33,8 @@ def get_all_product_niche(text: str, output_dir: str, pages_num: int):
         if pages_num != -1 and iterator_page > pages_num:
             break
     for data in mass:
-        request = requests.get(
+
+        request = session.get(
             f'https://wbx-content-v2.wbstatic.net/price-history/{data[1]}.json?')
         if request.status_code != 200:
             continue
@@ -50,6 +53,7 @@ def get_all_product_niche(text: str, output_dir: str, pages_num: int):
             if i % 10 == 0 and i != 0:
                 f.write("\n")
             f.write(str(avr_mass[i]) + ",")
+    session.close()
 
 
 def load(text: str, update: bool, pages_num: int = -1):
