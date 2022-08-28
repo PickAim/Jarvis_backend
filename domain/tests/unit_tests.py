@@ -42,6 +42,4 @@ class FrequencyCalcTest(unittest.TestCase):
         mid_cost = get_mean(costs, buy, pack)
         result_dict = all_calc(buy, pack, mid_cost, transit,
                                unit_count)
-        self.assert_(result_dict)
-        with open(join(constants.out_path, 'price.json'), 'w', encoding="UTF-8") as out_json:
-            json.dump(result_dict, out_json, indent=4)
+        self.assertTrue(result_dict)
