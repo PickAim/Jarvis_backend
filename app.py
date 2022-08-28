@@ -2,12 +2,12 @@ import uvicorn
 import re
 import numpy as np
 
-from logic import constants
-from logic.margin_calc import load_data
-from logic.margin_calc import get_mean
-from logic.margin_calc import all_calc
-from logic.load_data import get_all_product_niche
-from logic.calc import get_frequency_stats
+from domain import constants
+from domain.margin_calc import load_data
+from domain.margin_calc import get_mean
+from domain.margin_calc import all_calc
+from domain.load_data import get_all_product_niche
+from domain.calc import get_frequency_stats
 from fastapi import FastAPI
 from margin_item import MarginItem
 from os import listdir
