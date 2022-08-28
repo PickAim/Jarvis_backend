@@ -1,6 +1,7 @@
 import requests
 import json
 
+
 def get_parent():
     session = requests.Session()
     adapter = requests.adapters.HTTPAdapter(
@@ -41,5 +42,7 @@ def get_niche():
     with open("data_file.json", "w", encoding='utf-8') as write_file:
         json.dump(dict_niche_by_category,write_file, ensure_ascii=False)
 
+
 if __name__ == '__main__':
     get_niche()
+
