@@ -1,7 +1,6 @@
 import unittest
 import domain.constants as constants
 import numpy as np
-import json
 import time
 
 from os.path import join
