@@ -1,5 +1,3 @@
-from email.policy import default
-from xmlrpc.client import Boolean, DateTime
 from sqlalchemy import Column, Table, Index, Integer, String, \
     DateTime, Boolean, PrimaryKeyConstraint, ForeignKey
 from .db_config import Base
@@ -49,3 +47,4 @@ class ProductCostHistories(Base):
     id = Column(Integer, primary_key=True)
     cost = Column(Integer())
     date = Column(DateTime(), nullable=False, default=datetime.now)
+    niche_id = Column(Integer, ForeignKey(f'{Niches.__tablename__}.id'))
