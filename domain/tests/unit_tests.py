@@ -1,7 +1,6 @@
 import unittest
-import logic.constants as constants
+import domain.constants as constants
 import numpy as np
-import json
 
 from os.path import join
 from ..tests.some_tests_data import cost_data
@@ -28,6 +27,9 @@ class FrequencyCalcTest(unittest.TestCase):
 
     def test_all_calc(self):
         niche = 'молотый кофе'
+        is_update = False
+        pages_num = 2
+        load(niche, is_update, pages_num)
         filename = str(join(constants.data_path, niche + ".txt"))
         costs = np.array(load_data(filename))
         costs.sort()
@@ -39,6 +41,4 @@ class FrequencyCalcTest(unittest.TestCase):
         mid_cost = get_mean(costs, buy, pack)
         result_dict = all_calc(buy, pack, mid_cost, transit,
                                unit_count)
-        self.assert_(result_dict)
-        with open(join(constants.out_path, 'price.json'), 'w', encoding="UTF-8") as out_json:
-            json.dump(result_dict, out_json, indent=4)
+        self.assertTrue(result_dict)
