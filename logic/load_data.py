@@ -1,17 +1,15 @@
 import requests
-import sys
-import re
 
+from os.path import exists
+from os import mkdir
 from . import constants
 from os.path import abspath
 from os import listdir
 from os.path import isfile, join
 from datetime import datetime, timedelta
-from .calc import get_frequency_stats
-from .jarvis_utils import create_parser, load_data
 
 
-def get_all_product_niche(text: str, output_dir: str):
+def get_all_product_niche(text: str, output_dir: str, pages_num: int):
     iterator_page = 1
     temp_mass = []
     mass = []
@@ -30,7 +28,8 @@ def get_all_product_niche(text: str, output_dir: str):
         for product in json_code['data']['products']:
             mass.append((product['name'], product['id']))
         iterator_page += 1
-        break  # todo uncomment after TECHNOPROM
+        if pages_num != -1 and iterator_page > pages_num:
+            break
     for data in mass:
         request = requests.get(
             f'https://wbx-content-v2.wbstatic.net/price-history/{data[1]}.json?')
@@ -53,20 +52,12 @@ def get_all_product_niche(text: str, output_dir: str):
             f.write(str(avr_mass[i]) + ",")
 
 
-if __name__ == '__main__':
-    parser = create_parser([('-t', '--text'), ('-u', '--update')])
-    namespace = parser.parse_args(sys.argv[1:])
-    is_update = namespace.update.lower() == 'true' or namespace.update == '1'
-    text_to_search = namespace.text.lower()
-    text_to_search = re.sub(' +', ' ', text_to_search)
-    only_files = [f.split('.')[0] for f in listdir(
-        constants.data_path) if isfile(join(constants.data_path, f))]
-    if not only_files.__contains__(text_to_search) or is_update:
-        get_all_product_niche(text_to_search, abspath(constants.data_path))
-    filename = str(join(constants.data_path, text_to_search + ".txt"))
-    cost_data = load_data(filename)
-    n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
-    x, y = get_frequency_stats(cost_data, n_samples + 1)
-    with (open(join(constants.out_path, "out.txt"), "w")) as file:
-        for i in range(len(x)):
-            file.write(f'{x[i]}, {y[i]}\n')
+def load(text: str, update: bool, pages_num: int = -1):
+    only_files = []
+    if exists(constants.data_path):
+        only_files = [f.split('.')[0] for f in listdir(
+            constants.data_path) if isfile(join(constants.data_path, f))]
+    else:
+        mkdir(constants.data_path)
+    if not (text in only_files) or update:
+        get_all_product_niche(text, abspath(constants.data_path), pages_num)

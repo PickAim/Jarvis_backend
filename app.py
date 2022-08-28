@@ -3,19 +3,15 @@ import re
 import numpy as np
 
 from logic import constants
-from logic.margin_calc import load_data
+from logic.jarvis_utils import load_data
 from logic.margin_calc import get_mean
 from logic.margin_calc import all_calc
-from logic.load_data import get_all_product_niche
+from logic.load_data import load
 from logic.calc import get_frequency_stats
 from fastapi import FastAPI
 from margin_item import MarginItem
-from os import listdir
 from os.path import join
-from os.path import isfile
-from os.path import exists
 from os.path import abspath
-from os import mkdir
 
 
 app = FastAPI()
@@ -34,18 +30,11 @@ async def calc_margin(margin_item: MarginItem):
     return result_dict
 
 
-@app.get('/data/{niche}')  # todo add parameter (is_update) in request
+@app.get('/data/{niche}')
 async def upload_data(niche: str, is_update: bool):
     text_to_search = niche.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
-    only_files = []
-    if exists(constants.data_path):
-        only_files = [f.split('.')[0] for f in listdir(
-            constants.data_path) if isfile(join(constants.data_path, f))]
-    else:
-        mkdir(constants.data_path)
-    if not text_to_search in only_files or is_update:
-        get_all_product_niche(text_to_search, abspath(constants.data_path))
+    load(text_to_search, is_update, 1)  # now it's just first page of products
     filename = abspath(
         str(join(constants.data_path, text_to_search + ".txt"))
     )
