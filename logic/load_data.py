@@ -16,11 +16,16 @@ def get_all_product_niche(text: str, output_dir: str):
     temp_mass = []
     mass = []
     avr_mass = []
+    session = requests.Session()
+    adapter = requests.adapters.HTTPAdapter(
+        pool_connections=100,
+        pool_maxsize=100)
+    session.mount('http://', adapter)
     while True:
         uri = f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&couponsGeo=2,12,7,3,6,21,16' \
               f'&curr=rub&dest=-1221148,-140294,-1751445,-364763&emp=0&lang=ru&locale=ru&pricemarginCoeff=1.0' \
               f'&query={text}&resultset=catalog&sort=popular&spp=0&suppressSpellcheck=false&page={str(iterator_page)}'
-        request = requests.get(
+        request = session.get(
             uri
         )
         json_code = request.json()
@@ -32,7 +37,7 @@ def get_all_product_niche(text: str, output_dir: str):
         iterator_page += 1
         break  # todo uncomment after TECHNOPROM
     for data in mass:
-        request = requests.get(
+        request = session.get(
             f'https://wbx-content-v2.wbstatic.net/price-history/{data[1]}.json?')
         if request.status_code != 200:
             continue
