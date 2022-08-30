@@ -1,4 +1,3 @@
-from unicodedata import name
 from domain.wildberies_data_provider import WildBerriesDataProvider
 from database.db_config import SessionLocal
 from database.tables import Category, Niche
@@ -32,10 +31,11 @@ class DbFiller():
                 )
                 db_niches = []
                 for category, niches in category_to_niches.items():
+                    category_id = category_to_id[category]
                     for niche in niches:
                         db_niches.append(
                             Niche(name=niche,
-                                  category_id=category_to_id[category])
+                                  category_id=category_id)
                         )
                 session.add_all(db_niches)
 

@@ -48,4 +48,4 @@ class ProductCostHistory(Base):
     id = Column(Integer, primary_key=True)
     cost = Column(Integer(), nullable=False)
     date = Column(DateTime(), nullable=False, default=datetime.now)
-    niche_id = Column(Integer, ForeignKey(f'{Niche.__tablename__}.id'))
+    product_id = Column(Integer, ForeignKey(f'{Product.__tablename__}.id'))
