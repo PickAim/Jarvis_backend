@@ -24,7 +24,7 @@ async def calc_margin(margin_item: MarginItem):
     filename = abspath(str(join(constants.data_path, niche + ".txt")))
     costs = np.array(load_data(filename))
     costs.sort()
-    mid_cost = get_mean(costs, margin_item.buy, margin_item.pack)
+    mid_cost = get_mean(costs, margin_item.buy, margin_item.pack, 20)  # todo think about number of samples
     result_dict = all_calc(margin_item.buy, margin_item.pack, mid_cost, margin_item.pack,
                            margin_item.units)
     return result_dict

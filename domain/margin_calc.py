@@ -46,8 +46,7 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=0.0)
     result = {
         "Pcost": (buy_price, buy_price / (cost - commission * old_margin)),  # Закупочная себестоимость
         "Pack": (pack_price, pack_price / (cost - commission * old_margin)),  # Упаковка
-        # Комиссия маркетплейса
-        "Mcomm": (full_commission, full_commission / (cost - commission * old_margin)),
+        "Mcomm": (full_commission, full_commission / (cost - commission * old_margin)),  # Комиссия маркетплейса
         "Log": (logistic_price, logistic_price / (cost - commission * old_margin)),  # Логистика
         "Store": (unit_storage_cost, unit_storage_cost / (cost - commission * old_margin)),  # Хранение
         "Margin": (margin, abs(margin) / (cost - commission * old_margin)),  # Маржа
@@ -64,35 +63,27 @@ def all_calc(buy_price, pack_price, mid_cost, transit_price=0.0, unit_count=0.0)
                            + logistic_price / cost * 100
                            + unit_storage_cost / cost * 100)  # Цена
     result["Commis"] = cost * commission
-    result["tr_margin"] = transit_margin
-    result["tr_cost"] = transit_cost
-    result["tr_delta"] = transit_cost - cost
+    if unit_count > 0:
+        result["tr_margin"] = transit_margin
+        result["tr_cost"] = transit_cost
+        result["tr_delta"] = transit_cost - cost
     return result
 
 
 def get_concurrent_margin(mid_cost, unit_cost, unit_storage_cost):
-    return (mid_cost - unit_cost - commission * mid_cost - logistic_price - unit_storage_cost) / 0.5
+    return mid_cost - unit_cost - commission * mid_cost - logistic_price - unit_storage_cost
 
 
-def get_mean(cost_data: np.array, buy_price, pack_price) -> float:
-    unit_cost = buy_price + pack_price
-    unit_storage_cost = wrep * storage_price
-    lower = cost_data[0: len(cost_data) // 3]
-    middle = cost_data[len(cost_data) // 3: 2 * len(cost_data) // 3]
-    high = cost_data[2 * len(cost_data) // 3:]
-    l_concurrent_margin = get_concurrent_margin(
-        lower.mean(), unit_cost, unit_storage_cost)
-    if buy_price * 100 < l_concurrent_margin:
-        return lower.mean() / 100
-    m_concurrent_margin = get_concurrent_margin(
-        middle.mean(), unit_cost, unit_storage_cost)
-    if buy_price * 100 < m_concurrent_margin:
-        return middle.mean() / 100
-    h_concurrent_margin = get_concurrent_margin(
-        high.mean(), unit_cost, unit_storage_cost)
-    if buy_price * 100 < h_concurrent_margin:
-        return high.mean() / 100
-    return cost_data.mean() / 100
-
-
-
+def get_mean(cost_data: np.array, buy_price, pack_price, n_samples) -> float:
+    unit_cost = (buy_price + pack_price) * 100
+    unit_storage_cost = (wrep * storage_price) * 100
+    keys = []
+    step = len(cost_data) // n_samples
+    for i in range(n_samples - 1):
+        keys.append(i * step)
+    keys.append(len(cost_data) - 1)
+    for i in range(1, len(keys)):
+        concurrent_margin = get_concurrent_margin(cost_data[keys[i-1]:keys[i]].mean(), unit_cost, unit_storage_cost)
+        if concurrent_margin > 0:
+            return cost_data[keys[i-1]:keys[i]].mean() / 100
+    return cost_data[-2:-1].mean() / 100
