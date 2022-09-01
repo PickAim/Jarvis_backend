@@ -1,6 +1,4 @@
 from datetime import datetime
-import re
-from urllib import response
 import requests
 
 
