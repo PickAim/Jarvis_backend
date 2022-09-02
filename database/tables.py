@@ -4,47 +4,48 @@ from .db_config import Base
 from datetime import datetime
 
 
-class Users(Base):
+class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     login = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
+    wildberries_key = Column(String(255), nullable=False)
 
 
-class Pays(Base):
+class Pay(Base):
     __tablename__ = 'pays'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey(f'{Users.__tablename__}.id'))
+    user_id = Column(Integer, ForeignKey(f'{User.__tablename__}.id'))
     payment_date = Column(DateTime, nullable=False, default=datetime.now)
     is_auto = Column(Boolean, nullable=False)
 
 
-class Categories(Base):
+class Category(Base):
     __tablename__ = 'categories'
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=False, unique=True)
 
 
-class Niches(Base):
+class Niche(Base):
     __tablename__ = 'niches'
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
     category_id = Column(Integer(), ForeignKey(
-        f'{Categories.__tablename__}.id'))
+        f'{Category.__tablename__}.id'))
     update_date = Column(DateTime(), nullable=False, default=datetime.now)
 
 
-class Products(Base):
+class Product(Base):
     __tablename__ = 'products'
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
-    niche_id = Column(Integer(), ForeignKey(f'{Niches.__tablename__}.id'))
+    niche_id = Column(Integer(), ForeignKey(f'{Niche.__tablename__}.id'))
 
 
-class ProductCostHistories(Base):
+class ProductCostHistory(Base):
     __tablename__ = 'product_cost_histories'
     id = Column(Integer, primary_key=True)
-    cost = Column(Integer())
+    cost = Column(Integer(), nullable=False)
     date = Column(DateTime(), nullable=False, default=datetime.now)
-    niche_id = Column(Integer, ForeignKey(f'{Niches.__tablename__}.id'))
+    product_id = Column(Integer, ForeignKey(f'{Product.__tablename__}.id'))

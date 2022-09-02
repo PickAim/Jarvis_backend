@@ -40,9 +40,8 @@ def get_niche():
         niche.sort()
         dict_niche_by_category[i] = niche
     with open("data_file.json", "w", encoding='utf-8') as write_file:
-        json.dump(dict_niche_by_category,write_file, ensure_ascii=False)
+        json.dump(dict_niche_by_category, write_file, ensure_ascii=False)
 
 
 if __name__ == '__main__':
     get_niche()
-
