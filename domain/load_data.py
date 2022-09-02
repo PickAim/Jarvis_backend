@@ -11,7 +11,7 @@ import aiohttp
 import asyncio
 
 
-async def get_page_data(session, data,output_dir: str,text):
+async def get_page_data(session, data, output_dir: str, text):
     avr_mass = []
     url = 'https://wbx-content-v2.wbstatic.net/price-history/'+str(data)+'.json'
     async with session.get(url=url) as request:
@@ -35,7 +35,6 @@ async def get_page_data(session, data,output_dir: str,text):
                 if i % 10 == 0 and i != 0:
                     f.write("\n")
                 f.write(str(avr_mass[i]) + ",")
-
 
 
 async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
@@ -63,10 +62,10 @@ async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
     async with aiohttp.ClientSession() as session:
         tasks = []
         for data in mass:
-            task = asyncio.create_task(get_page_data(session, data[1],output_dir,text))
+            task = asyncio.create_task(get_page_data(session, data[1], output_dir, text))
             tasks.append(task)
         await asyncio.gather(*tasks)
-    session.close()
+    await session.close()
 
 
 def load(text: str, update: bool = False, pages_num: int = -1):

@@ -1,9 +1,9 @@
-from domain.data_providers.wildberies_data_provider import WildBerriesDataProvider
+from domain.data_providers.wildberries_data_provider import WildBerriesDataProvider
 from sqlalchemy.orm import sessionmaker
 from database.tables import Category, Niche, Product, ProductCostHistory
 
 
-class DbFiller():
+class DbFiller:
 
     def __init__(self, api: WildBerriesDataProvider, sessionmaker: sessionmaker):
         self.__api = api

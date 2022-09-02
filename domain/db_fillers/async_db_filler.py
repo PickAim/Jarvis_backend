@@ -1,12 +1,12 @@
 import asyncio
-from domain.data_providers.async_wildberies_data_provider import AsyncWildberiesDataProvider
+from domain.data_providers.async_wildberries_data_provider import AsyncWildberriesDataProvider
 from sqlalchemy.orm import sessionmaker
 from database.tables import Category, Niche, Product, ProductCostHistory
 
 
 class AsyncDbFiller:
 
-    def __init__(self, api: AsyncWildberiesDataProvider, sessionmaker: sessionmaker) -> None:
+    def __init__(self, api: AsyncWildberriesDataProvider, sessionmaker: sessionmaker) -> None:
         self.__api = api
         self.__sessionmaker = sessionmaker
 

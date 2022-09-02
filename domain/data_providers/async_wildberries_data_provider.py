@@ -6,7 +6,7 @@ from types import TracebackType
 from typing import Optional, Type
 
 
-class AsyncWildberiesDataProvider:
+class AsyncWildberriesDataProvider:
 
     def __init__(self, api_key: str) -> None:
         self.__api_key = api_key
