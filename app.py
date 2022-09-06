@@ -18,7 +18,7 @@ app = FastAPI()
 
 
 @app.post('/margin/')
-async def calc_margin(margin_item: MarginItem):
+def calc_margin(margin_item: MarginItem):
     niche = margin_item.niche.lower()
     niche = re.sub(' +', ' ', niche)
     filename = abspath(str(join(constants.data_path, niche + ".txt")))
@@ -31,7 +31,7 @@ async def calc_margin(margin_item: MarginItem):
 
 
 @app.get('/data/{niche}')
-async def upload_data(niche: str, is_update: bool = False):
+def upload_data(niche: str, is_update: bool = False):
     text_to_search = niche.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
     load(text_to_search, is_update, 1)  # todo delete 1 after testing

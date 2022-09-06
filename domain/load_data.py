@@ -11,16 +11,16 @@ import aiohttp
 import asyncio
 
 
-async def get_page_data(session, data, output_dir: str, text):
+async def get_page_data(session, data):
     avr_mass = []
-    url = 'https://wbx-content-v2.wbstatic.net/price-history/'+str(data)+'.json'
+    url = 'https://wbx-content-v2.wbstatic.net/price-history/'+str(data)+'.json?'
     async with session.get(url=url) as request:
         response_status = request.status
         if response_status != 200:
             pass
         else:
             json_code = await request.json()
-            sum = json_code[len(json_code) - 1]['price']['RUB']
+            sum = 0
             count = 1
             for obj in json_code:
                 time_data = datetime.fromtimestamp(obj['dt'])
@@ -28,13 +28,11 @@ async def get_page_data(session, data, output_dir: str, text):
                 if time_data > last_month:
                     sum += obj['price']['RUB']
                     count += 1
-            avr_mass.append(sum / count)
-
-        with open(join(output_dir, text + ".txt"), 'a', encoding='utf-8') as f:
-            for i in range(len(avr_mass)):
-                if i % 10 == 0 and i != 0:
-                    f.write("\n")
-                f.write(str(avr_mass[i]) + ",")
+            if sum != 0:
+                avr_mass.append(sum / count)
+            else:
+                avr_mass.append(json_code[len(json_code) - 1]['price']['RUB'])
+        return avr_mass
 
 
 async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
@@ -62,9 +60,17 @@ async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
     async with aiohttp.ClientSession() as session:
         tasks = []
         for data in mass:
-            task = asyncio.create_task(get_page_data(session, data[1], output_dir, text))
+            task = asyncio.create_task(get_page_data(session, data[1]))
             tasks.append(task)
-        await asyncio.gather(*tasks)
+        avr_collection = await asyncio.gather(*tasks)
+        j = 0
+        with open(join(output_dir, text + ".txt"), 'w', encoding='utf-8') as f:
+            for avr_mass in avr_collection:
+                for i in range(len(avr_mass)):
+                    if j % 10 == 0 and j != 0:
+                        f.write("\n")
+                    j += 1
+                    f.write(str(avr_mass[i]) + ",")
     await session.close()
 
 
@@ -76,5 +82,11 @@ def load(text: str, update: bool = False, pages_num: int = -1):
     else:
         mkdir(constants.data_path)
     if not (text in only_files) or update:
-        asyncio.run(get_all_product_niche(text, abspath(constants.data_path), pages_num))
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(get_all_product_niche(text, abspath(constants.data_path), pages_num))
+        # task = asyncio.ensure_future(get_all_product_niche(text, abspath(constants.data_path), pages_num))
+        # loop.run_until_complete(asyncio.wait([task]))
+        # asyncio.run_coroutine_threadsafe()
+        # asyncio.run(get_all_product_niche(text, abspath(constants.data_path), pages_num))
 
