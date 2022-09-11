@@ -40,7 +40,6 @@ async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
     temp_mass = []
     mass = []
     session = requests.Session()
-
     while True:
         uri = f'https://search.wb.ru/exactmatch/ru/common/v4/search?appType=1&couponsGeo=2,12,7,3,6,21,16' \
               f'&curr=rub&dest=-1221148,-140294,-1751445,-364763&emp=0&lang=ru&locale=ru&pricemarginCoeff=1.0' \
@@ -57,6 +56,7 @@ async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
         iterator_page += 1
         if pages_num != -1 and iterator_page > pages_num:
             break
+    session.close()
     async with aiohttp.ClientSession() as session:
         tasks = []
         for data in mass:
@@ -85,8 +85,4 @@ def load(text: str, update: bool = False, pages_num: int = -1):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(get_all_product_niche(text, abspath(constants.data_path), pages_num))
-        # task = asyncio.ensure_future(get_all_product_niche(text, abspath(constants.data_path), pages_num))
-        # loop.run_until_complete(asyncio.wait([task]))
-        # asyncio.run_coroutine_threadsafe()
-        # asyncio.run(get_all_product_niche(text, abspath(constants.data_path), pages_num))
 
