@@ -57,6 +57,7 @@ async def get_all_product_niche(text: str, output_dir: str, pages_num: int):
         iterator_page += 1
         if pages_num != -1 and iterator_page > pages_num:
             break
+    session.close()
     async with aiohttp.ClientSession() as session:
         tasks = []
         for data in mass:
