@@ -16,7 +16,7 @@ def get_storage_dict(nmproduct : str):
     dict_storage_nmproduct = dict('')
     for product in mass:
         for data_storage in product:
-            dict_storage_nmproduct[data_storage['wh']]=data_storage['qty']
+            dict_storage_nmproduct[data_storage['wh']] = data_storage['qty']
     return dict_storage_nmproduct
 
 
@@ -24,5 +24,5 @@ def get_storage_data(mass_nmproduct : [str]):
     main_dict = dict('')
     for nmproduct in mass_nmproduct:
         dicts = get_storage_dict(nmproduct)
-        main_dict[nmproduct]=dicts
+        main_dict[nmproduct] = dicts
     return main_dict
