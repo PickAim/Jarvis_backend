@@ -46,12 +46,6 @@ class FrequencyCalcTest(unittest.TestCase):
         n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
         x, y = get_frequency_stats(cost_data, n_samples + 1)
         self.assertEqual(len(x), n_samples + 1)
-        
-
-    def test_hoba(self):
-        arr = np.array([a for a in range(1, 16)])
-        print(arr)
-        print(arr * np.array([arr]).swapaxes(0, 1))
 
 
     def test_load_storage(self):
