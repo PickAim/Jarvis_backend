@@ -6,7 +6,7 @@ import time
 from os.path import join
 
 from some_tests_data import cost_data
-from domain.calc import get_frequency_stats
+from domain.calc import get_frequency_stats, frequency_calc
 from domain.load_data import load
 from domain.load_storage import get_storage_data
 from domain.jarvis_utils import load_data
@@ -34,21 +34,25 @@ class FrequencyCalcTest(unittest.TestCase):
                                unit_count)
         self.assertTrue(result_dict)
 
-    def test_load(self):
+    def test_load_n_freq_calc(self):
         text_to_search = 'молотый кофе'
         is_update = True
         pages_num = 1
         start_time = time.time()
         load(text_to_search, is_update, pages_num)
-        print(time.time()-start_time)
+        print(time.time() - start_time)
         filename = str(join(constants.data_path, text_to_search + ".txt"))
         cost_data = load_data(filename)
         n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
         x, y = get_frequency_stats(cost_data, n_samples + 1)
         self.assertEqual(len(x), n_samples + 1)
 
-
-    def test_load_storage(self):
+    @staticmethod
+    def test_load_storage():
         text = ['26414401', '6170053']
         print(get_storage_data(text))
 
+    def test_only_freq_calc(self):
+        n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
+        x, y = get_frequency_stats(cost_data, n_samples + 1)
+        self.assertEqual(len(x), n_samples + 1)

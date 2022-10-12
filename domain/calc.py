@@ -3,23 +3,9 @@ import matplotlib.pyplot as plt
 
 
 def frequency_calc(costs: np.array, n_samples: int):
-    keys = []
-    frequency = []
-    maximum = costs.max()
-    minimum = costs.min()
-    step = (maximum - minimum) // n_samples
-    for i in range(n_samples):
-        keys.append((i + 1) * step + minimum)
-        frequency.append(0)
-    i = 0
-    for cost in costs:
-        while cost > keys[i]:
-            i += 1
-            if i >= n_samples - 1:
-                i -= 1
-                break
-        frequency[i] += 1
-    return keys, frequency
+    res = plt.hist(costs, n_samples)
+    plt.clf()
+    return list(res[1][1:]), list(res[0])
 
 
 def get_mean(lst: list[int]) -> int:
@@ -42,10 +28,10 @@ def get_frequency_stats(cost_data: list[float], n_samples: int) -> tuple[list[fl
     # plt.grid(True)
     # plt.show()
     math_ozh = get_mean(frequency)
-    interesting_part_ind = 0
+    interesting_part_ind = len(keys)//3
     if len(frequency) < 2:
         return keys, frequency
-    while frequency[interesting_part_ind] > math_ozh//2 and interesting_part_ind < len(frequency):
+    while frequency[interesting_part_ind] > math_ozh//2 and interesting_part_ind < len(frequency):  # todo
         interesting_part_ind += 1
     while True:
         if 0 < interesting_part_ind < len(frequency):
