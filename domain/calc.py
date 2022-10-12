@@ -24,9 +24,9 @@ def get_frequency_stats(cost_data: list[float], n_samples: int) -> tuple[list[fl
     base_keys, base_frequency = frequency_calc(cost_data, n_samples)
     keys = base_keys.copy()
     frequency = base_frequency.copy()
-    plt.plot(keys, frequency)  # just show graphics
-    plt.grid(True)
-    plt.show()
+    # plt.plot(keys, frequency)  # just show graphics
+    # plt.grid(True)
+    # plt.show()
     math_ozh = get_mean(frequency)
     interesting_part_ind = len(keys)//3
     if len(frequency) < 2:
@@ -58,7 +58,7 @@ def get_frequency_stats(cost_data: list[float], n_samples: int) -> tuple[list[fl
                 break
         else:
             break
-    plt.plot(keys, frequency)  # just show graphics
-    plt.grid(True)
-    plt.show()
+    # plt.plot(keys, frequency)  # just show graphics
+    # plt.grid(True)
+    # plt.show()
     return keys, frequency
