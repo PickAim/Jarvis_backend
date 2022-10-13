@@ -28,25 +28,31 @@ def get_my_name(url: str) -> str:
 
 def publish_to_git():
     version = get_my_version()
+    saved_branch = run(f' git rev-parse --abbrev-ref HEAD',
+              stdout=PIPE, stderr=STDOUT, universal_newlines=True, shell=True).stdout.replace('\n', '')
     sys(f'git stash')
     out = run(f'git switch -c release/{version}',
               stdout=PIPE, stderr=STDOUT, universal_newlines=True, shell=True).stdout
     if out.__contains__('fatal'):
         sys(f'git checkout release/{version}')
+    sys(f'git rebase {saved_branch}')
     sys(f'git stash pop')
     sys('git add ..')
     sys('git add .')
     sys(f'git commit -m \"[Auto: {datetime.now()}] publish {version}\"')
-    sys(f'git push origin release/{version}')
+    sys(f'git push -f origin release/{version}')
 
 
 def publish_to_git_with_comment(comment):
     version = get_my_version()
+    saved_branch = run(f' git rev-parse --abbrev-ref HEAD',
+                       stdout=PIPE, stderr=STDOUT, universal_newlines=True, shell=True).stdout.replace('\n', '')
     sys(f'git stash')
     out = run(f'git switch -c release/{version}',
               stdout=PIPE, stderr=STDOUT, universal_newlines=True, shell=True).stdout
     if out.__contains__('fatal'):
         sys(f'git checkout release/{version}')
+    sys(f'git rebase {saved_branch}')
     sys(f'git stash pop')
     sys('git add ..')
     sys('git add .')
