@@ -1,19 +1,20 @@
 import unittest
-import domain.constants as constants
+import components.jarvis_calc.constants as constants
 import numpy as np
 import time
 
 from os.path import join
 
 from some_tests_data import cost_data
-from domain.calc import get_frequency_stats, frequency_calc
-from domain.load_data import load
-from domain.load_storage import get_storage_data
-from domain.jarvis_utils import load_data
-from domain.margin_calc import get_mean, all_calc
+from components.jarvis_calc.calc import get_frequency_stats, frequency_calc
+from components.jarvis_calc.load_data import load
+from components.jarvis_calc.load_storage import get_storage_data
+from components.jarvis_calc.jarvis_utils import load_data
+from components.jarvis_calc.margin_calc import get_mean, all_calc
 
 
 class FrequencyCalcTest(unittest.TestCase):
+
     def test_stats_calc(self):
         self.assertEqual(len(get_frequency_stats(cost_data, 100)[0]), 100)
 

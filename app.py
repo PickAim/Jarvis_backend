@@ -2,12 +2,12 @@ import uvicorn
 import re
 import numpy as np
 
-from domain import constants
-from domain.jarvis_utils import load_data
-from domain.margin_calc import get_mean
-from domain.margin_calc import all_calc
-from domain.load_data import load
-from domain.calc import get_frequency_stats
+from components.jarvis_calc import constants
+from components.jarvis_calc.jarvis_utils import load_data
+from components.jarvis_calc.margin_calc import get_mean
+from components.jarvis_calc.margin_calc import all_calc
+from components.jarvis_calc.load_data import load
+from components.jarvis_calc.calc import get_frequency_stats
 from fastapi import FastAPI
 from margin_item import MarginItem
 from os.path import join
