@@ -7,4 +7,4 @@
 *.json
 *.db
 **/__pycache__
-/jarvis_db
+/components/
