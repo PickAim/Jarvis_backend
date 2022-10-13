@@ -87,7 +87,3 @@ def build():
                 sys(f'python {os.path.join(component_dir, dir_name, "builder", "build.py")}')
 
                 sys(f'rd /s /q {os.path.join(component_dir, dir_name)}\\builder')
-
-
-if __name__ == '__main__':
-    build()
