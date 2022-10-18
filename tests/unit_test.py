@@ -4,7 +4,6 @@ import numpy as np
 import time
 
 from os.path import join
-
 from some_tests_data import cost_data
 from components.jarvis_calc.calc import get_frequency_stats, frequency_calc
 from components.jarvis_calc.load_data import load
