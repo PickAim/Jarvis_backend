@@ -15,7 +15,6 @@ from os.path import abspath
 
 
 app = FastAPI()
-#test comment
 
 @app.post('/margin/')
 def calc_margin(margin_item: MarginItem):
