@@ -5,7 +5,7 @@ import time
 
 from os.path import join
 from some_tests_data import cost_data
-from jarvis_calc.calc import get_frequency_stats, frequency_calc
+from jarvis_calc.calc import get_frequency_stats
 from jarvis_calc.load_data import load
 from jarvis_calc.load_storage import get_storage_data
 from jarvis_calc.jarvis_utils import load_data
