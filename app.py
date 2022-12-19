@@ -16,6 +16,7 @@ from os.path import abspath
 
 app = FastAPI()
 
+
 @app.post('/margin/')
 def calc_margin(margin_item: MarginItem):
     niche = margin_item.niche.lower()
