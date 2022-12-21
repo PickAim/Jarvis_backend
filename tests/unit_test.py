@@ -13,7 +13,7 @@ class FrequencyCalcTest(unittest.TestCase):
         is_update = True
         pages_num = 1
         start_time = time.time()
-        load(text_to_search, is_update, pages_num)
+        load(text_to_search, constants.data_path, is_update, pages_num)
         print(time.time() - start_time)
         filename = str(join(constants.data_path, text_to_search + ".txt"))
         cost_data = load_data(filename)
