@@ -2,9 +2,9 @@ import time
 import unittest
 from os.path import join
 
-from jarvis_calc import constants
-from jarvis_calc.jarvis_utils import load_data
-from jarvis_calc.load_data import load
+from jarvis_calc.utils import constants
+from jarvis_calc.utils.jarvis_utils import load_data
+from jarvis_calc.utils.load_data import load
 
 
 class FrequencyCalcTest(unittest.TestCase):

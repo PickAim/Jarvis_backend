@@ -2,12 +2,12 @@ import uvicorn
 import re
 import numpy as np
 
-from jarvis_calc import constants
-from jarvis_calc.jarvis_utils import load_data
-from jarvis_calc.margin_calc import get_mean
-from jarvis_calc.margin_calc import all_calc
-from jarvis_calc.load_data import load
-from jarvis_calc.calc import get_frequency_stats
+from jarvis_calc.utils import constants
+from jarvis_calc.utils.calc_utils import get_frequency_stats
+from jarvis_calc.utils.jarvis_utils import load_data
+from jarvis_calc.utils.margin_calc import get_mean_concurrent_cost
+from jarvis_calc.utils.margin_calc import unit_economy_calc
+from jarvis_calc.utils.load_data import load
 from fastapi import FastAPI
 from margin_item import MarginItem
 from os.path import join
@@ -24,9 +24,9 @@ def calc_margin(margin_item: MarginItem):
     filename = abspath(str(join(constants.data_path, niche + ".txt")))
     costs = np.array(load_data(filename))
     costs.sort()
-    mid_cost = get_mean(costs, margin_item.buy,
+    mid_cost = get_mean_concurrent_cost(costs, margin_item.buy,
                         margin_item.pack, 10)  # todo think about number of samples example: int(len(costs) * 0.1)
-    result_dict = all_calc(margin_item.buy, margin_item.pack, mid_cost, margin_item.pack,
+    result_dict = unit_economy_calc(margin_item.buy, margin_item.pack, mid_cost, margin_item.pack,
                            margin_item.units)
     return result_dict
 
