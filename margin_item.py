@@ -2,8 +2,8 @@ from pydantic import BaseModel
 
 
 class MarginItem(BaseModel):
-    buy: float
-    pack: float
-    units: float
-    transit: float
+    buy: int
+    pack: int
+    units: int
+    transit: int
     niche: str

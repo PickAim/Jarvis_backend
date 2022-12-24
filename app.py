@@ -13,7 +13,6 @@ from margin_item import MarginItem
 from os.path import join
 from os.path import abspath
 
-
 app = FastAPI()
 
 
@@ -25,9 +24,10 @@ def calc_margin(margin_item: MarginItem):
     costs = np.array(load_data(filename))
     costs.sort()
     mid_cost = get_mean_concurrent_cost(costs, margin_item.buy,
-                        margin_item.pack, 10)  # todo think about number of samples example: int(len(costs) * 0.1)
+                                        margin_item.pack,
+                                        10)  # todo think about number of samples example: int(len(costs) * 0.1)
     result_dict = unit_economy_calc(margin_item.buy, margin_item.pack, mid_cost, margin_item.pack,
-                           margin_item.units)
+                                    margin_item.units)
     return result_dict
 
 
@@ -35,7 +35,7 @@ def calc_margin(margin_item: MarginItem):
 def upload_data(niche: str, is_update: bool = False):
     text_to_search = niche.lower()
     text_to_search = re.sub(' +', ' ', text_to_search)
-    load(text_to_search, is_update, 1)  # todo delete 1 after testing
+    load(text_to_search, constants.data_path, is_update, 1)  # todo delete 1 after testing
     filename = abspath(
         str(join(constants.data_path, text_to_search + ".txt"))
     )
