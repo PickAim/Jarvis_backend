@@ -2,9 +2,9 @@ import time
 import unittest
 from os.path import join
 
-from jarvis_calc.utils import constants
-from jarvis_calc.utils.jarvis_utils import load_data
-from jarvis_calc.utils.load_data import load
+from jdu.request.loader_utils import load_niche_info, load_cost_data_from_file
+
+import app
 
 
 class FrequencyCalcTest(unittest.TestCase):
@@ -13,10 +13,9 @@ class FrequencyCalcTest(unittest.TestCase):
         is_update = True
         pages_num = 1
         start_time = time.time()
-        load(text_to_search, constants.data_path, is_update, pages_num)
+        load_niche_info(text_to_search, app.storage_dir, is_update, pages_num)
         print(time.time() - start_time)
-        filename = str(join(constants.data_path, text_to_search + ".txt"))
-        cost_data = load_data(filename)
+        filename = str(join(app.storage_dir, text_to_search + ".txt"))
+        cost_data = load_cost_data_from_file(filename)
         self.assertIsNotNone(cost_data)
         self.assertNotEqual(0, len(cost_data))
-
