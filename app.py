@@ -9,11 +9,11 @@ from jdu.request.loader_utils import load_cost_data_from_file, load_niche_info
 
 from margin_item import MarginItem
 from os.path import join
-from os.path import abspath
+from os.path import abspath, dirname
 
 app = FastAPI()
 
-storage_dir = join(abspath(__package__), "data")
+storage_dir = join(dirname(__file__), "data")
 
 
 @app.post('/margin/')
