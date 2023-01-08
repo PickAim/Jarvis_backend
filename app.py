@@ -13,7 +13,7 @@ from os.path import abspath
 
 app = FastAPI()
 
-storage_dir = "/data"
+storage_dir = join(abspath(__package__), "data")
 
 
 @app.post('/margin/')
