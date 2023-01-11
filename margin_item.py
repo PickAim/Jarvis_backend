@@ -22,4 +22,3 @@ class MarginJormItem(BaseModel):
     transit_count: int = 0
     transit_price: int = 0
     warehouse_name: str = FactoryKeywords.DEFAULT_WAREHOUSE
-

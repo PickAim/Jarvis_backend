@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from os.path import join
 from os.path import abspath, dirname
 
-from jarvis_calc.utils.calc_utils import get_frequency_stats
+from jarvis_calc.utils.calc_utils import get_frequency_stats, get_frequency_stats_with_jorm
 from jarvis_calc.factories import JORMFactory
 from jarvis_calc.utils.margin_calc import unit_economy_calc, unit_economy_calc_with_jorm
 
@@ -60,6 +60,13 @@ def upload_data(niche: str, is_update: bool = False):
     cost_data = load_cost_data_from_file(filename)
     n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
     x, y = get_frequency_stats(cost_data, n_samples + 1)
+    return {'x': x, 'y': y}
+
+
+@app.get('/jorm_data/{niche}')
+def upload_data(niche: str):
+    niche: Niche = jorm_factory.niche(niche)
+    x, y = get_frequency_stats_with_jorm(niche)
     return {'x': x, 'y': y}
 
 
