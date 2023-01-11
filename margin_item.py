@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from jarvis_calc.factories import FactoryKeywords
 
 
 class MarginItem(BaseModel):
@@ -12,3 +13,13 @@ class MarginItem(BaseModel):
     commission: float
     returned_percent: float
     client_tax: float
+
+
+class MarginJormItem(BaseModel):
+    buy: int
+    pack: int
+    niche: str
+    transit_count: int = 0
+    transit_price: int = 0
+    warehouse_name: str = FactoryKeywords.DEFAULT_WAREHOUSE
+

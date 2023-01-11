@@ -1,5 +1,5 @@
-import time
 import unittest
+import time
 from os.path import join
 
 from jdu.request.loader_utils import load_niche_info, load_cost_data_from_file
@@ -19,3 +19,7 @@ class FrequencyCalcTest(unittest.TestCase):
         cost_data = load_cost_data_from_file(filename)
         self.assertIsNotNone(cost_data)
         self.assertNotEqual(0, len(cost_data))
+
+
+if __name__ == '__main__':
+    unittest.main()

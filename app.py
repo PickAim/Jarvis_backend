@@ -2,18 +2,27 @@ import uvicorn
 import re
 import numpy as np
 
-from jarvis_calc.utils.calc_utils import get_frequency_stats
-from jarvis_calc.utils.margin_calc import unit_economy_calc
 from fastapi import FastAPI
-from jdu.request.loader_utils import load_cost_data_from_file, load_niche_info
 
-from margin_item import MarginItem
 from os.path import join
 from os.path import abspath, dirname
+
+from jarvis_calc.utils.calc_utils import get_frequency_stats
+from jarvis_calc.factories import JORMFactory
+from jarvis_calc.utils.margin_calc import unit_economy_calc, unit_economy_calc_with_jorm
+
+from jorm.market.infrastructure import Niche, Warehouse
+
+from jdu.request.loader_utils import load_cost_data_from_file, load_niche_info
+
+from margin_item import MarginItem, MarginJormItem
+
 
 app = FastAPI()
 
 storage_dir = join(dirname(__file__), "data")
+
+jorm_factory: JORMFactory = JORMFactory()  # TODO move to login or session creating request
 
 
 @app.post('/margin/')
@@ -28,6 +37,15 @@ def calc_margin(margin_item: MarginItem):
                                     margin_item.logistic_to_customer, margin_item.storage_price,
                                     margin_item.returned_percent, margin_item.client_tax, costs,
                                     margin_item.transit_price, margin_item.transit_count)
+    return result_dict
+
+
+@app.post('/jorm_margin/')
+def calc_margin(margin_item: MarginJormItem):
+    niche: Niche = jorm_factory.niche(margin_item.niche)
+    warehouse: Warehouse = jorm_factory.warehouse(margin_item.warehouse_name)
+    result_dict = unit_economy_calc_with_jorm(margin_item.buy, margin_item.pack, niche,
+                                              warehouse, jorm_factory.get_current_client())
     return result_dict
 
 
