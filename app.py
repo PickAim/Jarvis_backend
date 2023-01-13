@@ -7,13 +7,16 @@ from fastapi import FastAPI
 from os.path import join
 from os.path import abspath, dirname
 
+from jarvis_calc.database_interactors.db_access import DBUpdateProvider
 from jarvis_calc.utils.calc_utils import get_frequency_stats, get_frequency_stats_with_jorm
 from jarvis_calc.factories import JORMFactory
 from jarvis_calc.utils.margin_calc import unit_economy_calc, unit_economy_calc_with_jorm
+from jarvis_db.fill.updaters import CalcUpdater
 
 from jorm.market.infrastructure import Niche, Warehouse
 
 from jdu.request.loader_utils import load_cost_data_from_file, load_niche_info
+from jorm.market.service import Request
 
 from margin_item import MarginItem, MarginJormItem
 
@@ -24,7 +27,33 @@ storage_dir = join(dirname(__file__), "data")
 
 jorm_factory: JORMFactory = JORMFactory()  # TODO move to login or session creating request
 
+db_updater: DBUpdateProvider = CalcUpdater()  # TODO move to login or session creating request
 
+
+@app.post('/jorm_margin/')
+def calc_margin(margin_item: MarginJormItem):
+    niche: Niche = jorm_factory.niche(margin_item.niche)
+    warehouse: Warehouse = jorm_factory.warehouse(margin_item.warehouse_name)
+    result_dict = unit_economy_calc_with_jorm(margin_item.buy, margin_item.pack, niche,
+                                              warehouse, jorm_factory.get_current_client(),
+                                              margin_item.transit_price, margin_item.transit_count)
+    return result_dict
+
+
+@app.get('/jorm_data/{niche}')
+def upload_data(niche: str):
+    niche: Niche = jorm_factory.niche(niche)
+    x, y = get_frequency_stats_with_jorm(niche)
+    return {'x': x, 'y': y}
+
+
+@app.get('/save_request/{request}')
+def upload_data(request_json: str):
+    request_to_save: Request = jorm_factory.request(request_json)
+    db_updater.save_request(request_to_save)
+
+
+# TODO delete all requests below
 @app.post('/margin/')
 def calc_margin(margin_item: MarginItem):
     niche = margin_item.niche.lower()
@@ -40,15 +69,6 @@ def calc_margin(margin_item: MarginItem):
     return result_dict
 
 
-@app.post('/jorm_margin/')
-def calc_margin(margin_item: MarginJormItem):
-    niche: Niche = jorm_factory.niche(margin_item.niche)
-    warehouse: Warehouse = jorm_factory.warehouse(margin_item.warehouse_name)
-    result_dict = unit_economy_calc_with_jorm(margin_item.buy, margin_item.pack, niche,
-                                              warehouse, jorm_factory.get_current_client())
-    return result_dict
-
-
 @app.get('/data/{niche}')
 def upload_data(niche: str, is_update: bool = False):
     text_to_search = niche.lower()
@@ -60,13 +80,6 @@ def upload_data(niche: str, is_update: bool = False):
     cost_data = load_cost_data_from_file(filename)
     n_samples = int(len(cost_data) * 0.1)  # todo think about number of samples
     x, y = get_frequency_stats(cost_data, n_samples + 1)
-    return {'x': x, 'y': y}
-
-
-@app.get('/jorm_data/{niche}')
-def upload_data(niche: str):
-    niche: Niche = jorm_factory.niche(niche)
-    x, y = get_frequency_stats_with_jorm(niche)
     return {'x': x, 'y': y}
 
 
