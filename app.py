@@ -7,16 +7,15 @@ from fastapi import FastAPI
 from os.path import join
 from os.path import abspath, dirname
 
-from jarvis_calc.database_interactors.db_access import DBUpdateProvider
+# from jarvis_calc.database_interactors.db_access import DBUpdateProvider
 from jarvis_calc.utils.calc_utils import get_frequency_stats, get_frequency_stats_with_jorm
 from jarvis_calc.factories import JORMFactory
 from jarvis_calc.utils.margin_calc import unit_economy_calc, unit_economy_calc_with_jorm
-from jarvis_db.fill.updaters import CalcUpdater
 
 from jorm.market.infrastructure import Niche, Warehouse
 
 from jdu.request.loader_utils import load_cost_data_from_file, load_niche_info
-from jorm.market.service import Request
+# from jorm.market.service import Request
 
 from margin_item import MarginItem, MarginJormItem
 
@@ -27,7 +26,7 @@ storage_dir = join(dirname(__file__), "data")
 
 jorm_factory: JORMFactory = JORMFactory()  # TODO move to login or session creating request
 
-db_updater: DBUpdateProvider = CalcUpdater()  # TODO move to login or session creating request
+# db_updater: DBUpdateProvider = CalcUpdater()  # TODO move to login or session creating request
 
 
 @app.post('/jorm_margin/')
@@ -47,10 +46,10 @@ def upload_data(niche: str):
     return {'x': x, 'y': y}
 
 
-@app.get('/save_request/{request}')
-def upload_data(request_json: str):
-    request_to_save: Request = jorm_factory.request(request_json)
-    db_updater.save_request(request_to_save)
+# @app.get('/save_request/{request}')
+# def upload_data(request_json: str):
+#     request_to_save: Request = jorm_factory.request(request_json)
+#     db_updater.save_request(request_to_save)
 
 
 # TODO delete all requests below
