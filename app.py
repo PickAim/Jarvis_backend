@@ -46,8 +46,8 @@ def calc_margin(unit_economy_item: UnitEconomyRequestObject):
     if access_token is None:
         access_token = unit_economy_item.access_token
     user: User = session_controller.get_user(access_token)
-    niche: Niche = session_controller.niche(unit_economy_item.niche)
-    warehouse: Warehouse = session_controller.warehouse(unit_economy_item.warehouse_name)
+    niche: Niche = session_controller.get_niche(unit_economy_item.niche)
+    warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
     result_dict = {}
     if isinstance(user, Client):
         result_dict = unit_economy_calc_with_jorm(unit_economy_item.buy, unit_economy_item.pack, niche,
@@ -59,7 +59,7 @@ def calc_margin(unit_economy_item: UnitEconomyRequestObject):
 @app.get('/jorm_data/{niche}')
 def upload_data(token: str, niche: str):
     session_controller.get_user(token)
-    niche: Niche = session_controller.niche(niche)
+    niche: Niche = session_controller.get_niche(niche)
     x, y = get_frequency_stats_with_jorm(niche)
     return {'x': x, 'y': y}
 

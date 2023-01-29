@@ -97,10 +97,10 @@ class JarvisSessionController:
             return JarvisExceptionCode.HAS_WHITE_SPACES
         return 0
 
-    def niche(self, niche_name: str) -> Niche:
+    def get_niche(self, niche_name: str) -> Niche:
         return self.__jorm_factory.niche(niche_name)
 
-    def warehouse(self, warehouse_name: str) -> Warehouse:
+    def get_warehouse(self, warehouse_name: str) -> Warehouse:
         return self.__jorm_factory.warehouse(warehouse_name)
 
     def save_request(self, request_json: str, user: User):
