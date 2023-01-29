@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class JarvisException(Enum):
+class JarvisExceptionCode(Enum):
     # authorization exceptions
     INCORRECT_LOGIN_OR_PASSWORD: int = 4012
 

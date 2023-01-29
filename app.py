@@ -1,5 +1,3 @@
-import os
-
 import uvicorn
 
 from fastapi import FastAPI
@@ -22,7 +20,7 @@ session_controller: JarvisSessionController = JarvisSessionController()
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(_, exc):
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
 
@@ -59,15 +57,15 @@ def calc_margin(unit_economy_item: UnitEconomyRequestObject):
 
 
 @app.get('/jorm_data/{niche}')
-def upload_data(token: bytes, niche: str):
-    user = session_controller.get_user(token)
+def upload_data(token: str, niche: str):
+    session_controller.get_user(token)
     niche: Niche = session_controller.niche(niche)
     x, y = get_frequency_stats_with_jorm(niche)
     return {'x': x, 'y': y}
 
 
 @app.get('/save_request/{request}')
-def upload_data(token: bytes, request_json: str):
+def upload_data(token: str, request_json: str):
     user = session_controller.get_user(token)
     session_controller.save_request(request_json, user)
 
