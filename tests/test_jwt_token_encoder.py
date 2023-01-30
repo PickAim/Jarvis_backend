@@ -15,7 +15,7 @@ class JwtTokenEncoderTest(unittest.TestCase):
         encoder = PyJwtTokenEncoder(key, algorithm)
         token = encoder.provide_token(data)
         decoded = jwt.decode(token, key, [algorithm])
-        for expected_pair, actual_pair in zip(data, decoded, strict=True):
+        for expected_pair, actual_pair in zip(data.items(), decoded.items(), strict=True):
             self.assertEqual(expected_pair, actual_pair)
 
 
