@@ -7,17 +7,17 @@ from jarvis_calc.factories import JORMFactory
 from jarvis_db.access.accessers import ConcreteDBAccessProvider
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
-from jorm.utils.hashing import Hasher
 
 from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionCode
 from sessions.request_items import BaseRequestObject
+from utils.hashing import Hasher
 
 
 @dataclass
 class JarvisSessionController:
     __db_updater: DBUpdater = DBUpdater()
-    __tokenizer = TokenController("3ARtLTXRn9urnRK9d6rzDbj5Jy5vp/iG8dlaseZliD4=")
+    __tokenizer = TokenController()
     __hasher: Hasher = Hasher()
     __db__accessor: DBAccessProvider = ConcreteDBAccessProvider()
     __jorm_factory: JORMFactory = JORMFactory()

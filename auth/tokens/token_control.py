@@ -11,7 +11,7 @@ letters = string.printable
 
 
 class TokenController:
-    def __init__(self, key: str, algorythm: str = "HS256"):
+    def __init__(self, key: str = "3ARtLTXRn9urnRK9d6rzDbj5Jy5vp/iG8dlaseZliD4=", algorythm: str = "HS256"):
         self.__algorythm: str = algorythm
         self.__SECRET_KEY = key
         self.__TIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
