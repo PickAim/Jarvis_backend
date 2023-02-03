@@ -5,11 +5,11 @@ from typing import Any
 
 class TokenEncoder(ABC):
     @abstractmethod
-    def provide_token(self, payload: dict[str, Any]) -> str:
+    def encode_token(self, payload: dict[str, Any]) -> str:
         pass
 
 
 class TokenDecoder(ABC):
     @abstractmethod
-    def extract_payload(self, token: str) -> dict[str, Any]:
+    def decode_payload(self, token: str) -> dict[str, Any]:
         pass
