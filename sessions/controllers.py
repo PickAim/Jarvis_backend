@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 
 from fastapi import HTTPException, status
 from jarvis_calc.database_interactors.db_access import DBUpdater, DBAccessProvider
@@ -97,8 +98,12 @@ class JarvisSessionController:
             return JarvisExceptionCode.HAS_WHITE_SPACES
         return 0
 
+    @lru_cache(maxsize=10)
     def get_niche(self, niche_name: str) -> Niche:
-        return self.__jorm_factory.niche(niche_name)
+        result_niche: Niche = self.__db__accessor.get_niche(niche_name)
+        if result_niche is None:
+            result_niche = self.__db_updater.load_new_niche(niche_name)
+        return result_niche
 
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
         return self.__jorm_factory.warehouse(warehouse_name)
