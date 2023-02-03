@@ -5,12 +5,13 @@ from fastapi import HTTPException, status
 from jarvis_calc.database_interactors.db_access import DBUpdater, DBAccessProvider
 from jarvis_calc.factories import JORMFactory
 from jarvis_db.access.accessers import ConcreteDBAccessProvider
-from auth.tokens.token_control import TokenController
-from jorm.utils.hashing import Hasher
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
+from jorm.utils.hashing import Hasher
 
+from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionCode
+from sessions.request_items import BaseRequestObject
 
 
 @dataclass
@@ -38,8 +39,8 @@ class JarvisSessionController:
 
     def update_token(self, update_token: str) -> tuple[str, str]:
         exception = HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=JarvisExceptionCode.INCORRECT_TOKEN
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=JarvisExceptionCode.INCORRECT_TOKEN
         )
 
         user_id: int = self.__tokenizer.get_user_id(update_token)
@@ -104,3 +105,43 @@ class JarvisSessionController:
 
     def save_request(self, request_json: str, user: User):
         self.__db_updater.save_request(self.__jorm_factory.request(request_json), user)
+
+
+class CookieHandler:
+    def __init__(self, cookie: any):
+        self.access_token, self.update_token, self.imprint_token = self.__extract_tokens_from_cookie(cookie)
+        self.is_use_cookie: bool = (self.access_token is not None
+                                    and self.update_token is not None
+                                    and self.imprint_token is not None)
+
+    def save_to_cookie(self):
+        pass
+
+    @staticmethod
+    def __extract_tokens_from_cookie(cookie: any) -> tuple[str, str, str]:
+        pass
+
+
+class BaseRequestItemsHandler:
+    def __init__(self, base_request_item: BaseRequestObject, cookie: any):
+        self.__cookie_controller: CookieHandler = CookieHandler(cookie)
+        if self.__cookie_controller.is_use_cookie:
+            self.__access_token: str = self.__cookie_controller.access_token
+            self.__update_token: str = self.__cookie_controller.update_token
+            self.__imprint_token: str = self.__cookie_controller.imprint_token
+        else:
+            self.__access_token: str = base_request_item.access_token
+            self.__update_token: str = base_request_item.update_token
+            self.__imprint_token: str = base_request_item.imprint_token
+
+    def get_tokens(self) -> tuple[str, str, str]:
+        return self.__access_token, self.__update_token, self.__imprint_token
+
+    def is_use_cookie(self) -> bool:
+        return self.__cookie_controller.is_use_cookie
+
+    def save_to_cookie(self) -> None:
+        self.__cookie_controller.save_to_cookie()
+
+    def save_token_to_cookie(self, access_token: str, update_token: str, imprint_token: str):
+        pass
