@@ -2,10 +2,10 @@ import re
 from dataclasses import dataclass
 
 from fastapi import HTTPException, status
-from jarvis_calc.database_interactors.db_access import DBUpdateProvider, DBAccessProvider
+from jarvis_calc.database_interactors.db_access import DBUpdater, DBAccessProvider
 from jarvis_calc.factories import JORMFactory
 from jarvis_db.access.accessers import ConcreteDBAccessProvider
-from jorm.utils.tokens import Tokenizer
+from auth.tokens.token_control import TokenController
 from jorm.utils.hashing import Hasher
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
@@ -15,8 +15,8 @@ from sessions.exceptions import JarvisExceptionCode
 
 @dataclass
 class JarvisSessionController:
-    __db_updater: DBUpdateProvider
-    __tokenizer = Tokenizer()
+    __db_updater: DBUpdater = DBUpdater()
+    __tokenizer = TokenController("3ARtLTXRn9urnRK9d6rzDbj5Jy5vp/iG8dlaseZliD4=")
     __hasher: Hasher = Hasher()
     __db__accessor: DBAccessProvider = ConcreteDBAccessProvider()
     __jorm_factory: JORMFactory = JORMFactory()
@@ -26,29 +26,32 @@ class JarvisSessionController:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=JarvisExceptionCode.INCORRECT_TOKEN,
         )
+
         if self.__tokenizer.is_token_expired(access_token):
             raise exception
         user = self.__db__accessor.get_user_by_id(
-            self.__tokenizer.extract_encoded_data(access_token)[self.__tokenizer.USER_ID_KEY]
+            self.__tokenizer.get_user_id(access_token)
         )
         if user:
             return user
         raise exception
 
     def update_token(self, update_token: str) -> tuple[str, str]:
-        user_id: int = self.__tokenizer.extract_encoded_data(update_token)[self.__tokenizer.USER_ID_KEY]
+        exception = HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=JarvisExceptionCode.INCORRECT_TOKEN
+        )
+
+        user_id: int = self.__tokenizer.get_user_id(update_token)
         new_access_token: str = self.__tokenizer.create_access_token(user_id)
         new_update_token: str = self.__tokenizer.create_update_token(user_id)
         try:
             self.__db_updater.update_session_tokens(update_token, new_access_token, new_update_token)
             return new_access_token, new_update_token
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=JarvisExceptionCode.INCORRECT_TOKEN
-            )
+            raise exception
 
-    def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str]:
+    def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db__accessor.get_account(login)
         if account is not None and self.__hasher.verify(password, account.hashed_password):
             user: User = self.__db__accessor.get_user_by_account(account)
@@ -59,7 +62,7 @@ class JarvisSessionController:
             else:
                 imprint_token: str = self.__tokenizer.create_imprint_token(user.user_id)
                 self.__db_updater.save_all_tokens(access_token, update_token, imprint_token, user)
-            return access_token, update_token
+            return access_token, update_token, imprint_token
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=JarvisExceptionCode.INCORRECT_LOGIN_OR_PASSWORD,
@@ -76,10 +79,6 @@ class JarvisSessionController:
             status_code=status.HTTP_208_ALREADY_REPORTED,
             detail=JarvisExceptionCode.REGISTER_EXISTING_LOGIN
         )
-
-    @staticmethod
-    def extract_tokens_from_cookie() -> tuple[bytes, bytes, bytes]:
-        pass
 
     @staticmethod
     def __check__password_correctness(password: str) -> int:

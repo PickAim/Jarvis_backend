@@ -44,16 +44,22 @@ class TokenController:
             to_encode[self.__EXPIRES_TIME_KEY] = str(expires_in)
         return self.create_basic_token(to_encode, add_random_part, length_of_rand_part)
 
-    def decode_data(self, token: str) -> any:
-        return self.token_decoder.decode_payload(token)
-
-    def is_token_expired(self, token: str) -> bool:
-        extracted_data = self.decode_data(token)
-        if self.__EXPIRES_TIME_KEY in extracted_data:
-            return datetime.now() > datetime.strptime(extracted_data[self.__EXPIRES_TIME_KEY], self.__TIME_FORMAT)
-        return False
-
     def create_basic_token(self, to_encode=None, add_random_part: bool = False, length_of_rand_part: int = 0) -> str:
         if add_random_part:
             to_encode['r'] = ''.join(random.choice(letters) for _ in range(length_of_rand_part))
         return self.token_encoder.encode_token(to_encode)
+
+    def decode_data(self, token: str) -> any:
+        return self.token_decoder.decode_payload(token)
+
+    def is_token_expired(self, token: str) -> bool:
+        decoded_data = self.decode_data(token)
+        if self.__EXPIRES_TIME_KEY in decoded_data:
+            return datetime.now() > datetime.strptime(decoded_data[self.__EXPIRES_TIME_KEY], self.__TIME_FORMAT)
+        return False
+
+    def get_user_id(self, token: str) -> int:
+        decoded_data = self.decode_data(token)
+        if self.__USER_ID_KEY in decoded_data:
+            return int(decoded_data[self.__USER_ID_KEY])
+        return -1
