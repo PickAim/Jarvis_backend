@@ -1,5 +1,7 @@
-import jwt
 from typing import Any
+
+import jwt
+
 from auth.tokens.token_processers import (
     TokenDecoder,
     TokenEncoder
@@ -21,4 +23,4 @@ class PyJwtTokenDecoder(TokenDecoder):
         self.__algorithms = algorithms
 
     def decode_payload(self, token: str) -> dict[str, Any]:
-        return jwt.decode(token, self.__key, self.__algorithms)
+        return jwt.decode(token, key=self.__key, algorithms=self.__algorithms)

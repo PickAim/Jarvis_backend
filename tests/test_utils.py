@@ -1,13 +1,13 @@
 import unittest
 
-from utils.hashing import Hasher
+from auth.hashing import PasswordHasher
 
 
 class UtilsTest(unittest.TestCase):
     def test_hasher_verify(self):
         password: str = "password"
-        hasher = Hasher()
-        hashed = hasher.hash(password)
+        hasher: PasswordHasher = PasswordHasher()
+        hashed: str = hasher.hash(password)
         print(hashed)
         self.assertTrue(hasher.verify(password, hashed))
 
