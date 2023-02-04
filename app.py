@@ -63,7 +63,7 @@ def calc_margin(unit_economy_item: UnitEconomyRequestObject):
     return result_dict
 
 
-@app.get('/jorm_data/{niche}')
+@app.post('/jorm_data/{niche}')
 def upload_data(niche_freq_item: NicheFrequencyObject):
     request_item_handler: BaseRequestItemsHandler = BaseRequestItemsHandler(niche_freq_item, "")
     access_token, _, _ = request_item_handler.get_tokens()
@@ -75,7 +75,7 @@ def upload_data(niche_freq_item: NicheFrequencyObject):
     return {'x': x, 'y': y}
 
 
-@app.get('/save_request/{request}')
+@app.post('/save_request/{request}')
 def save_request_to_history(request_save_item: RequestSaveObject):
     request_item_handler: BaseRequestItemsHandler = BaseRequestItemsHandler(request_save_item, "")
     access_token, _, _ = request_item_handler.get_tokens()
