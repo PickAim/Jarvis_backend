@@ -7,7 +7,7 @@ from auth.tokens.token_control import TokenController
 
 
 @dataclass
-class Hasher:
+class PasswordHasher:
     def __init__(self):
         self.__HASH_KEY: str = 'hash'
         self.__SALT_KEY: str = 'salt'
