@@ -8,17 +8,17 @@ from jarvis_calc.factories import JORMFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
 
+from auth.hashing import PasswordHasher
 from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionCode
 from sessions.request_items import BaseRequestObject
-from utils.hashing import Hasher
 
 
 @dataclass
 class JarvisSessionController:
     __db_controller: DBController = DBController()
     __tokenizer = TokenController()
-    __hasher: Hasher = Hasher()
+    __password_hasher: PasswordHasher = PasswordHasher()
     __jorm_factory: JORMFactory = JORMFactory()
 
     def get_user(self, access_token: str) -> User:
@@ -53,7 +53,7 @@ class JarvisSessionController:
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login)
-        if account is not None and self.__hasher.verify(password, account.hashed_password):
+        if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
             access_token: str = self.__tokenizer.create_access_token(user.user_id)
             update_token: str = self.__tokenizer.create_update_token(user.user_id)
@@ -71,7 +71,7 @@ class JarvisSessionController:
     def register_user(self, login: str, password: str, phone_number: str):
         account: Account = self.__db_controller.get_account(login)
         if account is None:
-            hashed_password: str = self.__hasher.hash(password)
+            hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_factory.create_account(login, hashed_password, phone_number)
             client: Client = self.__jorm_factory.create_new_client()
             self.__db_controller.save_user_and_account(client, account)
