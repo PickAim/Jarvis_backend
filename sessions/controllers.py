@@ -11,7 +11,7 @@ from jorm.market.person import User, Account, Client
 from auth.hashing import PasswordHasher
 from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionCode
-from sessions.request_items import BaseRequestObject
+from sessions.request_items import RequestObject
 
 
 @dataclass
@@ -126,7 +126,7 @@ class CookieHandler:
 
 
 class BaseRequestItemsHandler:
-    def __init__(self, base_request_item: BaseRequestObject, cookie: any):
+    def __init__(self, base_request_item: RequestObject, cookie: any):
         self.__cookie_controller: CookieHandler = CookieHandler(cookie)
         if self.__cookie_controller.is_use_cookie:
             self.__access_token: str = self.__cookie_controller.access_token

@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import PlainTextResponse
 
 from sessions.controllers import JarvisSessionController, BaseRequestItemsHandler
-from sessions.request_items import UnitEconomyRequestObject, BaseRequestObject, AuthenticationObject, \
+from sessions.request_items import UnitEconomyRequestObject, RequestObject, AuthenticationObject, \
     NicheFrequencyObject, RequestSaveObject
 
 app = FastAPI()
@@ -21,7 +21,7 @@ async def http_exception_handler(_, exc):
 
 
 @app.post('/update_tokens/')
-def update_tokens(request_item: BaseRequestObject) -> tuple[str, str, str] | None:
+def update_tokens(request_item: RequestObject) -> tuple[str, str, str] | None:
     request_item_handler: BaseRequestItemsHandler = BaseRequestItemsHandler(request_item, "")
     _, update_token, imprint_token = request_item_handler.get_tokens()
 
