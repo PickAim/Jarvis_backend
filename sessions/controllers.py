@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from jarvis_calc.database_interactors.db_access import DBUpdater, DBAccessProvider
 from jarvis_calc.factories import JORMFactory
 from jarvis_db.access.accessers import ConcreteDBAccessProvider
+from jdu.db_access.update.updaters import CalcDBUpdater
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
 
@@ -17,7 +18,7 @@ from utils.hashing import Hasher
 
 @dataclass
 class JarvisSessionController:
-    __db_updater: DBUpdater = DBUpdater()
+    __db_updater: DBUpdater = CalcDBUpdater()
     __tokenizer = TokenController()
     __hasher: Hasher = Hasher()
     __db__accessor: DBAccessProvider = ConcreteDBAccessProvider()
