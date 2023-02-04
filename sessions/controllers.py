@@ -3,10 +3,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from fastapi import HTTPException, status
-from jarvis_calc.database_interactors.db_access import DBUpdater, DBAccessProvider
+from jarvis_calc.database_interactors.db_controller import DBController
 from jarvis_calc.factories import JORMFactory
-from jarvis_db.access.accessers import ConcreteDBAccessProvider
-from jdu.db_access.update.updaters import CalcDBUpdater
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
 
@@ -18,10 +16,9 @@ from utils.hashing import Hasher
 
 @dataclass
 class JarvisSessionController:
-    __db_updater: DBUpdater = CalcDBUpdater()
+    __db_controller: DBController = DBController()
     __tokenizer = TokenController()
     __hasher: Hasher = Hasher()
-    __db__accessor: DBAccessProvider = ConcreteDBAccessProvider()
     __jorm_factory: JORMFactory = JORMFactory()
 
     def get_user(self, access_token: str) -> User:
@@ -32,7 +29,7 @@ class JarvisSessionController:
 
         if self.__tokenizer.is_token_expired(access_token):
             raise exception
-        user = self.__db__accessor.get_user_by_id(
+        user = self.__db_controller.get_user_by_id(
             self.__tokenizer.get_user_id(access_token)
         )
         if user:
@@ -49,22 +46,22 @@ class JarvisSessionController:
         new_access_token: str = self.__tokenizer.create_access_token(user_id)
         new_update_token: str = self.__tokenizer.create_update_token(user_id)
         try:
-            self.__db_updater.update_session_tokens(update_token, new_access_token, new_update_token)
+            self.__db_controller.update_session_tokens(update_token, new_access_token, new_update_token)
             return new_access_token, new_update_token
         except Exception:
             raise exception
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
-        account: Account = self.__db__accessor.get_account(login)
+        account: Account = self.__db_controller.get_account(login)
         if account is not None and self.__hasher.verify(password, account.hashed_password):
-            user: User = self.__db__accessor.get_user_by_account(account)
+            user: User = self.__db_controller.get_user_by_account(account)
             access_token: str = self.__tokenizer.create_access_token(user.user_id)
             update_token: str = self.__tokenizer.create_update_token(user.user_id)
             if imprint_token is not None:
-                self.__db_updater.update_session_tokens_by_imprint(access_token, update_token, imprint_token, user)
+                self.__db_controller.update_session_tokens_by_imprint(access_token, update_token, imprint_token, user)
             else:
                 imprint_token: str = self.__tokenizer.create_imprint_token(user.user_id)
-                self.__db_updater.save_all_tokens(access_token, update_token, imprint_token, user)
+                self.__db_controller.save_all_tokens(access_token, update_token, imprint_token, user)
             return access_token, update_token, imprint_token
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -72,12 +69,12 @@ class JarvisSessionController:
         )
 
     def register_user(self, login: str, password: str, phone_number: str):
-        account: Account = self.__db__accessor.get_account(login)
+        account: Account = self.__db_controller.get_account(login)
         if account is None:
             hashed_password: str = self.__hasher.hash(password)
             account: Account = self.__jorm_factory.create_account(login, hashed_password, phone_number)
             client: Client = self.__jorm_factory.create_new_client()
-            self.__db_updater.save_user_and_account(client, account)
+            self.__db_controller.save_user_and_account(client, account)
         raise HTTPException(
             status_code=status.HTTP_208_ALREADY_REPORTED,
             detail=JarvisExceptionCode.REGISTER_EXISTING_LOGIN
@@ -101,16 +98,16 @@ class JarvisSessionController:
 
     @lru_cache(maxsize=10)
     def get_niche(self, niche_name: str) -> Niche:
-        result_niche: Niche = self.__db__accessor.get_niche(niche_name)
+        result_niche: Niche = self.__db_controller.get_niche(niche_name)
         if result_niche is None:
-            result_niche = self.__db_updater.load_new_niche(niche_name)
+            result_niche = self.__db_controller.load_new_niche(niche_name)
         return result_niche
 
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
         return self.__jorm_factory.warehouse(warehouse_name)
 
     def save_request(self, request_json: str, user: User):
-        self.__db_updater.save_request(self.__jorm_factory.request(request_json), user)
+        self.__db_controller.save_request(self.__jorm_factory.request(request_json), user)
 
 
 class CookieHandler:
