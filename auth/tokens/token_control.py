@@ -1,3 +1,4 @@
+import json
 import random
 import string
 from datetime import timedelta, datetime
@@ -8,6 +9,37 @@ letters = string.printable
 
 
 # "3ARtLTXRn9urnRK9d6rzDbj5Jy5vp/iG8dlaseZliD4="
+
+class TokenModel:
+    def __init__(self, access_token: str = None, update_token: str = None, imprint_token: str = None):
+        self.__ACCESS_TOKEN_KEY = "access_token"
+        self.__UPDATE_TOKEN_KEY = "update_token"
+        self.__IMPRINT_TOKEN_KEY = "imprint_token"
+        self.__tokens: dict[str, str] = {
+            self.__ACCESS_TOKEN_KEY: access_token,
+            self.__UPDATE_TOKEN_KEY: update_token,
+            self.__IMPRINT_TOKEN_KEY: imprint_token
+        }
+
+    def get_access_token(self) -> str:
+        return self.__tokens[self.__ACCESS_TOKEN_KEY]
+
+    def get_update_token(self) -> str:
+        return self.__tokens[self.__UPDATE_TOKEN_KEY]
+
+    def get_imprint_token(self) -> str:
+        return self.__tokens[self.__IMPRINT_TOKEN_KEY]
+
+    def dumps(self):
+        return json.dumps(self.__tokens)
+
+    def loads(self, input_string: str):
+        self.__tokens = json.loads(input_string)
+
+    def is_empty(self) -> bool:
+        return self.get_access_token() is None \
+               or self.get_update_token() is None \
+               or self.get_imprint_token() is None
 
 
 class TokenController:

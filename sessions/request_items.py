@@ -1,15 +1,10 @@
 from jarvis_calc.factories import FactoryKeywords
 from pydantic import BaseModel
 
-
-class RequestObject(BaseModel):
-    my_request_type: int = 0
-    access_token: str = ""
-    update_token: str = ""
-    imprint_token: str = ""
+DEFAULT_TOKEN_VALUE = "default_token"
 
 
-class UnitEconomyRequestObject(RequestObject):
+class UnitEconomyRequestObject(BaseModel):
     buy: int
     pack: int
     niche: str
@@ -19,15 +14,7 @@ class UnitEconomyRequestObject(RequestObject):
     warehouse_name: str = FactoryKeywords.DEFAULT_WAREHOUSE
 
 
-class NicheFrequencyObject(RequestObject):
-    niche: str
-
-
-class RequestSaveObject(RequestObject):
-    request_json: str
-
-
-class AuthenticationObject(RequestObject):
+class AuthenticationObject(BaseModel):
     login: str
     password: str
 

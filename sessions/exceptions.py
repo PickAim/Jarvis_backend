@@ -1,7 +1,10 @@
 from enum import Enum
 
+from fastapi import HTTPException
+from starlette import status
 
-class JarvisExceptionCode(Enum):
+
+class JarvisExceptionsCode(Enum):
     # authorization exceptions
     INCORRECT_LOGIN_OR_PASSWORD: int = 4012
 
@@ -17,3 +20,26 @@ class JarvisExceptionCode(Enum):
     REGISTER_EXISTING_LOGIN: int = 4019
 
     INCORRECT_TOKEN: int = 5001
+    EXPIRED_TOKEN: int = 5002
+
+
+class JarvisExceptions(Enum):
+    INCORRECT_TOKEN = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=JarvisExceptionsCode.INCORRECT_TOKEN,
+    )
+
+    EXPIRED_TOKEN = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=JarvisExceptionsCode.EXPIRED_TOKEN
+    )
+
+    INCORRECT_LOGIN_OR_PASSWORD = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD,
+    )
+
+    EXISTING_LOGIN = HTTPException(
+        status_code=status.HTTP_208_ALREADY_REPORTED,
+        detail=JarvisExceptionsCode.REGISTER_EXISTING_LOGIN
+    )
