@@ -19,11 +19,19 @@ class JarvisExceptionsCode(Enum):
     # registration exceptions
     REGISTER_EXISTING_LOGIN: int = 4019
 
+    # token exceptions
     INCORRECT_TOKEN: int = 5001
     EXPIRED_TOKEN: int = 5002
 
 
 class JarvisExceptions(Enum):
+    @staticmethod
+    def create_exception_with_code(exception_code: int) -> HTTPException:
+        return HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=exception_code
+        )
+
     INCORRECT_TOKEN = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=JarvisExceptionsCode.INCORRECT_TOKEN,

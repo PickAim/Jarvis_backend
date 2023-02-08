@@ -40,20 +40,14 @@ class JarvisSessionController:
         return self.__db_controller.check_token_rnd_part(rnd_part, user_id, imprint_token, token_type)
 
     def update_token(self, update_token: str) -> tuple[str, str]:
-        return "newa", "newu"
-        # exception = HTTPException(
-        #     status_code=status.HTTP_401_UNAUTHORIZED,
-        #     detail=JarvisExceptionCode.INCORRECT_TOKEN
-        # )
-        #
-        # user_id: int = self.__tokenizer.get_user_id(update_token)
-        # new_access_token: str = self.__tokenizer.create_access_token(user_id)
-        # new_update_token: str = self.__tokenizer.create_update_token(user_id)
-        # try:
-        #     self.__db_controller.update_session_tokens(update_token, new_access_token, new_update_token)
-        #     return new_access_token, new_update_token
-        # except Exception:
-        #     raise exception
+        user_id: int = self.__tokenizer.get_user_id(update_token)
+        new_access_token: str = self.__tokenizer.create_access_token(user_id)
+        new_update_token: str = self.__tokenizer.create_update_token(user_id)
+        try:
+            self.__db_controller.update_session_tokens(update_token, new_access_token, new_update_token)
+            return new_access_token, new_update_token
+        except Exception:
+            raise JarvisExceptions.INCORRECT_TOKEN
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login)
@@ -76,6 +70,9 @@ class JarvisSessionController:
     def register_user(self, login: str, password: str, phone_number: str):
         account: Account = self.__db_controller.get_account(login)
         if account is None:
+            password_check_status: int = self.__check__password_correctness(password)
+            if password_check_status != 0:
+                raise JarvisExceptions.create_exception_with_code(password_check_status)
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_factory.create_account(login, hashed_password, phone_number)
             client: Client = self.__jorm_factory.create_new_client()
