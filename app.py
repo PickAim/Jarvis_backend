@@ -17,29 +17,9 @@ app = FastAPI()
 session_controller: JarvisSessionController = JarvisSessionController()
 
 
-def check_token_correctness(any_session_token: str) -> str:
-    session_controller.get_user(any_session_token)
-    return any_session_token
-
-
-def access_token_correctness_depend(access_token: str = None,
-                                    cookie_access_token: str = CookieHandler.load_access_token()) -> str:
-    if cookie_access_token is not None:
-        return check_token_correctness(cookie_access_token)
-    elif access_token is not None:
-        if TokenController().is_token_expired(access_token):
-            raise JarvisExceptions.EXPIRED_TOKEN
-        return check_token_correctness(access_token)
-    else:
-        raise JarvisExceptions.INCORRECT_TOKEN
-
-
-def update_token_correctness_depend(update_token: str = None,
-                                    cookie_update_token: str = CookieHandler.load_update_token()) -> str:
-    if cookie_update_token is not None:
-        return check_token_correctness(cookie_update_token)
-    elif update_token is not None:
-        return check_token_correctness(update_token)
+def check_token_correctness(any_session_token: str, imprint_token: str) -> str:
+    if session_controller.check_token_correctness(any_session_token, imprint_token):
+        return any_session_token
     else:
         raise JarvisExceptions.INCORRECT_TOKEN
 
@@ -52,6 +32,33 @@ def imprint_token_correctness_depend(imprint_token: str = None,
         return imprint_token
     else:
         return None
+
+
+def access_token_correctness_depend(access_token: str = None,
+                                    cookie_access_token: str = CookieHandler.load_access_token(),
+                                    imprint_token: str = Depends(imprint_token_correctness_depend)) -> str:
+    token_to_check: str
+    if cookie_access_token is not None:
+        token_to_check = cookie_access_token
+    elif access_token is not None:
+        token_to_check = access_token
+    else:
+        raise JarvisExceptions.INCORRECT_TOKEN
+
+    if TokenController().is_token_expired(token_to_check):
+        raise JarvisExceptions.EXPIRED_TOKEN
+    return check_token_correctness(token_to_check, imprint_token)
+
+
+def update_token_correctness_depend(update_token: str = None,
+                                    cookie_update_token: str = CookieHandler.load_update_token(),
+                                    imprint_token: str = Depends(imprint_token_correctness_depend)) -> str:
+    if cookie_update_token is not None:
+        return check_token_correctness(cookie_update_token, imprint_token)
+    elif update_token is not None:
+        return check_token_correctness(update_token, imprint_token)
+    else:
+        raise JarvisExceptions.INCORRECT_TOKEN
 
 
 @app.post("/delete_all_cookie/")

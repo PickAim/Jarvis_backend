@@ -32,6 +32,12 @@ class JarvisSessionController:
             return user
         raise JarvisExceptions.INCORRECT_TOKEN
 
+    def check_token_correctness(self, token: str, imprint_token: str) -> bool:
+        user_id: int = self.__tokenizer.get_user_id(token)
+        token_type: int = self.__tokenizer.get_token_type(token)
+        rnd_part: str = self.__tokenizer.get_random_part(token)
+        return self.__db_controller.check_token_rnd_part(rnd_part, user_id, imprint_token, token_type)
+
     def update_token(self, update_token: str) -> tuple[str, str]:
         return "newa", "newu"
         # exception = HTTPException(
@@ -61,7 +67,7 @@ class JarvisSessionController:
                 except Exception:
                     raise JarvisExceptions.INCORRECT_TOKEN
             else:
-                imprint_token: str = self.__tokenizer.create_imprint_token(user.user_id)
+                imprint_token: str = self.__tokenizer.create_imprint_token()
                 self.__db_controller.save_all_tokens(access_token, update_token, imprint_token, user)
             return access_token, update_token, imprint_token
         raise JarvisExceptions.INCORRECT_LOGIN_OR_PASSWORD
@@ -140,29 +146,3 @@ class CookieHandler:
         response.delete_cookie("update_token")
         response.delete_cookie("imprint_token")
         return response
-
-#
-# class BaseRequestItemsHandler:
-#     def __init__(self, base_request_item: RequestObject, token_model: TokenModel):
-#         self.is_use_cookie = True
-#         if base_request_item.is_token_init():
-#             self.is_use_cookie = False
-#             access_token: str = base_request_item.access_token
-#             update_token: str = base_request_item.update_token
-#             imprint_token: str = base_request_item.imprint_token
-#         else:
-#             if token_model is None or token_model.is_empty():
-#                 raise JarvisExceptions.INCORRECT_TOKEN
-#             access_token: str = base_request_item.access_token
-#             update_token: str = base_request_item.update_token
-#             imprint_token: str = base_request_item.imprint_token
-#         self.__token_model: TokenModel = TokenModel(access_token, update_token, imprint_token)
-#
-#     def get_token_model(self) -> TokenModel:
-#         return self.__token_model
-#
-#     def set_token_model(self, token_model: TokenModel) -> None:
-#         self.__token_model = token_model
-#
-#     def save_to_cookie(self, response: JSONResponse) -> JSONResponse:
-#         return CookieHandler.save_token_to_cookie(response, self.__token_model)
