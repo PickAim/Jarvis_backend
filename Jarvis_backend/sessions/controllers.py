@@ -10,9 +10,10 @@ from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
 from starlette.responses import Response
 
-from auth.hashing import PasswordHasher
-from auth.tokens.token_control import TokenController
-from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
+from Jarvis_backend.auth.hashing import PasswordHasher
+from Jarvis_backend.auth.tokens.token_control import TokenController
+from Jarvis_backend.contants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
+from Jarvis_backend.sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 
 @dataclass
@@ -115,17 +116,19 @@ class CookieHandler:
 
     @staticmethod
     def save_access_token(response: Response, access_token: str) -> Response:
-        response.set_cookie(key="access_token", value=access_token, path="/any", httponly=True, secure=True)
+        response.set_cookie(key="access_token", value=access_token, path=ACCESS_TOKEN_USAGE_URL_PART, httponly=True,
+                            secure=True)
         return response
 
     @staticmethod
     def save_update_token(response: Response, update_token: str) -> Response:
-        response.set_cookie(key="update_token", value=update_token, path="/items", httponly=True, secure=True)
+        response.set_cookie(key="update_token", value=update_token, path=UPDATE_TOKEN_USAGE_URL_PART, httponly=True,
+                            secure=True)
         return response
 
     @staticmethod
     def save_imprint_token(response: Response, imprint_token: str) -> Response:
-        response.set_cookie(key="imprint_token", value=imprint_token, path="/any", httponly=True, secure=True)
+        response.set_cookie(key="imprint_token", value=imprint_token, path="/", httponly=True, secure=True)
         return response
 
     @staticmethod

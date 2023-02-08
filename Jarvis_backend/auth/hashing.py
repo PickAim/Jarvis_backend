@@ -3,7 +3,7 @@ import hashlib
 import os
 from dataclasses import dataclass
 
-from auth.tokens.token_control import TokenController
+from Jarvis_backend.auth.tokens.token_control import TokenController
 
 
 @dataclass

@@ -1,7 +1,9 @@
 import unittest
-from auth.tokens import PyJwtTokenDecoder
 from datetime import datetime
+
 import jwt
+
+from Jarvis_backend.auth import PyJwtTokenDecoder
 
 
 class JwtTokenDecoderTest(unittest.TestCase):

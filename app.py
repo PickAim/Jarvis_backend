@@ -8,10 +8,11 @@ from jorm.market.person import User, Client
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import PlainTextResponse
 
-from auth.tokens.token_control import TokenController
-from sessions.controllers import JarvisSessionController, CookieHandler
-from sessions.exceptions import JarvisExceptions
-from sessions.request_items import UnitEconomyRequestObject, AuthenticationObject
+from Jarvis_backend.auth import TokenController
+from Jarvis_backend.contants import UPDATE_TOKEN_USAGE_URL_PART, ACCESS_TOKEN_USAGE_URL_PART
+from Jarvis_backend.sessions.controllers import JarvisSessionController, CookieHandler
+from Jarvis_backend.sessions.exceptions import JarvisExceptions
+from Jarvis_backend.sessions.request_items import UnitEconomyRequestObject, AuthenticationObject
 
 app = FastAPI()
 session_controller: JarvisSessionController = JarvisSessionController()
@@ -72,7 +73,7 @@ async def http_exception_handler(_, exc):
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
 
-@app.get('/update/update_all_tokens')
+@app.get(UPDATE_TOKEN_USAGE_URL_PART + '/update_all_tokens')
 def update_tokens(update_token: str = Depends(update_token_correctness_depend)):
     new_access_token, new_update_token = session_controller.update_token(update_token)
     response: JSONResponse = JSONResponse(content={
@@ -100,7 +101,7 @@ def auth(auth_item: AuthenticationObject,
     return response
 
 
-@app.post('/access/jorm_margin/')
+@app.post(ACCESS_TOKEN_USAGE_URL_PART + '/jorm_margin/')
 def calc_margin(unit_economy_item: UnitEconomyRequestObject,
                 access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)
@@ -114,14 +115,14 @@ def calc_margin(unit_economy_item: UnitEconomyRequestObject,
     return result_dict
 
 
-@app.get('/access/jorm_data/')
+@app.get(ACCESS_TOKEN_USAGE_URL_PART + '/jorm_data/')
 def upload_data(niche_name: str, _: str = Depends(access_token_correctness_depend)):
     niche: Niche = session_controller.get_niche(niche_name)
     x, y = get_frequency_stats_with_jorm(niche)
     return {'x': x, 'y': y}
 
 
-@app.get('/access/save_request/')
+@app.get(ACCESS_TOKEN_USAGE_URL_PART + '/save_request/')
 def save_request_to_history(request_json: str,
                             access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)

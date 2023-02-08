@@ -5,7 +5,7 @@ from datetime import timedelta, datetime
 
 from jorm.server.token.types import TokenType
 
-from auth.tokens import PyJwtTokenEncoder, PyJwtTokenDecoder
+from Jarvis_backend.auth.tokens import PyJwtTokenEncoder, PyJwtTokenDecoder
 
 letters = string.printable
 

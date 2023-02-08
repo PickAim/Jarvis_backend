@@ -1,6 +1,6 @@
 import unittest
 
-from auth.hashing import PasswordHasher
+from Jarvis_backend.auth import PasswordHasher
 
 
 class UtilsTest(unittest.TestCase):
