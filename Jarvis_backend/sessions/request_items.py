@@ -19,5 +19,7 @@ class AuthenticationObject(BaseModel):
     password: str
 
 
-class RegistrationObject(AuthenticationObject):
-    phone_number: str
+class RegistrationObject(BaseModel):
+    email: str
+    phone: str
+    password: str

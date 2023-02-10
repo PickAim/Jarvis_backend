@@ -9,7 +9,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import PlainTextResponse
 
 from Jarvis_backend.auth import TokenController
-from Jarvis_backend.contants import UPDATE_TOKEN_USAGE_URL_PART, ACCESS_TOKEN_USAGE_URL_PART
+from Jarvis_backend.constants import (
+    UPDATE_TOKEN_USAGE_URL_PART,
+    ACCESS_TOKEN_USAGE_URL_PART,
+    ACCESS_TOKEN_NAME,
+    UPDATE_TOKEN_NAME,
+    IMPRINT_TOKEN_NAME
+)
 from Jarvis_backend.sessions.controllers import JarvisSessionController, CookieHandler
 from Jarvis_backend.sessions.exceptions import JarvisExceptions
 from Jarvis_backend.sessions.request_items import UnitEconomyRequestObject, AuthenticationObject
@@ -62,6 +68,11 @@ def update_token_correctness_depend(update_token: str = None,
         raise JarvisExceptions.INCORRECT_TOKEN
 
 
+@app.get(ACCESS_TOKEN_USAGE_URL_PART + "/cookie")
+def cookie(access_token=Depends(access_token_correctness_depend)):
+    print(access_token)
+
+
 @app.post("/delete_all_cookie/")
 def delete_cookie():
     response = JSONResponse(content="deleted")
@@ -77,8 +88,8 @@ async def http_exception_handler(_, exc):
 def update_tokens(update_token: str = Depends(update_token_correctness_depend)):
     new_access_token, new_update_token = session_controller.update_token(update_token)
     response: JSONResponse = JSONResponse(content={
-        "access_token": new_access_token,
-        "update_token": new_update_token,
+        ACCESS_TOKEN_NAME: new_access_token,
+        UPDATE_TOKEN_NAME: new_update_token,
     })
     CookieHandler.save_access_token(response, new_access_token)
     CookieHandler.save_update_token(response, new_update_token)
@@ -91,14 +102,19 @@ def auth(auth_item: AuthenticationObject,
     new_access_token, new_update_token, new_imprint_token = \
         session_controller.authenticate_user(auth_item.login, auth_item.password, imprint_token)
     response: JSONResponse = JSONResponse(content={
-        "access_token": new_access_token,
-        "update_token": new_update_token,
-        "imprint_token": new_imprint_token
+        ACCESS_TOKEN_NAME: str(new_access_token),
+        UPDATE_TOKEN_NAME: str(new_update_token),
+        IMPRINT_TOKEN_NAME: str(new_imprint_token)
     })
     CookieHandler.save_access_token(response, new_access_token)
     CookieHandler.save_update_token(response, new_update_token)
     CookieHandler.save_imprint_token(response, new_imprint_token)
     return response
+
+
+@app.get('/reg/')
+def reg(login: str, password: str, phone: str = "+78945612356"):
+    session_controller.register_user(login, password, phone)
 
 
 @app.post(ACCESS_TOKEN_USAGE_URL_PART + '/jorm_margin/')

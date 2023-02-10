@@ -12,12 +12,13 @@ from starlette.responses import Response
 
 from Jarvis_backend.auth.hashing import PasswordHasher
 from Jarvis_backend.auth.tokens.token_control import TokenController
-from Jarvis_backend.contants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
+from Jarvis_backend.constants import ACCESS_TOKEN_USAGE_URL_PART
 from Jarvis_backend.sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 
 @dataclass
 class JarvisSessionController:
+    temp_user_count: int = 0
     __db_controller: DBController = DBController()
     __tokenizer = TokenController()
     __password_hasher: PasswordHasher = PasswordHasher()
@@ -42,9 +43,12 @@ class JarvisSessionController:
     def update_token(self, update_token: str) -> tuple[str, str]:
         user_id: int = self.__tokenizer.get_user_id(update_token)
         new_access_token: str = self.__tokenizer.create_access_token(user_id)
+        new_access_token_rnd_part: str = self.__tokenizer.get_random_part(new_access_token)
         new_update_token: str = self.__tokenizer.create_update_token(user_id)
+        new_update_token_rnd_part: str = self.__tokenizer.get_random_part(new_update_token)
         try:
-            self.__db_controller.update_session_tokens(update_token, new_access_token, new_update_token)
+            self.__db_controller.update_session_tokens(update_token,
+                                                       new_access_token_rnd_part, new_update_token_rnd_part)
             return new_access_token, new_update_token
         except Exception:
             raise JarvisExceptions.INCORRECT_TOKEN
@@ -76,7 +80,10 @@ class JarvisSessionController:
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_factory.create_account(login, hashed_password, phone_number)
             client: Client = self.__jorm_factory.create_new_client()
+            client.user_id = self.temp_user_count
+            self.temp_user_count += 1
             self.__db_controller.save_user_and_account(client, account)
+            return
         raise JarvisExceptions.EXISTING_LOGIN
 
     @staticmethod
@@ -89,7 +96,7 @@ class JarvisSessionController:
             return JarvisExceptionsCode.NOT_HAS_UPPER_LETTERS
         if not re.search(r"\d", password):
             return JarvisExceptionsCode.NOT_HAS_DIGIT
-        if not re.search(r"[_@$]", password):
+        if not re.search(r"[!@#$%^&*()_+~]", password):
             return JarvisExceptionsCode.NOT_HAS_SPECIAL_SIGNS
         if re.search(r" ", password):
             return JarvisExceptionsCode.HAS_WHITE_SPACES
@@ -113,35 +120,39 @@ class CookieHandler:
 
     @staticmethod
     def save_access_token(response: Response, access_token: str) -> Response:
-        response.set_cookie(key="access_token", value=access_token, path=ACCESS_TOKEN_USAGE_URL_PART, httponly=True,
-                            secure=True)
+        response.set_cookie(key="cookie_access_token", path=ACCESS_TOKEN_USAGE_URL_PART,
+                            value=access_token, httponly=True, secure=True)
         return response
 
     @staticmethod
     def save_update_token(response: Response, update_token: str) -> Response:
-        response.set_cookie(key="update_token", value=update_token, path=UPDATE_TOKEN_USAGE_URL_PART, httponly=True,
+        # path = UPDATE_TOKEN_USAGE_URL_PART,
+        response.set_cookie(key="cookie_update_token", value=update_token, httponly=True,
                             secure=True)
         return response
 
     @staticmethod
     def save_imprint_token(response: Response, imprint_token: str) -> Response:
-        response.set_cookie(key="imprint_token", value=imprint_token, path="/", httponly=True, secure=True)
+        response.set_cookie(key="cookie_imprint_token", value=imprint_token, httponly=True, secure=True)
         return response
 
     @staticmethod
-    def load_access_token(access_token: str = Cookie(default=None)) -> str | None:
-        return access_token
+    def load_access_token(cookie_access_token: str = Cookie(default=None)) -> str | None:
+        return cookie_access_token
 
     @staticmethod
-    def load_update_token(update_token: str = Cookie(default=None)) -> str | None:
-        return update_token
+    def load_update_token(cookie_update_token: str = Cookie(default=None)) -> str | None:
+        return cookie_update_token
 
     @staticmethod
-    def load_imprint_token(imprint_token: str = Cookie(default=None)) -> str | None:
-        return imprint_token
+    def load_imprint_token(cookie_imprint_token: str = Cookie(default=None)) -> str | None:
+        return cookie_imprint_token
 
     @staticmethod
     def delete_all_cookie(response: JSONResponse) -> JSONResponse:
+        response.delete_cookie("cookie_access_token")
+        response.delete_cookie("cookie_update_token")
+        response.delete_cookie("cookie_imprint_token")
         response.delete_cookie("access_token")
         response.delete_cookie("update_token")
         response.delete_cookie("imprint_token")

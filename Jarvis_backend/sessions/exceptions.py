@@ -1,11 +1,10 @@
 import json
-from enum import Enum
 
 from starlette import status
 from starlette.exceptions import HTTPException
 
 
-class JarvisExceptionsCode(Enum):
+class JarvisExceptionsCode:
     # authorization exceptions
     INCORRECT_LOGIN_OR_PASSWORD = 4012
 
@@ -25,7 +24,7 @@ class JarvisExceptionsCode(Enum):
     EXPIRED_TOKEN = 5002
 
 
-class JarvisExceptions(Enum):
+class JarvisExceptions:
     @staticmethod
     def create_exception_with_code(exception_code: int) -> HTTPException:
         return HTTPException(
@@ -35,30 +34,11 @@ class JarvisExceptions(Enum):
             })
         )
 
-    INCORRECT_TOKEN = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=json.dumps({
-            'jarvis_exception': JarvisExceptionsCode.INCORRECT_TOKEN.value
-        })
-    )
+    INCORRECT_TOKEN: HTTPException = create_exception_with_code(JarvisExceptionsCode.INCORRECT_TOKEN)
 
-    EXPIRED_TOKEN = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=json.dumps({
-            'jarvis_exception': JarvisExceptionsCode.EXPIRED_TOKEN.value
-        })
-    )
+    EXPIRED_TOKEN: HTTPException = create_exception_with_code(JarvisExceptionsCode.EXPIRED_TOKEN)
 
-    INCORRECT_LOGIN_OR_PASSWORD = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=json.dumps({
-            'jarvis_exception': JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD.value
-        })
-    )
+    INCORRECT_LOGIN_OR_PASSWORD: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD)
 
-    EXISTING_LOGIN = HTTPException(
-        status_code=status.HTTP_208_ALREADY_REPORTED,
-        detail=json.dumps({
-            'jarvis_exception': JarvisExceptionsCode.REGISTER_EXISTING_LOGIN.value
-        })
-    )
+    EXISTING_LOGIN: HTTPException = create_exception_with_code(JarvisExceptionsCode.REGISTER_EXISTING_LOGIN)
