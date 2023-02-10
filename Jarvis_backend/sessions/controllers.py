@@ -42,12 +42,13 @@ class JarvisSessionController:
 
     def update_token(self, update_token: str) -> tuple[str, str]:
         user_id: int = self.__tokenizer.get_user_id(update_token)
+        old_update_token_rnd_token: str = self.__tokenizer.get_random_part(update_token)
         new_access_token: str = self.__tokenizer.create_access_token(user_id)
         new_access_token_rnd_part: str = self.__tokenizer.get_random_part(new_access_token)
         new_update_token: str = self.__tokenizer.create_update_token(user_id)
         new_update_token_rnd_part: str = self.__tokenizer.get_random_part(new_update_token)
         try:
-            self.__db_controller.update_session_tokens(update_token,
+            self.__db_controller.update_session_tokens(old_update_token_rnd_token,
                                                        new_access_token_rnd_part, new_update_token_rnd_part)
             return new_access_token, new_update_token
         except Exception:
@@ -58,16 +59,18 @@ class JarvisSessionController:
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
             access_token: str = self.__tokenizer.create_access_token(user.user_id)
+            access_token_rnd_part: str = self.__tokenizer.get_random_part(access_token)
             update_token: str = self.__tokenizer.create_update_token(user.user_id)
+            update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
             if imprint_token is not None:
                 try:
-                    self.__db_controller.update_session_tokens_by_imprint(access_token, update_token, imprint_token,
-                                                                          user)
+                    self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
+                                                                          imprint_token, user)
                 except Exception:
                     raise JarvisExceptions.INCORRECT_TOKEN
             else:
                 imprint_token: str = self.__tokenizer.create_imprint_token()
-                self.__db_controller.save_all_tokens(access_token, update_token, imprint_token, user)
+                self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
             return access_token, update_token, imprint_token
         raise JarvisExceptions.INCORRECT_LOGIN_OR_PASSWORD
 
@@ -152,7 +155,6 @@ class CookieHandler:
     def delete_all_cookie(response: JSONResponse) -> JSONResponse:
         response.delete_cookie("cookie_access_token")
         response.delete_cookie("cookie_update_token")
-        response.delete_cookie("cookie_imprint_token")
         response.delete_cookie("access_token")
         response.delete_cookie("update_token")
         response.delete_cookie("imprint_token")

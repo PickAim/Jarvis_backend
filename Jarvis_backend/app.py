@@ -102,9 +102,9 @@ def auth(auth_item: AuthenticationObject,
     new_access_token, new_update_token, new_imprint_token = \
         session_controller.authenticate_user(auth_item.login, auth_item.password, imprint_token)
     response: JSONResponse = JSONResponse(content={
-        ACCESS_TOKEN_NAME: str(new_access_token),
-        UPDATE_TOKEN_NAME: str(new_update_token),
-        IMPRINT_TOKEN_NAME: str(new_imprint_token)
+        ACCESS_TOKEN_NAME: new_access_token,
+        UPDATE_TOKEN_NAME: new_update_token,
+        IMPRINT_TOKEN_NAME: new_imprint_token
     })
     CookieHandler.save_access_token(response, new_access_token)
     CookieHandler.save_update_token(response, new_update_token)
