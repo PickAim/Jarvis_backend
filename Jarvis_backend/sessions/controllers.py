@@ -54,25 +54,39 @@ class JarvisSessionController:
         except Exception:
             raise JarvisExceptions.INCORRECT_TOKEN
 
+    def authenticate_user_by_access_token(self, access_token: str, imprint_token: str) -> tuple[str, str, str]:
+        user_id = self.__tokenizer.get_user_id(access_token)
+        user: User = self.__db_controller.get_user_by_id(user_id)
+        if user is not None:
+            return self.__create_tokens_for_user(user, imprint_token)
+        raise JarvisExceptions.INCORRECT_TOKEN
+
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
-            access_token: str = self.__tokenizer.create_access_token(user.user_id)
-            access_token_rnd_part: str = self.__tokenizer.get_random_part(access_token)
-            update_token: str = self.__tokenizer.create_update_token(user.user_id)
-            update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
-            if imprint_token is not None:
-                try:
-                    self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
-                                                                          imprint_token, user)
-                except Exception:
-                    raise JarvisExceptions.INCORRECT_TOKEN
-            else:
-                imprint_token: str = self.__tokenizer.create_imprint_token()
-                self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
-            return access_token, update_token, imprint_token
+            return self.__create_tokens_for_user(user, imprint_token)
         raise JarvisExceptions.INCORRECT_LOGIN_OR_PASSWORD
+
+    def __create_tokens_for_user(self, user: User, imprint_token: str) -> tuple[str, str, str]:
+        access_token: str = self.__tokenizer.create_access_token(user.user_id)
+        access_token_rnd_part: str = self.__tokenizer.get_random_part(access_token)
+        update_token: str = self.__tokenizer.create_update_token(user.user_id)
+        update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
+        self.__update_rnd_part_with_imprint(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
+        return access_token, update_token, imprint_token
+
+    def __update_rnd_part_with_imprint(self, access_token_rnd_part: str,
+                                       update_token_rnd_part: str, imprint_token: str, user: User):
+        if imprint_token is not None:
+            try:
+                self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
+                                                                      imprint_token, user)
+            except Exception:
+                raise JarvisExceptions.INCORRECT_TOKEN
+        else:
+            imprint_token: str = self.__tokenizer.create_imprint_token()
+            self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
 
     def register_user(self, login: str, password: str, phone_number: str):
         account: Account = self.__db_controller.get_account(login)
