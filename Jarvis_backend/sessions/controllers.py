@@ -12,7 +12,7 @@ from starlette.responses import Response
 
 from Jarvis_backend.auth.hashing import PasswordHasher
 from Jarvis_backend.auth.tokens.token_control import TokenController
-from Jarvis_backend.constants import ACCESS_TOKEN_USAGE_URL_PART
+from Jarvis_backend.constants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
 from Jarvis_backend.sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 
@@ -147,7 +147,6 @@ class CookieHandler:
 
     @staticmethod
     def save_update_token(response: Response, update_token: str) -> Response:
-        # path = UPDATE_TOKEN_USAGE_URL_PART,
         response.set_cookie(key="cookie_update_token", value=update_token, httponly=True,
                             secure=True)
         return response
@@ -171,9 +170,6 @@ class CookieHandler:
 
     @staticmethod
     def delete_all_cookie(response: JSONResponse) -> JSONResponse:
-        response.delete_cookie("cookie_access_token")
-        response.delete_cookie("cookie_update_token")
-        response.delete_cookie("access_token")
-        response.delete_cookie("update_token")
-        response.delete_cookie("imprint_token")
+        response.delete_cookie("cookie_access_token", path=ACCESS_TOKEN_USAGE_URL_PART, httponly=True, secure=True)
+        response.delete_cookie("cookie_update_token", path=UPDATE_TOKEN_USAGE_URL_PART, httponly=True, secure=True)
         return response
