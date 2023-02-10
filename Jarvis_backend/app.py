@@ -6,6 +6,7 @@ from jarvis_calc.utils.margin_calc import unit_economy_calc_with_jorm
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Client
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
 from Jarvis_backend.auth import TokenController
@@ -22,6 +23,19 @@ from Jarvis_backend.sessions.request_items import UnitEconomyRequestObject, Auth
 
 app = FastAPI()
 session_controller: JarvisSessionController = JarvisSessionController()
+
+origins = [
+    "http://localhost",
+    "http://localhost:8088",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def check_token_correctness(any_session_token: str, imprint_token: str) -> str:
