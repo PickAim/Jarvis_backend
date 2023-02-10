@@ -26,19 +26,22 @@ class JarvisExceptionsCode:
 
 class JarvisExceptions:
     @staticmethod
-    def create_exception_with_code(exception_code: int) -> HTTPException:
+    def create_exception_with_code(exception_code: int, description: str = "") -> HTTPException:
         return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=json.dumps({
-                'jarvis_exception': exception_code
+                'jarvis_exception': exception_code,
+                'description': 'Exception: ' + description
             })
         )
 
-    INCORRECT_TOKEN: HTTPException = create_exception_with_code(JarvisExceptionsCode.INCORRECT_TOKEN)
+    INCORRECT_TOKEN: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_TOKEN, "Incorrect session token")
 
-    EXPIRED_TOKEN: HTTPException = create_exception_with_code(JarvisExceptionsCode.EXPIRED_TOKEN)
+    EXPIRED_TOKEN: HTTPException = create_exception_with_code(JarvisExceptionsCode.EXPIRED_TOKEN, "Expired token")
 
     INCORRECT_LOGIN_OR_PASSWORD: HTTPException = \
-        create_exception_with_code(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD)
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, "Incorrect login or password")
 
-    EXISTING_LOGIN: HTTPException = create_exception_with_code(JarvisExceptionsCode.REGISTER_EXISTING_LOGIN)
+    EXISTING_LOGIN: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.REGISTER_EXISTING_LOGIN, "Existing login exception")
