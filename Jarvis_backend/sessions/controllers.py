@@ -61,6 +61,10 @@ class JarvisSessionController:
             return self.__create_tokens_for_user(user, imprint_token)
         raise JarvisExceptions.INCORRECT_TOKEN
 
+    def logout(self, access_token: str, imprint_token: str):
+        user_id = self.__tokenizer.get_user_id(access_token)
+        self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
+
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
@@ -93,7 +97,7 @@ class JarvisSessionController:
         if account is None:
             password_check_status: int = self.__check__password_correctness(password)
             if password_check_status != 0:
-                raise JarvisExceptions.create_exception_with_code(password_check_status)
+                raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_factory.create_account(login, hashed_password, phone_number)
             client: Client = self.__jorm_factory.create_new_client()

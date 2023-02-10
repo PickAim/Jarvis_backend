@@ -21,5 +21,5 @@ class AuthenticationObject(BaseModel):
 
 class RegistrationObject(BaseModel):
     email: str
-    phone: str
     password: str
+    phone: str = "+7894561235"

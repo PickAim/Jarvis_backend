@@ -19,7 +19,7 @@ from Jarvis_backend.constants import (
 )
 from Jarvis_backend.sessions.controllers import JarvisSessionController, CookieHandler
 from Jarvis_backend.sessions.exceptions import JarvisExceptions
-from Jarvis_backend.sessions.request_items import UnitEconomyRequestObject, AuthenticationObject
+from Jarvis_backend.sessions.request_items import UnitEconomyRequestObject, AuthenticationObject, RegistrationObject
 
 app = FastAPI()
 session_controller: JarvisSessionController = JarvisSessionController()
@@ -129,7 +129,7 @@ def auth(auth_item: AuthenticationObject,
     return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
 
-@app.post(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
+@app.get(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
 def auth_by_token(access_token: str = Depends(access_token_correctness_depend),
                   imprint_token: str = Depends(imprint_token_correctness_depend)):
     new_access_token, new_update_token, new_imprint_token = \
@@ -137,9 +137,18 @@ def auth_by_token(access_token: str = Depends(access_token_correctness_depend),
     return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
 
-@app.get('/reg/')
-def reg(login: str, password: str, phone: str = "+78945612356"):
-    session_controller.register_user(login, password, phone)
+@app.get(ACCESS_TOKEN_USAGE_URL_PART + '/log_out/')
+def log_out(access_token: str = Depends(access_token_correctness_depend),
+            imprint_token: str = Depends(imprint_token_correctness_depend)):
+    session_controller.logout(access_token, imprint_token)
+    response = JSONResponse(content="deleted")
+    CookieHandler.delete_all_cookie(response)
+    return response
+
+
+@app.post('/reg/')
+def reg(registration_item: RegistrationObject):
+    session_controller.register_user(registration_item.email, registration_item.password, registration_item.phone)
 
 
 @app.post(ACCESS_TOKEN_USAGE_URL_PART + '/jorm_margin/')
