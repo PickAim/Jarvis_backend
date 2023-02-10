@@ -29,10 +29,7 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
         niche: Niche = session_controller.get_niche(unit_economy_item.niche,
                                                     unit_economy_item.category, unit_economy_item.marketplace_id)
         warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
-        result = calculation_controller.calc_unit_economy(unit_economy_item.buy, unit_economy_item.pack, niche,
-                                                          warehouse, user, unit_economy_item.transit_price,
-                                                          unit_economy_item.transit_count,
-                                                          unit_economy_item.transit_price)
+        result = calculation_controller.calc_unit_economy(unit_economy_item, niche, warehouse, user)
         return result
 
     @staticmethod
