@@ -130,11 +130,9 @@ def auth(auth_item: AuthenticationObject,
 
 
 @app.get(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
-def auth_by_token(access_token: str = Depends(access_token_correctness_depend),
-                  imprint_token: str = Depends(imprint_token_correctness_depend)):
-    new_access_token, new_update_token, new_imprint_token = \
-        session_controller.authenticate_user_by_access_token(access_token, imprint_token)
-    return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
+def auth_by_token(_: str = Depends(access_token_correctness_depend),
+                  __: str = Depends(imprint_token_correctness_depend)):
+    return True
 
 
 @app.get(ACCESS_TOKEN_USAGE_URL_PART + '/log_out/')
