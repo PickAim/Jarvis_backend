@@ -78,6 +78,8 @@ class JarvisSessionController:
         update_token: str = self.__tokenizer.create_update_token(user.user_id)
         update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
         self.__update_rnd_part_with_imprint(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
+        if imprint_token is None or imprint_token == 'None':
+            imprint_token = self.__tokenizer.create_imprint_token()
         return access_token, update_token, imprint_token
 
     def __update_rnd_part_with_imprint(self, access_token_rnd_part: str,
