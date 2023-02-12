@@ -9,24 +9,24 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
-from Jarvis_backend.auth import TokenController
-from Jarvis_backend.constants import (
+from auth import TokenController
+from constants import (
     UPDATE_TOKEN_USAGE_URL_PART,
     ACCESS_TOKEN_USAGE_URL_PART,
     ACCESS_TOKEN_NAME,
     UPDATE_TOKEN_NAME,
     IMPRINT_TOKEN_NAME
 )
-from Jarvis_backend.sessions.controllers import JarvisSessionController, CookieHandler
-from Jarvis_backend.sessions.exceptions import JarvisExceptions
-from Jarvis_backend.sessions.request_items import UnitEconomyRequestObject, AuthenticationObject, RegistrationObject
+from sessions.controllers import JarvisSessionController, CookieHandler
+from sessions.exceptions import JarvisExceptions
+from sessions.request_items import UnitEconomyRequestObject, AuthenticationObject, RegistrationObject
 
 app = FastAPI()
 session_controller: JarvisSessionController = JarvisSessionController()
 
 origins = [
-    "http://localhost",
-    "http://localhost:8088",
+    # "http://localhost", # temp
+    "*"
 ]
 
 app.add_middleware(

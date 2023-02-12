@@ -2,7 +2,7 @@ from typing import Any
 
 import jwt
 
-from Jarvis_backend.auth.tokens.token_processers import (
+from auth.tokens.token_processers import (
     TokenDecoder,
     TokenEncoder
 )
