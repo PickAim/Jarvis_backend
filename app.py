@@ -1,8 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
-from jarvis_calc.utils.calc_utils import get_frequency_stats_with_jorm
-from jarvis_calc.utils.margin_calc import unit_economy_calc_with_jorm
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Client
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -10,6 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
 from auth import TokenController
+from calc.calculation import CalculationController
 from constants import (
     UPDATE_TOKEN_USAGE_URL_PART,
     ACCESS_TOKEN_USAGE_URL_PART,
@@ -22,6 +21,7 @@ from sessions.exceptions import JarvisExceptions
 from sessions.request_items import UnitEconomyRequestObject, AuthenticationObject, RegistrationObject
 
 app = FastAPI()
+calculation_controller: CalculationController = CalculationController()
 session_controller: JarvisSessionController = JarvisSessionController()
 
 origins = [
@@ -157,16 +157,17 @@ def calc_margin(unit_economy_item: UnitEconomyRequestObject,
     warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
     result_dict = {}
     if isinstance(user, Client):
-        result_dict = unit_economy_calc_with_jorm(unit_economy_item.buy, unit_economy_item.pack, niche,
-                                                  warehouse, user, unit_economy_item.transit_price,
-                                                  unit_economy_item.transit_count, unit_economy_item.transit_price)
+        result_dict = calculation_controller.calc_unit_economy(unit_economy_item.buy, unit_economy_item.pack, niche,
+                                                               warehouse, user, unit_economy_item.transit_price,
+                                                               unit_economy_item.transit_count,
+                                                               unit_economy_item.transit_price)
     return result_dict
 
 
 @app.get(ACCESS_TOKEN_USAGE_URL_PART + '/jorm_data/')
 def upload_data(niche_name: str, _: str = Depends(access_token_correctness_depend)):
     niche: Niche = session_controller.get_niche(niche_name)
-    x, y = get_frequency_stats_with_jorm(niche)
+    x, y = calculation_controller.calc_frequencies(niche)
     return {'x': x, 'y': y}
 
 
