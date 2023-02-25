@@ -10,9 +10,9 @@ from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
 from starlette.responses import Response
 
+from app.constants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
 from auth.hashing import PasswordHasher
 from auth.tokens.token_control import TokenController
-from constants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
 from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 
