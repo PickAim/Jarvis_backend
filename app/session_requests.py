@@ -3,11 +3,11 @@ from starlette.responses import JSONResponse
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from app.handlers import session_controller
-from app.tokens.util import (
+from app.tokens.dependencies import (
     imprint_token_correctness_depend,
-    save_and_return_all_tokens,
     access_token_correctness_depend
 )
+from app.tokens.util import save_and_return_all_tokens
 from sessions.controllers import CookieHandler
 from sessions.request_items import RegistrationObject, AuthenticationObject
 

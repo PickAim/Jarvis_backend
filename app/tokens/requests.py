@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.constants import UPDATE_TOKEN_USAGE_URL_PART
 from app.handlers import session_controller
-from app.tokens.util import update_token_correctness_depend, save_and_return_session_tokens
+from app.tokens.dependencies import update_token_correctness_depend
+from app.tokens.util import save_and_return_session_tokens
 
 token_router = APIRouter()
 

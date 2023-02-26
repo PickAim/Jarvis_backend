@@ -4,7 +4,7 @@ from jorm.market.person import User, Client
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from app.handlers import session_controller, calculation_controller
-from app.tokens.util import access_token_correctness_depend
+from app.tokens.dependencies import access_token_correctness_depend
 from sessions.request_items import UnitEconomyRequestObject
 
 calc_router = APIRouter(prefix=ACCESS_TOKEN_USAGE_URL_PART)
