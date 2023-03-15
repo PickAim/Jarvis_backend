@@ -1,4 +1,4 @@
-from jarvis_calc.factories import FactoryKeywords
+from jarvis_factory.factories.jorm import FactoryKeywords
 from pydantic import BaseModel
 
 DEFAULT_TOKEN_VALUE = "default_token"

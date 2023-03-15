@@ -5,7 +5,8 @@ from functools import lru_cache
 from fastapi import Cookie
 from fastapi.responses import JSONResponse
 from jarvis_calc.database_interactors.db_controller import DBController
-from jarvis_calc.factories import JORMFactory
+from jarvis_factory.factories.jcalc import JCalcClassesFactory
+from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
 from starlette.responses import Response
@@ -19,10 +20,10 @@ from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 @dataclass
 class JarvisSessionController:
     temp_user_count: int = 0
-    __db_controller: DBController = DBController()
+    __db_controller: DBController = JCalcClassesFactory.create_db_controller()
     __tokenizer = TokenController()
     __password_hasher: PasswordHasher = PasswordHasher()
-    __jorm_factory: JORMFactory = JORMFactory()
+    __jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
 
     def get_user(self, any_session_token: str) -> User:
         if self.__tokenizer.is_token_expired(any_session_token):
@@ -63,7 +64,7 @@ class JarvisSessionController:
 
     def logout(self, access_token: str, imprint_token: str):
         user_id = self.__tokenizer.get_user_id(access_token)
-        self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
+        self.__db_controller.delete_tokens_for_user(self.__jorm_classes_factory.create_user(user_id), imprint_token)
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login)
@@ -101,8 +102,8 @@ class JarvisSessionController:
             if password_check_status != 0:
                 raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
             hashed_password: str = self.__password_hasher.hash(password)
-            account: Account = self.__jorm_factory.create_account(login, hashed_password, phone_number)
-            client: Client = self.__jorm_factory.create_new_client()
+            account: Account = self.__jorm_classes_factory.create_account(login, hashed_password, phone_number)
+            client: Client = self.__jorm_classes_factory.create_new_client()
             client.user_id = self.temp_user_count
             self.temp_user_count += 1
             self.__db_controller.save_user_and_account(client, account)
@@ -133,10 +134,10 @@ class JarvisSessionController:
         return result_niche
 
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
-        return self.__jorm_factory.warehouse(warehouse_name)
+        return self.__jorm_classes_factory.warehouse(warehouse_name)
 
     def save_request(self, request_json: str, user: User):
-        self.__db_controller.save_request(self.__jorm_factory.request(request_json), user)
+        self.__db_controller.save_request(self.__jorm_classes_factory.request(request_json), user)
 
 
 class CookieHandler:
