@@ -9,10 +9,11 @@ from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
+from passlib.context import CryptContext
 from starlette.responses import Response
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
-from auth.hashing import PasswordHasher
+from auth.hashing.hasher import PasswordHasher
 from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
@@ -22,7 +23,7 @@ class JarvisSessionController:
     temp_user_count: int = 0
     __db_controller: DBController = JCalcClassesFactory.create_db_controller()
     __tokenizer = TokenController()
-    __password_hasher: PasswordHasher = PasswordHasher()
+    __password_hasher: PasswordHasher = PasswordHasher(CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
     __jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
 
     def get_user(self, any_session_token: str) -> User:

@@ -7,5 +7,5 @@ class PasswordEncoder(ABC):
         pass
 
     @abstractmethod
-    def verify(self, password: str, hash: str) -> bool:
+    def verify(self, password: str, hash_code: str) -> bool:
         pass

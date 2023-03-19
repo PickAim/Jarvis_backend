@@ -10,5 +10,5 @@ class PasslibEncoder(PasswordEncoder):
     def encode(self, password: str) -> str:
         return self.__context.hash(password)
 
-    def verify(self, password: str, hash: str) -> bool:
-        return self.__context.verify(password, hash)
+    def verify(self, password: str, hash_code: str) -> bool:
+        return self.__context.verify(password, hash_code)
