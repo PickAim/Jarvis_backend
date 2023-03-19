@@ -15,11 +15,6 @@ class UnitEconomyRequestObject(BaseModel):
 
 
 class AuthenticationObject(BaseModel):
-    login: str
-    password: str
-
-
-class RegistrationObject(BaseModel):
     email: str
     password: str
-    phone: str = "+7894561235"
+    phone: str = ""
