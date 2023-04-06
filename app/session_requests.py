@@ -23,7 +23,7 @@ def reg(auth_item: AuthenticationObject):
 def auth(auth_item: AuthenticationObject,
          imprint_token: str | None = Depends(imprint_token_correctness_depend)):
     new_access_token, new_update_token, new_imprint_token = \
-        session_controller.authenticate_user(auth_item.email, auth_item.password, imprint_token)
+        session_controller.authenticate_user(auth_item.email, auth_item.password, auth_item.phone, imprint_token)
     return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
 

@@ -67,8 +67,10 @@ class JarvisSessionController:
         user_id = self.__tokenizer.get_user_id(access_token)
         self.__db_controller.delete_tokens_for_user(self.__jorm_classes_factory.create_user(user_id), imprint_token)
 
-    def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
-        account: Account = self.__db_controller.get_account(login)
+    def authenticate_user(self, email: str, password: str, phone: str, imprint_token: str) -> tuple[str, str, str]:
+        account: Account = self.__db_controller.get_account_by_email(email)
+        if account is None:
+            account = self.__db_controller.get_account_by_phone(phone)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
             return self.__create_tokens_for_user(user, imprint_token)
@@ -96,14 +98,16 @@ class JarvisSessionController:
             imprint_token: str = self.__tokenizer.create_imprint_token()
             self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
 
-    def register_user(self, login: str, password: str, phone_number: str):
-        account: Account = self.__db_controller.get_account(login)
+    def register_user(self, email: str, password: str, phone_number: str):
+        account: Account = self.__db_controller.get_account_by_email(email)
+        if account is None:
+            account = self.__db_controller.get_account_by_phone(phone_number)
         if account is None:
             password_check_status: int = self.__check__password_correctness(password)
             if password_check_status != 0:
                 raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
             hashed_password: str = self.__password_hasher.hash(password)
-            account: Account = self.__jorm_classes_factory.create_account(login, hashed_password, phone_number)
+            account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
             client: Client = self.__jorm_classes_factory.create_new_client()
             client.user_id = self.temp_user_count
             self.temp_user_count += 1
@@ -113,7 +117,7 @@ class JarvisSessionController:
 
     @staticmethod
     def __check__password_correctness(password: str) -> int:
-        if len(password) <= 8:
+        if len(password) < 8:
             return JarvisExceptionsCode.LESS_THAN_8
         if not re.search(r"[a-zа-я]", password):
             return JarvisExceptionsCode.NOT_HAS_LOWER_LETTERS
