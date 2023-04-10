@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass
-from functools import lru_cache
 
 from fastapi import Cookie
 from fastapi.responses import JSONResponse
@@ -131,7 +130,6 @@ class JarvisSessionController:
             return JarvisExceptionsCode.HAS_WHITE_SPACES
         return 0
 
-    @lru_cache(maxsize=10)
     def get_niche(self, niche_name: str) -> Niche:
         result_niche: Niche = self.__db_controller.get_niche(niche_name)
         if result_niche is None:
