@@ -1,5 +1,3 @@
-import datetime
-
 from jorm.support import keywords
 from pydantic import BaseModel
 
@@ -7,7 +5,7 @@ from pydantic import BaseModel
 class RequestInfo(BaseModel):
     name: str
     id: int = -1
-    timestamp: float = datetime.datetime.utcnow().timestamp()
+    timestamp: float = 0.0
 
 
 class UnitEconomyRequestObject(BaseModel):

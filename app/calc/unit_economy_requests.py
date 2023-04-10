@@ -38,9 +38,13 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
     request_to_save: UnitEconomyRequestObject = unit_economy_save_item.request
     info_to_save: RequestInfo = unit_economy_save_item.info
     result_to_save: UnitEconomyResultObject = unit_economy_save_item.result
-
+    request_time: datetime
+    if info_to_save.timestamp == 0:
+        request_time = datetime.utcnow()
+    else:
+        request_time = datetime.fromtimestamp(info_to_save.timestamp)
     info: JRequestInfo = JRequestInfo(info_to_save.id,
-                                      datetime.fromtimestamp(info_to_save.timestamp),
+                                      request_time,
                                       info_to_save.name)
     request: UnitEconomyRequest = pydantic_to_jorm(UnitEconomyRequest, request_to_save)
     result = pydantic_to_jorm(UnitEconomyResult, result_to_save)
