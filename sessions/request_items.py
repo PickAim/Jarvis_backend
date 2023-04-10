@@ -23,16 +23,16 @@ class UnitEconomyRequestObject(BaseModel):
 
 
 class UnitEconomyResultObject(BaseModel):
-    product_cost: tuple[int, float]  # Закупочная себестоимость
-    pack_cost: tuple[int, float]  # Упаковка
-    marketplace_commission: tuple[int, float]  # Комиссия маркетплейса
-    logistic_price: tuple[int, float]  # Логистика
-    storage_price: tuple[int, float]  # Хранение
-    margin: tuple[int, float]  # Маржа в копейках
+    product_cost: int  # Закупочная себестоимость
+    pack_cost: int  # Упаковка
+    marketplace_commission: int  # Комиссия маркетплейса
+    logistic_price: int  # Логистика
+    storage_price: int  # Хранение
+    margin: int  # Маржа в копейках
     recommended_price: int
-    transit_profit: tuple[int, float]  # Чистая прибыль с транзита
-    roi: tuple[float, float]  # ROI
-    transit_margin: tuple[float, float]  # Маржа с транзита (%)
+    transit_profit: int  # Чистая прибыль с транзита
+    roi: float  # ROI
+    transit_margin: float  # Маржа с транзита (%)
 
 
 class UnitEconomySaveObject(BaseModel):
