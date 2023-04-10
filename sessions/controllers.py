@@ -8,6 +8,7 @@ from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
+from jorm.market.service import UnitEconomyRequest, UnitEconomyResult, FrequencyResult, FrequencyRequest, RequestInfo
 from passlib.context import CryptContext
 from starlette.responses import Response
 
@@ -19,7 +20,7 @@ from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 @dataclass
 class JarvisSessionController:
-    temp_user_count: int = 0
+    __temp_user_count: int = 0
     __db_controller: DBController = JCalcClassesFactory.create_db_controller()
     __tokenizer = TokenController()
     __password_hasher: PasswordHasher = PasswordHasher(CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
@@ -41,7 +42,7 @@ class JarvisSessionController:
         rnd_part: str = self.__tokenizer.get_random_part(token)
         return self.__db_controller.check_token_rnd_part(rnd_part, user_id, imprint_token, token_type)
 
-    def update_token(self, update_token: str) -> tuple[str, str]:
+    def update_tokens(self, update_token: str) -> tuple[str, str]:
         user_id: int = self.__tokenizer.get_user_id(update_token)
         old_update_token_rnd_token: str = self.__tokenizer.get_random_part(update_token)
         new_access_token: str = self.__tokenizer.create_access_token(user_id)
@@ -108,8 +109,8 @@ class JarvisSessionController:
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
             client: Client = self.__jorm_classes_factory.create_new_client()
-            client.user_id = self.temp_user_count
-            self.temp_user_count += 1
+            client.user_id = self.__temp_user_count
+            self.__temp_user_count += 1
             self.__db_controller.save_user_and_account(client, account)
             return
         raise JarvisExceptions.EXISTING_LOGIN
@@ -139,8 +140,17 @@ class JarvisSessionController:
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
         return self.__jorm_classes_factory.warehouse(warehouse_name)
 
-    def save_request(self, request_json: str, user: User):
-        self.__db_controller.save_request(self.__jorm_classes_factory.request(request_json), user)
+
+class RequestHandler:
+    __db_controller: DBController = JCalcClassesFactory.create_db_controller()
+
+    def save_unit_economy_request(self, request: UnitEconomyRequest, result: UnitEconomyResult,
+                                  info: RequestInfo, user: User) -> int:
+        return self.__db_controller.save_unit_economy_request(request, result, info, user)
+
+    def save_frequency_request(self, request: FrequencyRequest, result: FrequencyResult,
+                               info: RequestInfo, user: User) -> int:
+        return self.__db_controller.save_frequency_request(request, result, info, user)
 
 
 class CookieHandler:

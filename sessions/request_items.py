@@ -1,25 +1,23 @@
 import datetime
 
-from jarvis_factory.factories.jorm import FactoryKeywords
+from jorm.support import keywords
 from pydantic import BaseModel
-
-DEFAULT_TOKEN_VALUE = "default_token"
 
 
 class RequestInfo(BaseModel):
+    name: str
     id: int = -1
-    date: datetime.datetime = datetime.datetime.utcnow()
-    name: str = ""
+    timestamp: float = datetime.datetime.utcnow().timestamp()
 
 
 class UnitEconomyRequestObject(BaseModel):
     buy: int
     pack: int
     niche: str
-    transit_count: int = 0
-    transit_price: int = 0
-    market_place_transit_price: int = 0
-    warehouse_name: str = FactoryKeywords.DEFAULT_WAREHOUSE
+    transit_count: int = -1
+    transit_price: int = -1
+    market_place_transit_price: int = -1
+    warehouse_name: str = keywords.DEFAULT_WAREHOUSE
 
 
 class UnitEconomyResultObject(BaseModel):
