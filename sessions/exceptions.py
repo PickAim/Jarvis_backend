@@ -6,22 +6,22 @@ from starlette.exceptions import HTTPException
 
 class JarvisExceptionsCode:
     # authorization exceptions
-    INCORRECT_LOGIN_OR_PASSWORD = 4012
+    INCORRECT_LOGIN_OR_PASSWORD = 1001
 
     # password correctness exceptions
-    LESS_THAN_8 = 4013
-    NOT_HAS_LOWER_LETTERS = 4014
-    NOT_HAS_UPPER_LETTERS = 4015
-    NOT_HAS_DIGIT = 4016
-    NOT_HAS_SPECIAL_SIGNS = 4017
-    HAS_WHITE_SPACES = 4018
+    LESS_THAN_8 = 1002
+    NOT_HAS_LOWER_LETTERS = 1003
+    NOT_HAS_UPPER_LETTERS = 1004
+    NOT_HAS_DIGIT = 1005
+    NOT_HAS_SPECIAL_SIGNS = 1006
+    HAS_WHITE_SPACES = 1007
 
     # registration exceptions
-    REGISTER_EXISTING_LOGIN = 4019
+    REGISTER_EXISTING_LOGIN = 1008
 
     # token exceptions
-    INCORRECT_TOKEN = 5001
-    EXPIRED_TOKEN = 5002
+    INCORRECT_TOKEN = 2001
+    EXPIRED_TOKEN = 2002
 
 
 class JarvisExceptions:
