@@ -9,7 +9,7 @@ from app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from app.handlers import session_controller, calculation_controller, request_handler
 from app.tokens.dependencies import access_token_correctness_depend
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, RequestInfo
-from support.utils import pydantic_to_jorm
+from support.utils import pydantic_to_jorm, jorm_to_pydantic
 
 UNIT_ECON_URL_PART = "/unit_econ"
 
@@ -31,7 +31,7 @@ def calculate(unit_economy_item: UnitEconomyRequestObject,
     return result
 
 
-@unit_economy_router.post(UNIT_ECON_URL_PART + '/save/', response_model=UnitEconomySaveObject)
+@unit_economy_router.post(UNIT_ECON_URL_PART + '/save/', response_model=RequestInfo)
 def save(unit_economy_save_item: UnitEconomySaveObject,
          access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)
@@ -53,13 +53,22 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
     info_to_save.id = request_id
     info_to_save.timestamp = info.date.timestamp()
 
-    unit_economy_save_item.info = info_to_save
-    unit_economy_save_item.request = request_to_save
-    unit_economy_save_item.result = result_to_save
-
-    return unit_economy_save_item
+    return info_to_save
 
 
-@unit_economy_router.post(UNIT_ECON_URL_PART + '/get-all/')
+@unit_economy_router.post(UNIT_ECON_URL_PART + '/get-all/', response_model=list[UnitEconomySaveObject])
 def get_all(access_token: str = Depends(access_token_correctness_depend)):
-    pass
+    user: User = session_controller.get_user(access_token)
+    unit_economy_results_list = request_handler.get_all_unit_economy_results(user)
+    result = [
+        UnitEconomySaveObject.parse_obj({
+            "request": jorm_to_pydantic(unit_economy_result[0], UnitEconomyRequestObject),
+            "result": jorm_to_pydantic(unit_economy_result[1], UnitEconomyResultObject),
+            "info": RequestInfo.parse_obj({
+                "name": unit_economy_result[2].name,
+                "id": unit_economy_result[2].id,
+                "timestamp": unit_economy_result[2].date.timestamp()
+            })
+        }) for unit_economy_result in unit_economy_results_list
+    ]
+    return result

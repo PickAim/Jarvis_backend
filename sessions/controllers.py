@@ -152,6 +152,10 @@ class RequestHandler:
                                info: RequestInfo, user: User) -> int:
         return self.__db_controller.save_frequency_request(request, result, info, user)
 
+    def get_all_unit_economy_results(self, user: User) \
+            -> list[tuple[UnitEconomyRequest, UnitEconomyResult, RequestInfo]]:
+        return self.__db_controller.get_all_unit_economy_results(user)
+
 
 class CookieHandler:
 

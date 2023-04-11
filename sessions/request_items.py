@@ -13,8 +13,8 @@ class UnitEconomyRequestObject(BaseModel):
     pack: int
     niche: str
     transit_count: int = -1
-    transit_price: int = -1
-    market_place_transit_price: int = -1
+    transit_price: int = -1  # from China to me
+    market_place_transit_price: int = -1  # from me to customer
     warehouse_name: str = keywords.DEFAULT_WAREHOUSE
 
 
