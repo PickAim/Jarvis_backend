@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from typing import TypeVar
 
 from fastapi import Cookie
 from fastapi.responses import JSONResponse
@@ -141,6 +142,10 @@ class JarvisSessionController:
         return self.__jorm_classes_factory.warehouse(warehouse_name)
 
 
+T = TypeVar('T')
+V = TypeVar('V')
+
+
 class RequestHandler:
     __db_controller: DBController = JCalcClassesFactory.create_db_controller()
 
@@ -152,9 +157,13 @@ class RequestHandler:
                                info: RequestInfo, user: User) -> int:
         return self.__db_controller.save_frequency_request(request, result, info, user)
 
-    def get_all_unit_economy_results(self, user: User) \
-            -> list[tuple[UnitEconomyRequest, UnitEconomyResult, RequestInfo]]:
-        return self.__db_controller.get_all_unit_economy_results(user)
+    def get_all_request_results(self, user: User, request_type: T, request_result_type: V) \
+            -> list[tuple[T, V, RequestInfo]]:
+        if issubclass(request_type, UnitEconomyRequest) and issubclass(request_result_type, UnitEconomyResult):
+            return self.__db_controller.get_all_unit_economy_results(user)
+        elif issubclass(request_type, FrequencyRequest) and issubclass(request_result_type, FrequencyResult):
+            return self.__db_controller.get_all_frequency_results(user)
+        raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
 
 class CookieHandler:
