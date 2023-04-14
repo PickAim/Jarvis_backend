@@ -1,10 +1,9 @@
-from jorm.support import keywords
 from pydantic import BaseModel
 
 
 class RequestInfo(BaseModel):
     name: str
-    id: int = -1
+    id: int = None
     timestamp: float = 0.0
 
 
@@ -15,7 +14,7 @@ class UnitEconomyRequestObject(BaseModel):
     transit_count: int = -1
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
-    warehouse_name: str = keywords.DEFAULT_WAREHOUSE
+    warehouse_name: str = None
 
 
 class UnitEconomyResultObject(BaseModel):

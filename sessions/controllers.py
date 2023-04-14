@@ -165,6 +165,15 @@ class RequestHandler:
             return self.__db_controller.get_all_frequency_results(user)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
+    def delete_request(self, request_id: int, user: User, request_type: T) -> None:
+        if issubclass(request_type, UnitEconomyRequest):
+            self.__db_controller.delete_unit_economy_request_for_user(request_id, user)
+            return
+        elif issubclass(request_type, FrequencyRequest):
+            self.__db_controller.delete_frequency_request_for_user(request_id, user)
+            return
+        raise Exception(str(type(DBController)) + ": unexpected request or request result type")
+
 
 class CookieHandler:
 
