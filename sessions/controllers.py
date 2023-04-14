@@ -1,11 +1,9 @@
 import re
-from dataclasses import dataclass
 from functools import lru_cache
 
 from fastapi import Cookie
 from fastapi.responses import JSONResponse
 from jarvis_calc.database_interactors.db_controller import DBController
-from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, Account, Client
@@ -18,13 +16,14 @@ from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 
-@dataclass
 class JarvisSessionController:
-    temp_user_count: int = 0
-    __db_controller: DBController = JCalcClassesFactory.create_db_controller()
-    __tokenizer = TokenController()
-    __password_hasher: PasswordHasher = PasswordHasher(CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
-    __jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
+    def __init__(self, db_controller):
+        self.temp_user_count: int = 0
+        self.__db_controller: DBController = db_controller
+        self.__tokenizer = TokenController()
+        self.__password_hasher: PasswordHasher = PasswordHasher(
+            CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
+        self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
 
     def get_user(self, any_session_token: str) -> User:
         if self.__tokenizer.is_token_expired(any_session_token):
@@ -68,9 +67,7 @@ class JarvisSessionController:
         self.__db_controller.delete_tokens_for_user(self.__jorm_classes_factory.create_user(user_id), imprint_token)
 
     def authenticate_user(self, email: str, password: str, phone: str, imprint_token: str) -> tuple[str, str, str]:
-        account: Account = self.__db_controller.get_account_by_email(email)
-        if account is None:
-            account = self.__db_controller.get_account_by_phone(phone)
+        account: Account = self.__db_controller.get_account(email, phone)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
             return self.__create_tokens_for_user(user, imprint_token)
@@ -81,9 +78,9 @@ class JarvisSessionController:
         access_token_rnd_part: str = self.__tokenizer.get_random_part(access_token)
         update_token: str = self.__tokenizer.create_update_token(user.user_id)
         update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
-        self.__update_rnd_part_with_imprint(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
         if imprint_token is None or imprint_token == 'None':
             imprint_token = self.__tokenizer.create_imprint_token()
+        self.__update_rnd_part_with_imprint(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
         return access_token, update_token, imprint_token
 
     def __update_rnd_part_with_imprint(self, access_token_rnd_part: str,
@@ -98,16 +95,14 @@ class JarvisSessionController:
             imprint_token: str = self.__tokenizer.create_imprint_token()
             self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user)
 
-    def register_user(self, email: str, password: str, phone_number: str):
-        account: Account = self.__db_controller.get_account_by_email(email)
-        if account is None:
-            account = self.__db_controller.get_account_by_phone(phone_number)
+    def register_user(self, email: str, password: str, phone: str):
+        account: Account = self.__db_controller.get_account(email, phone)
         if account is None:
             password_check_status: int = self.__check__password_correctness(password)
             if password_check_status != 0:
                 raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
             hashed_password: str = self.__password_hasher.hash(password)
-            account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
+            account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone)
             client: Client = self.__jorm_classes_factory.create_new_client()
             client.user_id = self.temp_user_count
             self.temp_user_count += 1
