@@ -14,7 +14,7 @@ class UnitEconomyRequestObject(BaseModel):
     transit_count: int = -1
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
-    warehouse_name: str = None
+    warehouse_name: str = ""
 
 
 class UnitEconomyResultObject(BaseModel):
