@@ -33,7 +33,7 @@ def auth_by_token(_: str = Depends(access_token_correctness_depend),
     return True
 
 
-@session_router.get(ACCESS_TOKEN_USAGE_URL_PART + '/log_out/')
+@session_router.get(ACCESS_TOKEN_USAGE_URL_PART + '/logout/')
 def log_out(access_token: str = Depends(access_token_correctness_depend),
             imprint_token: str = Depends(imprint_token_correctness_depend)):
     session_controller.logout(access_token, imprint_token)

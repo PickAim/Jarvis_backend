@@ -9,14 +9,14 @@ from app.tokens.dependencies import access_token_correctness_depend
 calc_router = APIRouter(prefix=ACCESS_TOKEN_USAGE_URL_PART)
 
 
-@calc_router.get('/jorm_data/')
+@calc_router.get('/jorm-data/')
 def upload_data(niche_name: str, _: str = Depends(access_token_correctness_depend)):
     niche: Niche = session_controller.get_niche(niche_name)
     x, y = calculation_controller.calc_frequencies(niche)
     return {'x': x, 'y': y}
 
 
-@calc_router.get('/save_request/')
+@calc_router.get('/save-request/')
 def save_request_to_history(request_json: str,
                             access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)

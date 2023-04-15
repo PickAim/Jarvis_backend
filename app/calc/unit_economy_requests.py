@@ -11,7 +11,7 @@ from app.tokens.dependencies import access_token_correctness_depend
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, RequestInfo
 from support.utils import pydantic_to_jorm, jorm_to_pydantic
 
-UNIT_ECON_URL_PART = "/unit_econ"
+UNIT_ECON_URL_PART = "/unit-econ"
 
 unit_economy_router = APIRouter(prefix=ACCESS_TOKEN_USAGE_URL_PART)
 
