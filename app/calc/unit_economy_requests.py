@@ -56,7 +56,7 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
     return info_to_save
 
 
-@unit_economy_router.post(UNIT_ECON_URL_PART + '/get-all/', response_model=list[UnitEconomySaveObject])
+@unit_economy_router.get(UNIT_ECON_URL_PART + '/get-all/', response_model=list[UnitEconomySaveObject])
 def get_all(access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)
     unit_economy_results_list = request_handler.get_all_request_results(user, UnitEconomyRequest, UnitEconomyResult)
