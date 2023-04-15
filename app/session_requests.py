@@ -9,13 +9,13 @@ from app.tokens.dependencies import (
 )
 from app.tokens.util import save_and_return_all_tokens
 from sessions.controllers import CookieHandler
-from sessions.request_items import AuthenticationObject
+from sessions.request_items import AuthenticationObject, RegistrationObject
 
 session_router = APIRouter()
 
 
 @session_router.post('/reg/')
-def reg(auth_item: AuthenticationObject):
+def reg(auth_item: RegistrationObject):
     session_controller.register_user(auth_item.email, auth_item.password, auth_item.phone)
 
 
@@ -23,7 +23,7 @@ def reg(auth_item: AuthenticationObject):
 def auth(auth_item: AuthenticationObject,
          imprint_token: str | None = Depends(imprint_token_correctness_depend)):
     new_access_token, new_update_token, new_imprint_token = \
-        session_controller.authenticate_user(auth_item.email, auth_item.password, auth_item.phone, imprint_token)
+        session_controller.authenticate_user(auth_item.login, auth_item.password, imprint_token)
     return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
 

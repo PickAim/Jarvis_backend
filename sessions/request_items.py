@@ -36,7 +36,12 @@ class UnitEconomySaveObject(BaseModel):
     info: RequestInfo
 
 
-class AuthenticationObject(BaseModel):
+class RegistrationObject(BaseModel):
     email: str = ""
     password: str
     phone: str = ""
+
+
+class AuthenticationObject(BaseModel):
+    login: str = ""
+    password: str

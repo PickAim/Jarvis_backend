@@ -68,10 +68,10 @@ class JarvisSessionController:
         user_id = self.__tokenizer.get_user_id(access_token)
         self.__db_controller.delete_tokens_for_user(self.__jorm_classes_factory.create_user(user_id), imprint_token)
 
-    def authenticate_user(self, email: str, password: str, phone: str, imprint_token: str) -> tuple[str, str, str]:
-        account: Account = self.__db_controller.get_account_by_email(email)
+    def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
+        account: Account = self.__db_controller.get_account_by_email(login)
         if account is None:
-            account = self.__db_controller.get_account_by_phone(phone)
+            account = self.__db_controller.get_account_by_phone(login)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
             return self.__create_tokens_for_user(user, imprint_token)
