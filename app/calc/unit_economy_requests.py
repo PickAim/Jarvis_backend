@@ -74,7 +74,7 @@ def get_all(access_token: str = Depends(access_token_correctness_depend)):
     return result
 
 
-@unit_economy_router.post(UNIT_ECON_URL_PART + '/delete/')
+@unit_economy_router.get(UNIT_ECON_URL_PART + '/delete/')
 def delete(request_id: int,
            access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)
