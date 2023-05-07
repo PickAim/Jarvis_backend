@@ -20,7 +20,7 @@ unit_economy_router = APIRouter(prefix=ACCESS_TOKEN_USAGE_URL_PART)
 def calculate(unit_economy_item: UnitEconomyRequestObject,
               access_token: str = Depends(access_token_correctness_depend)):
     user: User = session_controller.get_user(access_token)
-    niche: Niche = session_controller.get_niche(unit_economy_item.niche)
+    niche: Niche = session_controller.get_niche(unit_economy_item.niche, unit_economy_item.marketplace_id)
     warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
     result: UnitEconomyResultObject | None = None
     if isinstance(user, Client):
@@ -48,7 +48,7 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
                                       info_to_save.name)
     request: UnitEconomyRequest = pydantic_to_jorm(UnitEconomyRequest, request_to_save)
     result = pydantic_to_jorm(UnitEconomyResult, result_to_save)
-    request_id = request_handler.save_unit_economy_request(request, result, info, user)
+    request_id = request_handler.save_request(user, request, result, info)
 
     info_to_save.id = request_id
     info_to_save.timestamp = info.date.timestamp()

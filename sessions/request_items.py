@@ -15,6 +15,7 @@ class UnitEconomyRequestObject(BaseModel):
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
     warehouse_name: str = ""
+    marketplace_id: int = 0
 
 
 class UnitEconomyResultObject(BaseModel):
