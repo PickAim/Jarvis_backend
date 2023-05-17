@@ -13,7 +13,7 @@ class PyJwtTokenEncoder(TokenEncoder):
         self.__key = key
         self.__algorithm = algorithm
 
-    def encode_token(self, payload: dict[str, Any]) -> bytes:
+    def encode_token(self, payload: dict[str, Any]) -> str:
         return jwt.encode(payload, self.__key, self.__algorithm)
 
 
@@ -22,5 +22,5 @@ class PyJwtTokenDecoder(TokenDecoder):
         self.__key = key
         self.__algorithms = algorithms
 
-    def decode_payload(self, token: bytes) -> dict[str, Any]:
+    def decode_payload(self, token: str) -> dict[str, Any]:
         return jwt.decode(token, key=self.__key, algorithms=self.__algorithms)

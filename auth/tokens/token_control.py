@@ -53,10 +53,10 @@ class TokenController:
     def create_basic_token(self, to_encode=None, add_random_part: bool = False, length_of_rand_part: int = 0) -> str:
         if add_random_part:
             to_encode[self.__RND_PART_KEY] = self.__create_random_part(length_of_rand_part)
-        return self.token_encoder.encode_token(to_encode).decode()
+        return self.token_encoder.encode_token(to_encode)
 
     def decode_data(self, token: str) -> any:
-        return self.token_decoder.decode_payload(token.encode())
+        return self.token_decoder.decode_payload(token)
 
     def is_token_expired(self, token: str) -> bool:
         decoded_data = self.decode_data(token)
