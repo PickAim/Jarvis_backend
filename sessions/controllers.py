@@ -1,5 +1,4 @@
 import re
-from dataclasses import dataclass
 from typing import TypeVar
 
 from fastapi import Cookie
@@ -20,13 +19,14 @@ from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
 
 
-@dataclass
 class JarvisSessionController:
-    __temp_user_count: int = 0
-    __db_controller: DBController = JCalcClassesFactory.create_db_controller()
-    __tokenizer = TokenController()
-    __password_hasher: PasswordHasher = PasswordHasher(CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
-    __jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
+    def __init__(self, db_controller):
+        self.temp_user_count: int = 0
+        self.__db_controller: DBController = db_controller
+        self.__tokenizer = TokenController()
+        self.__password_hasher: PasswordHasher = PasswordHasher(
+            CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
+        self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
 
     def get_user(self, any_session_token: str) -> User:
         if self.__tokenizer.is_token_expired(any_session_token):
@@ -107,8 +107,8 @@ class JarvisSessionController:
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
             client: Client = self.__jorm_classes_factory.create_new_client()
-            client.user_id = self.__temp_user_count
-            self.__temp_user_count += 1
+            client.user_id = self.temp_user_count
+            self.temp_user_count += 1  # TODO remove it after real JDB implementation
             self.__db_controller.save_user_and_account(client, account)
             return
         raise JarvisExceptions.EXISTING_LOGIN

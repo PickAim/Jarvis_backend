@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from jarvis_db.tables import Account
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
@@ -11,6 +12,7 @@ from app.tokens.requests import token_router
 from calc.economy_analyze_requests import unit_economy_router
 from sessions.controllers import CookieHandler
 
+g = Account.metadata
 app = FastAPI()
 
 origins = [
