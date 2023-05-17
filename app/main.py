@@ -6,9 +6,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
+from app.calc.product_analyze_requests import product_analyze_router
 from app.session_requests import session_router
 from app.tokens.requests import token_router
-from calc.requests import calc_router
+from calc.economy_analyze_requests import unit_economy_router
 from sessions.controllers import CookieHandler
 
 g = Account.metadata
@@ -29,7 +30,9 @@ app.add_middleware(
 
 app.include_router(token_router)
 app.include_router(session_router)
-app.include_router(calc_router)
+app.include_router(unit_economy_router)
+app.include_router(product_analyze_router)
+app.include_router(unit_economy_router)
 
 
 @app.post("/delete_all_cookie/")
