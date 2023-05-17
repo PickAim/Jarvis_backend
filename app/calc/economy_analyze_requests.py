@@ -6,8 +6,9 @@ from jorm.market.person import User, Client
 from jorm.market.service import UnitEconomyRequest, RequestInfo as JRequestInfo, UnitEconomyResult
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
-from app.handlers import session_controller, calculation_controller, request_handler
-from app.tokens.dependencies import access_token_correctness_depend
+from app.handlers import calculation_controller, request_handler
+from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend
+from sessions.controllers import JarvisSessionController
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, RequestInfo
 from support.utils import pydantic_to_jorm, jorm_to_pydantic
 
@@ -18,7 +19,8 @@ unit_economy_router = APIRouter(prefix=ACCESS_TOKEN_USAGE_URL_PART)
 
 @unit_economy_router.post(UNIT_ECON_URL_PART + '/calculate/', response_model=UnitEconomyResultObject)
 def calculate(unit_economy_item: UnitEconomyRequestObject,
-              access_token: str = Depends(access_token_correctness_depend)):
+              access_token: str = Depends(access_token_correctness_depend),
+              session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
     niche: Niche = session_controller.get_niche(unit_economy_item.niche, unit_economy_item.marketplace_id)
     warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
@@ -33,7 +35,8 @@ def calculate(unit_economy_item: UnitEconomyRequestObject,
 
 @unit_economy_router.post(UNIT_ECON_URL_PART + '/save/', response_model=RequestInfo)
 def save(unit_economy_save_item: UnitEconomySaveObject,
-         access_token: str = Depends(access_token_correctness_depend)):
+         access_token: str = Depends(access_token_correctness_depend),
+         session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
     request_to_save: UnitEconomyRequestObject = unit_economy_save_item.request
     info_to_save: RequestInfo = unit_economy_save_item.info
@@ -57,7 +60,8 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
 
 
 @unit_economy_router.get(UNIT_ECON_URL_PART + '/get-all/', response_model=list[UnitEconomySaveObject])
-def get_all(access_token: str = Depends(access_token_correctness_depend)):
+def get_all(access_token: str = Depends(access_token_correctness_depend),
+            session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
     unit_economy_results_list = request_handler.get_all_request_results(user, UnitEconomyRequest, UnitEconomyResult)
     result = [
@@ -76,6 +80,7 @@ def get_all(access_token: str = Depends(access_token_correctness_depend)):
 
 @unit_economy_router.get(UNIT_ECON_URL_PART + '/delete/')
 def delete(request_id: int,
-           access_token: str = Depends(access_token_correctness_depend)):
+           access_token: str = Depends(access_token_correctness_depend),
+           session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
     request_handler.delete_request(request_id, user, UnitEconomyRequest)
