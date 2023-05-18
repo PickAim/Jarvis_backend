@@ -8,7 +8,7 @@ from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
-from jorm.market.person import User, Account, Client
+from jorm.market.person import User, Account
 from jorm.market.service import UnitEconomyRequest, UnitEconomyResult, FrequencyResult, FrequencyRequest, RequestInfo
 from passlib.context import CryptContext
 from starlette.responses import Response
@@ -106,10 +106,10 @@ class JarvisSessionController:
                 raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
-            client: Client = self.__jorm_classes_factory.create_new_client()
-            client.user_id = self.temp_user_count
+            user: User = self.__jorm_classes_factory.create_user(self.temp_user_count)
+            user.user_id = self.temp_user_count
             self.temp_user_count += 1  # TODO remove it after real JDB implementation
-            self.__db_controller.save_user_and_account(client, account)
+            self.__db_controller.save_user_and_account(user, account)
             return
         raise JarvisExceptions.EXISTING_LOGIN
 

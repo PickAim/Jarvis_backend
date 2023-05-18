@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from jorm.market.infrastructure import Niche, Warehouse
-from jorm.market.person import User, Client
+from jorm.market.person import User
 from jorm.market.service import UnitEconomyRequest, RequestInfo as JRequestInfo, UnitEconomyResult
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
@@ -24,12 +24,10 @@ def calculate(unit_economy_item: UnitEconomyRequestObject,
     user: User = session_controller.get_user(access_token)
     niche: Niche = session_controller.get_niche(unit_economy_item.niche, unit_economy_item.marketplace_id)
     warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
-    result: UnitEconomyResultObject | None = None
-    if isinstance(user, Client):
-        result = calculation_controller.calc_unit_economy(unit_economy_item.buy, unit_economy_item.pack, niche,
-                                                          warehouse, user, unit_economy_item.transit_price,
-                                                          unit_economy_item.transit_count,
-                                                          unit_economy_item.transit_price)
+    result = calculation_controller.calc_unit_economy(unit_economy_item.buy, unit_economy_item.pack, niche,
+                                                      warehouse, user, unit_economy_item.transit_price,
+                                                      unit_economy_item.transit_count,
+                                                      unit_economy_item.transit_price)
     return result
 
 

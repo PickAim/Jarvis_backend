@@ -5,7 +5,7 @@ from jarvis_calc.calculators.niche_analyze import NicheAnalyzeCalculator
 from jarvis_calc.calculators.product_analyze import DownturnCalculator
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
-from jorm.market.person import Client
+from jorm.market.person import User
 
 from sessions.request_items import UnitEconomyResultObject
 
@@ -23,13 +23,13 @@ class CalculationController:
                           pack_price: int,
                           niche: Niche,
                           warehouse: Warehouse,
-                          client: Client,
+                          user: User,
                           transit_price: int = 0.0,
                           transit_count: int = 0.0,
                           market_place_transit_price: int = 0.0) -> UnitEconomyResultObject:
         return UnitEconomyResultObject.parse_obj(
             self.__unit_economy_calculator.calculate(buy_price, pack_price, niche, warehouse,
-                                                     client, transit_price, transit_count,
+                                                     user, transit_price, transit_count,
                                                      market_place_transit_price)
         )
 
