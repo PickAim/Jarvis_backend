@@ -15,15 +15,15 @@ session_router = APIRouter()
 
 
 @session_router.post('/reg/')  # TODO recheck all request for names comparison
-def reg(auth_item: RegistrationObject,
-        session_controller: JarvisSessionController = Depends(session_controller_depend)):
+def registrate_user(auth_item: RegistrationObject,
+                    session_controller: JarvisSessionController = Depends(session_controller_depend)):
     session_controller.register_user(auth_item.email, auth_item.password, auth_item.phone)
 
 
 @session_router.post('/auth/')
-def auth(auth_item: AuthenticationObject,
-         imprint_token: str | None = Depends(imprint_token_correctness_depend),
-         session_controller: JarvisSessionController = Depends(session_controller_depend)):
+def authenticate_user(auth_item: AuthenticationObject,
+                      imprint_token: str | None = Depends(imprint_token_correctness_depend),
+                      session_controller: JarvisSessionController = Depends(session_controller_depend)):
     new_access_token, new_update_token, new_imprint_token = \
         session_controller.authenticate_user(auth_item.login, auth_item.password, imprint_token)
     return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
