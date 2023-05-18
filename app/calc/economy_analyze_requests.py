@@ -49,7 +49,7 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
                                       info_to_save.name)
     request: UnitEconomyRequest = pydantic_to_jorm(UnitEconomyRequest, request_to_save)
     result = pydantic_to_jorm(UnitEconomyResult, result_to_save)
-    request_id = request_handler.save_request(user, request, result, info)
+    request_id = request_handler.save_request(user.user_id, request, result, info)
 
     info_to_save.id = request_id
     info_to_save.timestamp = info.date.timestamp()
@@ -61,7 +61,8 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
 def get_all(access_token: str = Depends(access_token_correctness_depend),
             session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
-    unit_economy_results_list = request_handler.get_all_request_results(user, UnitEconomyRequest, UnitEconomyResult)
+    unit_economy_results_list = request_handler.get_all_request_results(user.user_id, UnitEconomyRequest,
+                                                                        UnitEconomyResult)
     result = [
         UnitEconomySaveObject.parse_obj({
             "request": jorm_to_pydantic(unit_economy_result[0], UnitEconomyRequestObject),
@@ -81,4 +82,4 @@ def delete(request_id: int,
            access_token: str = Depends(access_token_correctness_depend),
            session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
-    request_handler.delete_request(request_id, user, UnitEconomyRequest)
+    request_handler.delete_request(request_id, user.user_id, UnitEconomyRequest)

@@ -67,7 +67,7 @@ class JarvisSessionController:
 
     def logout(self, access_token: str, imprint_token: str):
         user_id = self.__tokenizer.get_user_id(access_token)
-        self.__db_controller.delete_tokens_for_user(self.__jorm_classes_factory.create_user(user_id), imprint_token)
+        self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login, login)
@@ -138,8 +138,8 @@ class JarvisSessionController:
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
         return self.__jorm_classes_factory.warehouse(warehouse_name)
 
-    def get_products_by_user(self, user: User) -> list[Product]:
-        return self.__db_controller.get_products_by_user(user)
+    def get_products_by_user(self, user_id: int) -> list[Product]:
+        return self.__db_controller.get_products_by_user(user_id)
 
 
 T = TypeVar('T')
@@ -149,28 +149,28 @@ V = TypeVar('V')
 class RequestHandler:
     __db_controller: DBController = JCalcClassesFactory.create_db_controller()
 
-    def save_request(self, user: User, request: T, request_result: V, request_info: RequestInfo) \
+    def save_request(self, user_id: int, request: T, request_result: V, request_info: RequestInfo) \
             -> int:
         if isinstance(request, UnitEconomyRequest) and isinstance(request_result, UnitEconomyResult):
-            return self.__db_controller.save_unit_economy_request(request, request_result, request_info, user)
+            return self.__db_controller.save_unit_economy_request(request, request_result, request_info, user_id)
         elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
-            return self.__db_controller.save_frequency_request(request, request_result, request_info, user)
+            return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
-    def get_all_request_results(self, user: User, request_type: T, request_result_type: V) \
+    def get_all_request_results(self, user_id: int, request_type: T, request_result_type: V) \
             -> list[tuple[T, V, RequestInfo]]:
         if issubclass(request_type, UnitEconomyRequest) and issubclass(request_result_type, UnitEconomyResult):
-            return self.__db_controller.get_all_unit_economy_results(user)
+            return self.__db_controller.get_all_unit_economy_results(user_id)
         elif issubclass(request_type, FrequencyRequest) and issubclass(request_result_type, FrequencyResult):
-            return self.__db_controller.get_all_frequency_results(user)
+            return self.__db_controller.get_all_frequency_results(user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
-    def delete_request(self, request_id: int, user: User, request_type: T) -> None:
+    def delete_request(self, request_id: int, user_id: int, request_type: T) -> None:
         if issubclass(request_type, UnitEconomyRequest):
-            self.__db_controller.delete_unit_economy_request_for_user(request_id, user)
+            self.__db_controller.delete_unit_economy_request_for_user(request_id, user_id)
             return
         elif issubclass(request_type, FrequencyRequest):
-            self.__db_controller.delete_frequency_request_for_user(request_id, user)
+            self.__db_controller.delete_frequency_request_for_user(request_id, user_id)
             return
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
