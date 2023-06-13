@@ -4,11 +4,10 @@ from typing import TypeVar
 from fastapi import Cookie
 from fastapi.responses import JSONResponse
 from jarvis_calc.database_interactors.db_controller import DBController
-from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
-from jorm.market.person import User, Account, Client
+from jorm.market.person import User, Account
 from jorm.market.service import UnitEconomyRequest, UnitEconomyResult, FrequencyResult, FrequencyRequest, RequestInfo
 from passlib.context import CryptContext
 from starlette.responses import Response
@@ -26,7 +25,7 @@ class JarvisSessionController:
         self.__tokenizer = TokenController()
         self.__password_hasher: PasswordHasher = PasswordHasher(
             CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
-        self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
+        self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory(self.__db_controller)
 
     def get_user(self, any_session_token: str) -> User:
         if self.__tokenizer.is_token_expired(any_session_token):
@@ -67,7 +66,7 @@ class JarvisSessionController:
 
     def logout(self, access_token: str, imprint_token: str):
         user_id = self.__tokenizer.get_user_id(access_token)
-        self.__db_controller.delete_tokens_for_user(self.__jorm_classes_factory.create_user(user_id), imprint_token)
+        self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login, login)
@@ -81,24 +80,23 @@ class JarvisSessionController:
         access_token_rnd_part: str = self.__tokenizer.get_random_part(access_token)
         update_token: str = self.__tokenizer.create_update_token(user_id)
         update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
-        self.__update_rnd_part_with_imprint(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
-        if imprint_token is None or imprint_token == 'None':
-            imprint_token = self.__tokenizer.create_imprint_token()
-        return access_token, update_token, imprint_token
-
-    def __update_rnd_part_with_imprint(self, access_token_rnd_part: str,
-                                       update_token_rnd_part: str, imprint_token: str, user_id: int):
-        if imprint_token is not None:
+        if imprint_token is not None and imprint_token != 'None':
             try:
                 self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
                                                                       imprint_token, user_id)
+                return access_token, update_token, imprint_token
             except Exception:
-                raise JarvisExceptions.INCORRECT_TOKEN
+                imprint_token = self.__tokenizer.create_imprint_token()
         else:
-            imprint_token: str = self.__tokenizer.create_imprint_token()
-            self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
+            imprint_token = self.__tokenizer.create_imprint_token()
+        self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
+        return access_token, update_token, imprint_token
 
     def register_user(self, email: str, password: str, phone_number: str):
+        if email == '':
+            email = None
+        if phone_number == '':
+            phone_number = None
         account: Account = self.__db_controller.get_account(email, phone_number)
         if account is None:
             password_check_status: int = self.__check__password_correctness(password)
@@ -106,10 +104,10 @@ class JarvisSessionController:
                 raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
             hashed_password: str = self.__password_hasher.hash(password)
             account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
-            client: Client = self.__jorm_classes_factory.create_new_client()
-            client.user_id = self.temp_user_count
+            user: User = self.__jorm_classes_factory.create_user(self.temp_user_count)
+            user.user_id = self.temp_user_count
             self.temp_user_count += 1  # TODO remove it after real JDB implementation
-            self.__db_controller.save_user_and_account(client, account)
+            self.__db_controller.save_user_and_account(user, account)
             return
         raise JarvisExceptions.EXISTING_LOGIN
 
@@ -138,8 +136,8 @@ class JarvisSessionController:
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
         return self.__jorm_classes_factory.warehouse(warehouse_name)
 
-    def get_products_by_user(self, user: User) -> list[Product]:
-        return self.__db_controller.get_products_by_user(user)
+    def get_products_by_user(self, user_id: int) -> list[Product]:
+        return self.__db_controller.get_products_by_user(user_id)
 
 
 T = TypeVar('T')
@@ -147,30 +145,31 @@ V = TypeVar('V')
 
 
 class RequestHandler:
-    __db_controller: DBController = JCalcClassesFactory.create_db_controller()
+    def __init__(self, db_controller: DBController):
+        self.__db_controller = db_controller
 
-    def save_request(self, user: User, request: T, request_result: V, request_info: RequestInfo) \
+    def save_request(self, user_id: int, request: T, request_result: V, request_info: RequestInfo) \
             -> int:
         if isinstance(request, UnitEconomyRequest) and isinstance(request_result, UnitEconomyResult):
-            return self.__db_controller.save_unit_economy_request(request, request_result, request_info, user)
+            return self.__db_controller.save_unit_economy_request(request, request_result, request_info, user_id)
         elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
-            return self.__db_controller.save_frequency_request(request, request_result, request_info, user)
+            return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
-    def get_all_request_results(self, user: User, request_type: T, request_result_type: V) \
+    def get_all_request_results(self, user_id: int, request_type: T, request_result_type: V) \
             -> list[tuple[T, V, RequestInfo]]:
         if issubclass(request_type, UnitEconomyRequest) and issubclass(request_result_type, UnitEconomyResult):
-            return self.__db_controller.get_all_unit_economy_results(user)
+            return self.__db_controller.get_all_unit_economy_results(user_id)
         elif issubclass(request_type, FrequencyRequest) and issubclass(request_result_type, FrequencyResult):
-            return self.__db_controller.get_all_frequency_results(user)
+            return self.__db_controller.get_all_frequency_results(user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
-    def delete_request(self, request_id: int, user: User, request_type: T) -> None:
+    def delete_request(self, request_id: int, user_id: int, request_type: T) -> None:
         if issubclass(request_type, UnitEconomyRequest):
-            self.__db_controller.delete_unit_economy_request_for_user(request_id, user)
+            self.__db_controller.delete_unit_economy_request_for_user(request_id, user_id)
             return
         elif issubclass(request_type, FrequencyRequest):
-            self.__db_controller.delete_frequency_request_for_user(request_id, user)
+            self.__db_controller.delete_frequency_request_for_user(request_id, user_id)
             return
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
