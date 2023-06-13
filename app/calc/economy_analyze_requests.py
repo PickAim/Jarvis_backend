@@ -6,8 +6,8 @@ from jorm.market.person import User
 from jorm.market.service import UnitEconomyRequest, RequestInfo as JRequestInfo, UnitEconomyResult
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
-from app.handlers import calculation_controller, request_handler
-from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend
+from app.handlers import calculation_controller
+from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, RequestInfo
 from support.utils import pydantic_to_jorm, jorm_to_pydantic
@@ -34,7 +34,8 @@ def calculate(unit_economy_item: UnitEconomyRequestObject,
 @unit_economy_router.post(UNIT_ECON_URL_PART + '/save/', response_model=RequestInfo)
 def save(unit_economy_save_item: UnitEconomySaveObject,
          access_token: str = Depends(access_token_correctness_depend),
-         session_controller: JarvisSessionController = Depends(session_controller_depend)):
+         session_controller: JarvisSessionController = Depends(session_controller_depend),
+         request_handler=Depends(request_handler_depend)):
     user: User = session_controller.get_user(access_token)
     request_to_save: UnitEconomyRequestObject = unit_economy_save_item.request
     info_to_save: RequestInfo = unit_economy_save_item.info
@@ -59,7 +60,8 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
 
 @unit_economy_router.get(UNIT_ECON_URL_PART + '/get-all/', response_model=list[UnitEconomySaveObject])
 def get_all(access_token: str = Depends(access_token_correctness_depend),
-            session_controller: JarvisSessionController = Depends(session_controller_depend)):
+            session_controller: JarvisSessionController = Depends(session_controller_depend),
+            request_handler=Depends(request_handler_depend)):
     user: User = session_controller.get_user(access_token)
     unit_economy_results_list = request_handler.get_all_request_results(user.user_id, UnitEconomyRequest,
                                                                         UnitEconomyResult)
@@ -80,6 +82,7 @@ def get_all(access_token: str = Depends(access_token_correctness_depend),
 @unit_economy_router.get(UNIT_ECON_URL_PART + '/delete/')
 def delete(request_id: int,
            access_token: str = Depends(access_token_correctness_depend),
-           session_controller: JarvisSessionController = Depends(session_controller_depend)):
+           session_controller: JarvisSessionController = Depends(session_controller_depend),
+           request_handler=Depends(request_handler_depend)):
     user: User = session_controller.get_user(access_token)
     request_handler.delete_request(request_id, user.user_id, UnitEconomyRequest)

@@ -2,12 +2,19 @@ from fastapi import Depends
 from jarvis_factory.factories.jcalc import JCalcClassesFactory
 
 from auth import TokenController
-from sessions.controllers import CookieHandler, JarvisSessionController
+from sessions.controllers import CookieHandler, JarvisSessionController, RequestHandler
+from sessions.dependencies import session_depend
 from sessions.exceptions import JarvisExceptions
 
 
-def session_controller_depend(db_controller=Depends(JCalcClassesFactory.create_db_controller)):
+def session_controller_depend(session=Depends(session_depend)) -> JarvisSessionController:
+    db_controller = JCalcClassesFactory.create_db_controller(session)
     return JarvisSessionController(db_controller)
+
+
+def request_handler_depend(session=Depends(session_depend)) -> RequestHandler:
+    db_controller = JCalcClassesFactory.create_db_controller(session)
+    return RequestHandler(db_controller)
 
 
 def check_token_correctness(any_session_token: str, imprint_token: str,

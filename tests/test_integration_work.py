@@ -2,7 +2,6 @@ import json
 import unittest
 
 from jarvis_db.db_config import Base
-from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from starlette.exceptions import HTTPException
@@ -33,7 +32,7 @@ class IntegrationTest(unittest.TestCase):
     update_token = ""
     imprint_token = ""
     session_controller: JarvisSessionController
-    db_context = DbContext(connection_sting='sqlite:///test.db', echo=True)
+    db_context = DbContext()
 
     def assertAuthentication(self, auth_item, session_controller) -> tuple[str, str, str]:
         response = authenticate_user(auth_item, None, session_controller)
@@ -62,8 +61,7 @@ class IntegrationTest(unittest.TestCase):
         auth_item_with_email = AuthenticationObject.parse_obj(authentication_by_email_object)
         auth_item_with_phone = AuthenticationObject.parse_obj(authentication_by_phone_object)
         with self.db_context.session() as session, session.begin():
-            db_controller = JCalcClassesFactory.create_db_controller(session)
-            self.session_controller = session_controller_depend(db_controller)
+            self.session_controller = session_controller_depend(session)
             # Registration
             try:
                 registrate_user(reg_item, self.session_controller)

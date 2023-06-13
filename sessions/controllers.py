@@ -4,7 +4,6 @@ from typing import TypeVar
 from fastapi import Cookie
 from fastapi.responses import JSONResponse
 from jarvis_calc.database_interactors.db_controller import DBController
-from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
@@ -26,7 +25,7 @@ class JarvisSessionController:
         self.__tokenizer = TokenController()
         self.__password_hasher: PasswordHasher = PasswordHasher(
             CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
-        self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory()
+        self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory(self.__db_controller)
 
     def get_user(self, any_session_token: str) -> User:
         if self.__tokenizer.is_token_expired(any_session_token):
@@ -146,7 +145,8 @@ V = TypeVar('V')
 
 
 class RequestHandler:
-    __db_controller: DBController = JCalcClassesFactory.create_db_controller()
+    def __init__(self, db_controller: DBController):
+        self.__db_controller = db_controller
 
     def save_request(self, user_id: int, request: T, request_result: V, request_info: RequestInfo) \
             -> int:
