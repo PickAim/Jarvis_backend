@@ -81,24 +81,23 @@ class JarvisSessionController:
         access_token_rnd_part: str = self.__tokenizer.get_random_part(access_token)
         update_token: str = self.__tokenizer.create_update_token(user_id)
         update_token_rnd_part: str = self.__tokenizer.get_random_part(update_token)
-        self.__update_rnd_part_with_imprint(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
-        if imprint_token is None or imprint_token == 'None':
-            imprint_token = self.__tokenizer.create_imprint_token()
-        return access_token, update_token, imprint_token
-
-    def __update_rnd_part_with_imprint(self, access_token_rnd_part: str,
-                                       update_token_rnd_part: str, imprint_token: str, user_id: int):
-        if imprint_token is not None:
+        if imprint_token is not None and imprint_token != 'None':
             try:
                 self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
                                                                       imprint_token, user_id)
+                return access_token, update_token, imprint_token
             except Exception:
-                raise JarvisExceptions.INCORRECT_TOKEN
+                imprint_token = self.__tokenizer.create_imprint_token()
         else:
-            imprint_token: str = self.__tokenizer.create_imprint_token()
-            self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
+            imprint_token = self.__tokenizer.create_imprint_token()
+        self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
+        return access_token, update_token, imprint_token
 
     def register_user(self, email: str, password: str, phone_number: str):
+        if email == '':
+            email = None
+        if phone_number == '':
+            phone_number = None
         account: Account = self.__db_controller.get_account(email, phone_number)
         if account is None:
             password_check_status: int = self.__check__password_correctness(password)

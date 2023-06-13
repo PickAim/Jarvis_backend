@@ -1,5 +1,5 @@
 jarvis_calc@ git+https://github.com/PickAim/jarvis_calc.git@v.0.1.1
-jarvis_factory@ git+https://github.com/PickAim/jarvis_factory.git@v.0.0.7
+jarvis_factory@ git+https://github.com/PickAim/jarvis_factory.git@v.0.1.0
 fastapi>=0.95.0
 starlette>=0.27.0
 uvicorn>=0.22.0
