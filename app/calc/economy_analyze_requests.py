@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
+from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User
 from jorm.market.service import UnitEconomyRequest, RequestInfo as JRequestInfo, UnitEconomyResult
@@ -8,7 +9,7 @@ from jorm.market.service import UnitEconomyRequest, RequestInfo as JRequestInfo,
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
-from sessions.controllers import JarvisSessionController
+from sessions.controllers import JarvisSessionController, RequestHandler
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, RequestInfo
 from support.utils import pydantic_to_jorm, jorm_to_pydantic
 
@@ -22,7 +23,8 @@ def calculate(unit_economy_item: UnitEconomyRequestObject,
               access_token: str = Depends(access_token_correctness_depend),
               session_controller: JarvisSessionController = Depends(session_controller_depend)):
     user: User = session_controller.get_user(access_token)
-    niche: Niche = session_controller.get_niche(unit_economy_item.niche, unit_economy_item.marketplace_id)
+    niche: Niche = session_controller.get_niche(unit_economy_item.niche,
+                                                unit_economy_item.category, unit_economy_item.marketplace_id)
     warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
     result = calculation_controller.calc_unit_economy(unit_economy_item.buy, unit_economy_item.pack, niche,
                                                       warehouse, user, unit_economy_item.transit_price,
@@ -35,7 +37,7 @@ def calculate(unit_economy_item: UnitEconomyRequestObject,
 def save(unit_economy_save_item: UnitEconomySaveObject,
          access_token: str = Depends(access_token_correctness_depend),
          session_controller: JarvisSessionController = Depends(session_controller_depend),
-         request_handler=Depends(request_handler_depend)):
+         request_handler: RequestHandler = Depends(request_handler_depend)):
     user: User = session_controller.get_user(access_token)
     request_to_save: UnitEconomyRequestObject = unit_economy_save_item.request
     info_to_save: RequestInfo = unit_economy_save_item.info
@@ -50,7 +52,14 @@ def save(unit_economy_save_item: UnitEconomySaveObject,
                                       info_to_save.name)
     request: UnitEconomyRequest = pydantic_to_jorm(UnitEconomyRequest, request_to_save)
     result = pydantic_to_jorm(UnitEconomyResult, result_to_save)
-    request_id = request_handler.save_request(user.user_id, request, result, info)
+    try:
+        request_id = request_handler.save_request(user.user_id, request, result, info, request_to_save.marketplace_id)
+    except Exception:
+        print("SAVED TO DEFAULT NICHE")
+        request.niche = JORMClassesFactory.create_default_niche().name
+        request.category = JORMClassesFactory.create_default_category().name
+        request.warehouse_name = JORMClassesFactory.create_simple_default_warehouse().name
+        request_id = request_handler.save_request(user.user_id, request, result, info, request_to_save.marketplace_id)
 
     info_to_save.id = request_id
     info_to_save.timestamp = info.date.timestamp()

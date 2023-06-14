@@ -127,14 +127,20 @@ class JarvisSessionController:
             return JarvisExceptionsCode.HAS_WHITE_SPACES
         return 0
 
-    def get_niche(self, niche_name: str, marketplace_id: int) -> Niche:
-        result_niche: Niche = self.__db_controller.get_niche(niche_name, marketplace_id)
-        if result_niche is None:
-            result_niche = self.__db_controller.load_new_niche(niche_name)
-        return result_niche
+    def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
+        result_niche: Niche = self.__db_controller.get_niche(niche_name, category_name, marketplace_id)
+        if result_niche is not None:
+            return result_niche
+        result_niche = self.__db_controller.load_new_niche(niche_name)
+        if result_niche is not None:
+            return result_niche
+        return JORMClassesFactory(self.__db_controller).create_default_niche()
 
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
-        return self.__jorm_classes_factory.warehouse(warehouse_name)
+        warehouse = self.__jorm_classes_factory.warehouse(warehouse_name)
+        if warehouse is not None:
+            return warehouse
+        return JORMClassesFactory(self.__db_controller).create_default_warehouse()
 
     def get_products_by_user(self, user_id: int) -> list[Product]:
         return self.__db_controller.get_products_by_user(user_id)
@@ -148,10 +154,12 @@ class RequestHandler:
     def __init__(self, db_controller: DBController):
         self.__db_controller = db_controller
 
-    def save_request(self, user_id: int, request: T, request_result: V, request_info: RequestInfo) \
+    def save_request(self, user_id: int, request: T, request_result: V,
+                     request_info: RequestInfo, any_additional_id: int = 0) \
             -> int:
         if isinstance(request, UnitEconomyRequest) and isinstance(request_result, UnitEconomyResult):
-            return self.__db_controller.save_unit_economy_request(request, request_result, request_info, user_id)
+            return self.__db_controller.save_unit_economy_request(request, request_result,
+                                                                  request_info, user_id, any_additional_id)
         elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
             return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
