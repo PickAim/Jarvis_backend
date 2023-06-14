@@ -95,6 +95,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_unit_economy_request(self):
         niche_name: str = "niche"
+        category_name: str = "category"
         buy: int = 50_00
         pack: int = 50_00
         transit_price: int = 1000_00
@@ -105,6 +106,7 @@ class IntegrationTest(unittest.TestCase):
             "buy": buy,
             "pack": pack,
             "niche": niche_name,
+            "category": category_name,
             "transit_count": transit_count,
             "transit_price": transit_price,
             "market_place_transit_price": marketplace_transit_price,
@@ -115,9 +117,10 @@ class IntegrationTest(unittest.TestCase):
             UnitEconomyRequestObject.parse_obj(unit_economy_object),
             self.access_token, self.session_controller
         )
-        self.assertEqual('{"product_cost": 5000, "pack_cost": 5000, "marketplace_commission": 0, "logistic_price": '
-                         '200, "storage_price": 0, "margin": -10200, "recommended_price": 0, "transit_profit": '
-                         '-10099999, "roi": -1.0099999, "transit_margin": -10099999.0}', request.json())
+        self.assertEqual('{"product_cost": 5000, "pack_cost": 5000, "marketplace_commission": 4743, '
+                         '"logistic_price": 200, "storage_price": 0, "margin": 12957, "recommended_price": 27900, '
+                         '"transit_profit": 13057000, "roi": 1.3057, "transit_margin": 0.4679928315412186}',
+                         request.json())
 
 
 if __name__ == '__main__':

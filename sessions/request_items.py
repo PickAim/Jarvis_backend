@@ -11,6 +11,7 @@ class UnitEconomyRequestObject(BaseModel):
     buy: int
     pack: int
     niche: str
+    category: str
     transit_count: int = -1
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
