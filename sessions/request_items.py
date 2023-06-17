@@ -7,6 +7,12 @@ class RequestInfo(BaseModel):
     timestamp: float = 0.0
 
 
+class BasicSaveObject(BaseModel):
+    request: BaseModel = ""
+    result: BaseModel = ""
+    info: RequestInfo = RequestInfo()
+
+
 class UnitEconomyRequestObject(BaseModel):
     buy: int
     pack: int
@@ -32,9 +38,18 @@ class UnitEconomyResultObject(BaseModel):
     transit_margin: float  # Маржа с транзита (%)
 
 
-class UnitEconomySaveObject(BaseModel):
+class UnitEconomySaveObject(BasicSaveObject):
     request: UnitEconomyRequestObject
     result: UnitEconomyResultObject
+    info: RequestInfo
+
+
+class ProductDownturnResultObject(BaseModel):
+    result_dict: dict[int, dict[int, dict[str, int]]]
+
+
+class ProductDownturnSaveObject(BasicSaveObject):
+    result: ProductDownturnResultObject
     info: RequestInfo
 
 

@@ -162,6 +162,8 @@ class RequestHandler:
                                                                   request_info, user_id, any_additional_id)
         elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
             return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
+        # elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
+        #     return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
 
     def get_all_request_results(self, user_id: int, request_type: T, request_result_type: V) \
