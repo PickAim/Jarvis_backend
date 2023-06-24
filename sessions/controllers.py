@@ -155,16 +155,28 @@ class RequestHandler:
         self.__db_controller = db_controller
 
     def save_request(self, user_id: int, request: T, request_result: V,
-                     request_info: RequestInfo, any_additional_id: int = 0) \
+                     request_info: RequestInfo) \
             -> int:
         if isinstance(request, UnitEconomyRequest) and isinstance(request_result, UnitEconomyResult):
-            return self.__db_controller.save_unit_economy_request(request, request_result,
-                                                                  request_info, user_id, any_additional_id)
+            return self.__save_unit_economy_request(request, request_result, request_info, user_id)
         elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
             return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
         # elif isinstance(request, FrequencyRequest) and isinstance(request_result, FrequencyResult):
         #     return self.__db_controller.save_frequency_request(request, request_result, request_info, user_id)
         raise Exception(str(type(DBController)) + ": unexpected request or request result type")
+
+    def __save_unit_economy_request(self, request: UnitEconomyRequest, request_result: UnitEconomyResult,
+                                    request_info: RequestInfo, user_id: int) -> int:
+        try:
+            return self.__db_controller.save_unit_economy_request(request, request_result,
+                                                                  request_info, user_id)
+        except Exception:
+            print("SAVED TO DEFAULT NICHE")
+            request.niche = JORMClassesFactory.create_default_niche().name
+            request.category = JORMClassesFactory.create_default_category().name
+            request.warehouse_name = JORMClassesFactory.create_simple_default_warehouse().name
+            return self.__db_controller.save_unit_economy_request(request, request_result,
+                                                                  request_info, user_id)
 
     def get_all_request_results(self, user_id: int, request_type: T, request_result_type: V) \
             -> list[tuple[T, V, RequestInfo]]:

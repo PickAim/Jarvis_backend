@@ -10,7 +10,8 @@ from sessions.controllers import JarvisSessionController, RequestHandler
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, \
     RequestInfo
 from support.request_api import post, get
-from support.utils import pydantic_to_jorm, jorm_to_pydantic
+from support.types import JEconomySaveObject
+from support.utils import jorm_to_pydantic, convert_save_objects
 
 
 class EconomyAnalyzeAPI(CalculationRequestAPI):
@@ -40,13 +41,8 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = session_controller.get_user(access_token)
-        request_to_save, result_to_save, info_to_save = (
-            unit_economy_save_item.request, unit_economy_save_item.request, unit_economy_save_item.info)
-
-        request: UnitEconomyRequest = pydantic_to_jorm(UnitEconomyRequest, request_to_save)
-        result = pydantic_to_jorm(UnitEconomyResult, result_to_save)
-        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
-                                                          request, result, info_to_save, request_to_save.marketplace_id)
+        jorm_economy_save_object: JEconomySaveObject = convert_save_objects(unit_economy_save_item, JEconomySaveObject)
+        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_economy_save_object)
 
     @staticmethod
     @get(router, '/get-all/', response_model=list[UnitEconomySaveObject])

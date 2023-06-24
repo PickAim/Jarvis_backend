@@ -39,8 +39,9 @@ class ProductDownturnAPI(CalculationRequestAPI):
             product_downturn_save_object.request,
             product_downturn_save_object.info
         )
-        jorm_request_info = CalculationRequestAPI.transform_info(info_to_save)
-        pass
+        user: User = session_controller.get_user(access_token)
+        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
+                                                          request_to_save, result_to_save, info_to_save)
 
     @staticmethod
     @get(router, '/get-all/', response_model=list[ProductDownturnSaveObject])

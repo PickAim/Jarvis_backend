@@ -1,11 +1,13 @@
 from fastapi import Depends
+from jorm.market.person import User
 
 from app.calc.calculation_request_api import CalculationRequestAPI
 from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController, RequestHandler
-from sessions.request_items import RequestInfo
+from sessions.request_items import RequestInfo, FrequencyRequest, FrequencyResult, FrequencySaveObject
 from support.request_api import post, get
+from support.utils import pydantic_to_jorm
 
 
 class NicheFrequencyAPI(CalculationRequestAPI):
@@ -14,11 +16,13 @@ class NicheFrequencyAPI(CalculationRequestAPI):
     router.prefix += NICHE_FREQUENCY_URL_PART
 
     @staticmethod
-    @post(router, '/save/', response_model=dict[str, list[int] | list[int]])
-    def calculate(niche_name: str, category_name, marketplace_id: int,
+    @post(router, '/calculate/', response_model=FrequencyResult)
+    def calculate(frequency_request: FrequencyRequest,
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
-        niche = session_controller.get_niche(niche_name, category_name, marketplace_id)
+        niche = session_controller.get_niche(frequency_request.niche_name,
+                                             frequency_request.category_name,
+                                             frequency_request.marketplace_id)
         result = calculation_controller.calc_frequencies(niche)
         return {
             'x': result[0],
@@ -27,10 +31,18 @@ class NicheFrequencyAPI(CalculationRequestAPI):
 
     @staticmethod
     @post(router, '/save/', response_model=RequestInfo)
-    def save(access_token: str = Depends(access_token_correctness_depend),
+    def save(frequency_save_item: FrequencySaveObject,
+             access_token: str = Depends(access_token_correctness_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
-        pass
+        user: User = session_controller.get_user(access_token)
+        request_to_save, result_to_save, info_to_save = (
+            frequency_save_item.request, frequency_save_item.request, frequency_save_item.info)
+
+        request: FrequencyRequest = pydantic_to_jorm(FrequencyRequest, request_to_save)
+        result = pydantic_to_jorm(FrequencyResult, result_to_save)
+        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
+                                                          request, result, info_to_save, request_to_save.marketplace_id)
 
     @staticmethod
     @get(router, '/save/', response_model=RequestInfo)
