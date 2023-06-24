@@ -4,10 +4,12 @@ from jorm.market.person import User
 from app.calc.calculation_request_api import CalculationRequestAPI
 from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
-from sessions.controllers import JarvisSessionController, RequestHandler
+from sessions.controllers import JarvisSessionController
+from sessions.request_handler import RequestHandler
 from sessions.request_items import RequestInfo, FrequencyRequest, FrequencyResult, FrequencySaveObject
 from support.request_api import post, get
-from support.utils import pydantic_to_jorm
+from support.types import JFrequencySaveObject
+from support.utils import convert_save_objects
 
 
 class NicheFrequencyAPI(CalculationRequestAPI):
@@ -36,13 +38,8 @@ class NicheFrequencyAPI(CalculationRequestAPI):
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = session_controller.get_user(access_token)
-        request_to_save, result_to_save, info_to_save = (
-            frequency_save_item.request, frequency_save_item.request, frequency_save_item.info)
-
-        request: FrequencyRequest = pydantic_to_jorm(FrequencyRequest, request_to_save)
-        result = pydantic_to_jorm(FrequencyResult, result_to_save)
-        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
-                                                          )
+        jorm_save_object: JFrequencySaveObject = convert_save_objects(frequency_save_item, JFrequencySaveObject)
+        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_save_object)
 
     @staticmethod
     @get(router, '/save/', response_model=RequestInfo)

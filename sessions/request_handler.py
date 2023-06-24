@@ -13,6 +13,8 @@ def __save_unit_economy_request(db_controller: DBController, save_object: JEcono
     request = save_object.request
     result = save_object.result
     info = save_object.info
+    if not isinstance(request, UnitEconomyRequest) or not isinstance(result, UnitEconomyResult):
+        raise Exception(str(type(RequestHandler)) + ": unexpected request or result type")
     try:
         return db_controller.save_unit_economy_request(request, result, info, user_id)
     except Exception:
@@ -27,6 +29,8 @@ def __save_frequency_request(db_controller: DBController, save_object: JFrequenc
     request = save_object.request
     result = save_object.result
     info = save_object.info
+    if not isinstance(request, FrequencyRequest) or not isinstance(result, FrequencyResult):
+        raise Exception(str(type(RequestHandler)) + ": unexpected request or result type")
     return db_controller.save_frequency_request(request, result, info, user_id)
 
 
