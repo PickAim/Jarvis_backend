@@ -16,7 +16,7 @@ class CalculationController:
         self.__unit_economy_calculator = UnitEconomyCalculator()
         self.__downturn_calculator = DownturnCalculator()
 
-    def calc_frequencies(self, niche: Niche) -> tuple[list[float], list[int]]:
+    def calc_frequencies(self, niche: Niche) -> tuple[list[int], list[int]]:
         return self.__frequency_calculator.calculate_niche_hist(niche)
 
     def calc_unit_economy(self, buy_price: int,
