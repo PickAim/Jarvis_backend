@@ -10,7 +10,22 @@ class RequestInfo(BaseModel):
 class BasicSaveObject(BaseModel):
     request: BaseModel = ""
     result: BaseModel = ""
-    info: RequestInfo = RequestInfo()
+    info: RequestInfo = RequestInfo.parse_obj({'name': "", 'id': None, 'timestamp': 0.0})
+
+
+class FrequencyRequest(BaseModel):
+    niche_name: str
+    category_name: str
+    marketplace_id: int
+
+
+class FrequencyResult(BaseModel):
+    frequencies: dict[int, int]
+
+
+class FrequencySaveObject(BasicSaveObject):
+    request: FrequencyRequest
+    result: FrequencyResult
 
 
 class UnitEconomyRequestObject(BaseModel):
@@ -18,11 +33,11 @@ class UnitEconomyRequestObject(BaseModel):
     pack: int
     niche: str
     category: str
+    marketplace_id: int
     transit_count: int = -1
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
     warehouse_name: str = ""
-    marketplace_id: int = 0
 
 
 class UnitEconomyResultObject(BaseModel):
@@ -41,7 +56,6 @@ class UnitEconomyResultObject(BaseModel):
 class UnitEconomySaveObject(BasicSaveObject):
     request: UnitEconomyRequestObject
     result: UnitEconomyResultObject
-    info: RequestInfo
 
 
 class ProductDownturnResultObject(BaseModel):
@@ -50,7 +64,6 @@ class ProductDownturnResultObject(BaseModel):
 
 class ProductDownturnSaveObject(BasicSaveObject):
     result: ProductDownturnResultObject
-    info: RequestInfo
 
 
 class RegistrationObject(BaseModel):
