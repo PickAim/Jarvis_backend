@@ -18,7 +18,7 @@ __DB_CONTEXT = None
 __DEFAULTS_INITED = False
 
 
-def _db_context_depends() -> DbContext:
+def db_context_depends() -> DbContext:
     global __DB_CONTEXT
     if __DB_CONTEXT is None:
         __DB_CONTEXT = DbContext("sqlite:///test.db", echo=True)
@@ -57,7 +57,7 @@ def init_defaults(session):
             product_service.create_product(product, default_niche_id)
 
 
-def session_depend(db_context: DbContext = Depends(_db_context_depends)):
+def session_depend(db_context: DbContext = Depends(db_context_depends)):
     global __DEFAULTS_INITED
     with db_context.session() as session, session.begin():
         if not __DEFAULTS_INITED:

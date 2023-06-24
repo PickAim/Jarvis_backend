@@ -9,8 +9,9 @@ from app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NA
 from app.session_requests import SessionAPI
 from app.tokens.dependencies import session_controller_depend, request_handler_depend
 from app.tokens.requests import TokenAPI
-from sessions.controllers import JarvisSessionController, RequestHandler
-from sessions.dependencies import _db_context_depends, init_defaults
+from sessions.controllers import JarvisSessionController
+from sessions.dependencies import db_context_depends, init_defaults
+from sessions.request_handler import RequestHandler
 from sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject
 from support.utils import pydantic_to_jorm
@@ -64,7 +65,7 @@ class IntegrationTest(unittest.TestCase):
         reg_item = RegistrationObject.parse_obj(registration_object)
         auth_item_with_email = AuthenticationObject.parse_obj(authentication_by_email_object)
         auth_item_with_phone = AuthenticationObject.parse_obj(authentication_by_phone_object)
-        db_context = _db_context_depends()
+        db_context = db_context_depends()
         self.session = get_session(db_context)
         self.session_controller = session_controller_depend(self.session)
         self.request_handler = request_handler_depend(self.session)
