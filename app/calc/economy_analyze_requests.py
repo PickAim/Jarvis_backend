@@ -1,12 +1,13 @@
 from fastapi import Depends
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User
-from jorm.market.service import UnitEconomyRequest, UnitEconomyResult
+from jorm.market.service import UnitEconomyRequest
 
 from app.calc.calculation_request_api import CalculationRequestAPI
 from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
-from sessions.controllers import JarvisSessionController, RequestHandler
+from sessions.controllers import JarvisSessionController
+from sessions.request_handler import RequestHandler
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, \
     RequestInfo
 from support.request_api import post, get
@@ -50,8 +51,7 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = session_controller.get_user(access_token)
-        unit_economy_results_list = request_handler.get_all_request_results(user.user_id, UnitEconomyRequest,
-                                                                            UnitEconomyResult)
+        unit_economy_results_list = request_handler.get_all_request_results(user.user_id, UnitEconomyRequest)
         result = [
             UnitEconomySaveObject.parse_obj({
                 "request": jorm_to_pydantic(unit_economy_result[0], UnitEconomyRequestObject),

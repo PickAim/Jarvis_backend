@@ -42,7 +42,7 @@ class NicheFrequencyAPI(CalculationRequestAPI):
         request: FrequencyRequest = pydantic_to_jorm(FrequencyRequest, request_to_save)
         result = pydantic_to_jorm(FrequencyResult, result_to_save)
         return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
-                                                          request, result, info_to_save, request_to_save.marketplace_id)
+                                                          )
 
     @staticmethod
     @get(router, '/save/', response_model=RequestInfo)
