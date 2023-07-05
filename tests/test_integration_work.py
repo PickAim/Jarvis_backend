@@ -2,6 +2,7 @@ import json
 import unittest
 
 from jorm.market.service import UnitEconomyResult
+from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_CATEGORY_NAME
 from starlette.exceptions import HTTPException
 
 from app.calc.economy_analyze_requests import EconomyAnalyzeAPI
@@ -102,8 +103,8 @@ class IntegrationTest(unittest.TestCase):
         self.update_token = response_dict[UPDATE_TOKEN_NAME]
 
     def test_unit_economy_request(self):
-        niche_name: str = "DEFAULT NICHE"
-        category_name: str = "DEFAULT CATEGORY"
+        niche_name: str = DEFAULT_NICHE_NAME
+        category_name: str = DEFAULT_CATEGORY_NAME
         buy: int = 50_00
         pack: int = 50_00
         transit_price: int = 1000_00
