@@ -1,15 +1,5 @@
 from fastapi import Depends
-from jarvis_db.repositores.mappers.market.infrastructure import NicheTableToJormMapper, CategoryTableToJormMapper, \
-    MarketplaceTableToJormMapper, WarehouseTableToJormMapper
-from jarvis_db.repositores.mappers.market.items import ProductTableToJormMapper
-from jarvis_db.repositores.market.infrastructure import NicheRepository, CategoryRepository, MarketplaceRepository, \
-    WarehouseRepository
-from jarvis_db.repositores.market.items import ProductCardRepository
-from jarvis_db.services.market.infrastructure.category_service import CategoryService
-from jarvis_db.services.market.infrastructure.marketplace_service import MarketplaceService
-from jarvis_db.services.market.infrastructure.niche_service import NicheService
-from jarvis_db.services.market.infrastructure.warehouse_service import WarehouseService
-from jarvis_db.services.market.items.product_card_service import ProductCardService
+from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 
 from sessions.db_context import DbContext
@@ -26,27 +16,25 @@ def db_context_depends() -> DbContext:
 
 
 def init_defaults(session):
-    marketplace_service = MarketplaceService(MarketplaceRepository(session),
-                                             MarketplaceTableToJormMapper(WarehouseTableToJormMapper()))
+    marketplace_service = JDBClassesFactory.create_marketplace_service(session)
     default_marketplace = JORMClassesFactory.create_default_marketplace()
     if marketplace_service.find_by_name(default_marketplace.name) is None:
         marketplace_service.create(default_marketplace)
     _, default_marketplace_id = marketplace_service.find_by_name(default_marketplace.name)
-    warehouse_service = WarehouseService(WarehouseRepository(session), WarehouseTableToJormMapper())
+    warehouse_service = JDBClassesFactory.create_warehouse_service(session)
     default_warehouse = JORMClassesFactory.create_simple_default_warehouse()
     if warehouse_service.find_warehouse_by_name(default_warehouse.name) is None:
         warehouse_service.create_warehouse(default_warehouse, default_marketplace_id)
-    category_service = CategoryService(CategoryRepository(session),
-                                       CategoryTableToJormMapper(NicheTableToJormMapper()))
+    category_service = JDBClassesFactory.create_category_service(session)
     default_category = JORMClassesFactory.create_default_category()
     if category_service.find_by_name(default_category.name, default_marketplace_id) is None:
         category_service.create(default_category, default_marketplace_id)
-    niche_service = NicheService(NicheRepository(session), NicheTableToJormMapper())
+    niche_service = JDBClassesFactory.create_niche_service(session)
     default_niche = JORMClassesFactory.create_default_niche()
     _, default_category_id = category_service.find_by_name(default_category.name, default_marketplace_id)
     if niche_service.find_by_name(default_niche.name, default_category_id) is None:
         niche_service.create(default_niche, default_category_id)
-    product_service = ProductCardService(ProductCardRepository(session), ProductTableToJormMapper())
+    product_service = JDBClassesFactory.create_product_card_service(session)
     filtered_product_ids = product_service.filter_existing_global_ids(
         [product.global_id
          for product in default_niche.products]
