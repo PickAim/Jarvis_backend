@@ -21,7 +21,6 @@ class TokenController:
         self.__TOKEN_TYPE_KEY = "token_type"
         self.__RND_PART_KEY = "r"
         self.__EXPIRES_TIME_KEY = "exp_time"
-        self.__ENCODED_DATA_KEY = "encoded_data"
         self.token_encoder: PyJwtTokenEncoder = PyJwtTokenEncoder(self.__SECRET_KEY, self.__algorythm)
         self.token_decoder: PyJwtTokenDecoder = PyJwtTokenDecoder(self.__SECRET_KEY, [self.__algorythm])
 

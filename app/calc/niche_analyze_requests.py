@@ -42,13 +42,14 @@ class NicheFrequencyAPI(CalculationRequestAPI):
         return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_save_object)
 
     @staticmethod
-    @get(router, '/save/', response_model=RequestInfo)
+    @get(router, '/get-all/', response_model=RequestInfo)
     def get_all(access_token: str = Depends(access_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
         pass
 
     @staticmethod
+    @get(router, '/delete/')
     def delete(request_id: int, access_token: str = Depends(access_token_correctness_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
