@@ -1,8 +1,8 @@
 from fastapi import Depends
 from jorm.market.person import User
 
+from app.calc.calculation import CalculationController
 from app.calc.calculation_request_api import CalculationRequestAPI
-from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
@@ -25,7 +25,7 @@ class NicheFrequencyAPI(CalculationRequestAPI):
         niche = session_controller.get_niche(frequency_request.niche_name,
                                              frequency_request.category_name,
                                              frequency_request.marketplace_id)
-        result = calculation_controller.calc_frequencies(niche)
+        result = CalculationController.calc_frequencies(niche)
         return {
             'x': result[0],
             'y': result[1]
