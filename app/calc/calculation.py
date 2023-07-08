@@ -8,6 +8,7 @@ from jorm.market.items import Product
 from jorm.market.person import User
 
 from sessions.request_items import UnitEconomyResultObject, UnitEconomyRequestObject
+from support.utils import jorm_to_pydantic
 
 
 class CalculationController:
@@ -20,17 +21,16 @@ class CalculationController:
                           niche: Niche,
                           warehouse: Warehouse,
                           user: User) -> UnitEconomyResultObject:
-        return UnitEconomyResultObject.parse_obj(
-            UnitEconomyCalculator.calculate(
-                UnitEconomyCalculateData(
-                    buy_price=data.buy,
-                    pack_price=data.pack,
-                    transit_price=data.transit_price,
-                    transit_count=data.transit_count,
-                    market_place_transit_price=data.market_place_transit_price,
-                ), niche, warehouse, user
-            )
+        result = UnitEconomyCalculator.calculate(
+            UnitEconomyCalculateData(
+                buy_price=data.buy,
+                pack_price=data.pack,
+                transit_price=data.transit_price,
+                transit_count=data.transit_count,
+                market_place_transit_price=data.market_place_transit_price,
+            ), niche, warehouse, user
         )
+        return jorm_to_pydantic(result, UnitEconomyResultObject)
 
     @staticmethod
     def calc_downturn_days(product: Product, from_date: datetime):
