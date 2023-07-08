@@ -3,8 +3,8 @@ from datetime import datetime
 from fastapi import Depends
 from jorm.market.person import User
 
+from app.calc.calculation import CalculationController
 from app.calc.calculation_request_api import CalculationRequestAPI
-from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
@@ -25,7 +25,7 @@ class ProductDownturnAPI(CalculationRequestAPI):
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
         return {
-            product.global_id: calculation_controller.calc_downturn_days(product, datetime.utcnow())
+            product.global_id: CalculationController.calc_downturn_days(product, datetime.utcnow())
             for product in user_products
         }
 

@@ -3,8 +3,8 @@ from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User
 from jorm.market.service import UnitEconomyRequest
 
+from app.calc.calculation import CalculationController
 from app.calc.calculation_request_api import CalculationRequestAPI
-from app.handlers import calculation_controller
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
@@ -29,7 +29,7 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
         niche: Niche = session_controller.get_niche(unit_economy_item.niche,
                                                     unit_economy_item.category, unit_economy_item.marketplace_id)
         warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
-        result = calculation_controller.calc_unit_economy(unit_economy_item, niche, warehouse, user)
+        result = CalculationController.calc_unit_economy(unit_economy_item, niche, warehouse, user)
         return result
 
     @staticmethod

@@ -27,11 +27,6 @@ for router in routers:
     app.include_router(router)
 
 
-@app.middleware("http")
-async def add_process_time_header(request, call_next):
-    return await call_next(request)
-
-
 @app.post("/delete_all_cookie/")
 def delete_cookie():
     response = JSONResponse(content="deleted")
