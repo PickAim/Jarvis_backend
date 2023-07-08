@@ -6,6 +6,7 @@ from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
+from jorm.support.constants import DEFAULT_CATEGORY_NAME
 from passlib.context import CryptContext
 from starlette.responses import JSONResponse, Response
 
@@ -126,6 +127,9 @@ class JarvisSessionController:
 
     def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_name, marketplace_id)
+        if result_niche is not None:
+            return result_niche
+        result_niche = self.__db_controller.get_niche(niche_name, DEFAULT_CATEGORY_NAME, marketplace_id)
         if result_niche is not None:
             return result_niche
         result_niche = self.__db_controller.load_new_niche(niche_name)
