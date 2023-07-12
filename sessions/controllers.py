@@ -1,3 +1,4 @@
+import logging
 import re
 
 from fastapi import Cookie
@@ -11,9 +12,12 @@ from passlib.context import CryptContext
 from starlette.responses import JSONResponse, Response
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
+from app.loggers import CONTROLLERS_LOGGER
 from auth.hashing.hasher import PasswordHasher
 from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptionsCode, JarvisExceptions
+
+LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
 
 
 class JarvisSessionController:
@@ -128,13 +132,17 @@ class JarvisSessionController:
     def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_name, marketplace_id)
         if result_niche is not None:
+            LOGGER.debug(f"get_niche: niche loaded from category.")
             return result_niche
         result_niche = self.__db_controller.get_niche(niche_name, DEFAULT_CATEGORY_NAME, marketplace_id)
         if result_niche is not None:
+            LOGGER.debug(f"get_niche: niche loaded from default category.")
             return result_niche
         result_niche = self.__db_controller.load_new_niche(niche_name)
         if result_niche is not None:
+            LOGGER.debug(f"get_niche: niche loaded just in time.")
             return result_niche
+        LOGGER.debug(f"get_niche: default niche created.")
         return JORMClassesFactory(self.__db_controller).create_default_niche()
 
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
@@ -148,7 +156,6 @@ class JarvisSessionController:
 
 
 class CookieHandler:
-
     @staticmethod
     def save_access_token(response: Response, access_token: str) -> Response:
         response.set_cookie(key="cookie_access_token", path=ACCESS_TOKEN_USAGE_URL_PART,

@@ -48,7 +48,7 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = session_controller.get_user(access_token)
-        unit_economy_results_list = request_handler.get_all_request_results(user.user_id, UnitEconomyRequest)
+        unit_economy_results_list = request_handler.get_all_request_results(user.user_id, JEconomySaveObject)
         result = [
             UnitEconomySaveObject.parse_obj({
                 "request": jorm_to_pydantic(unit_economy_result[0], UnitEconomyRequestObject),

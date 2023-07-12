@@ -3,6 +3,8 @@ import json
 from starlette import status
 from starlette.exceptions import HTTPException
 
+JARVIS_EXCEPTION_KEY = 'jarvis_exception'
+
 
 class JarvisExceptionsCode:
     # authorization exceptions
@@ -30,7 +32,7 @@ class JarvisExceptions:
         return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=json.dumps({
-                'jarvis_exception': exception_code,
+                JARVIS_EXCEPTION_KEY: exception_code,
                 'description': 'Exception: ' + description
             })
         )
