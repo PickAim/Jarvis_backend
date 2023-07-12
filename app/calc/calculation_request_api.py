@@ -7,11 +7,11 @@ from app.tokens.dependencies import access_token_correctness_depend, session_con
 from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
 from sessions.request_items import RequestInfo
-from support.request_api import RequestAPI
+from support.request_api import RequestAPIWithCheck
 from support.types import JBasicSaveObject
 
 
-class CalculationRequestAPI(RequestAPI):
+class CalculationRequestAPI(RequestAPIWithCheck):
     @staticmethod
     def save_and_return_info(request_handler: RequestHandler, user_id: int,
                              save_object: JBasicSaveObject) -> RequestInfo:
@@ -29,6 +29,8 @@ class CalculationRequestAPI(RequestAPI):
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         pass
 
+
+class SavableCalculationRequestAPI(CalculationRequestAPI):
     @staticmethod
     @abstractmethod
     def save(access_token: str = Depends(access_token_correctness_depend),

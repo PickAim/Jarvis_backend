@@ -4,7 +4,7 @@ from fastapi import Depends
 from jorm.market.person import User
 
 from app.calc.calculation import CalculationController
-from app.calc.calculation_request_api import CalculationRequestAPI
+from app.calc.calculation_request_api import SavableCalculationRequestAPI
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
@@ -13,9 +13,9 @@ from sessions.request_items import RequestInfo, ProductDownturnResultObject, \
 from support.request_api import post, get
 
 
-class ProductDownturnAPI(CalculationRequestAPI):
+class ProductDownturnAPI(SavableCalculationRequestAPI):
     PRODUCT_DOWNTURN_URL_PART = "/product-analyze"
-    router = CalculationRequestAPI._router()
+    router = SavableCalculationRequestAPI._router()
     router.prefix += PRODUCT_DOWNTURN_URL_PART
 
     @staticmethod
@@ -36,7 +36,7 @@ class ProductDownturnAPI(CalculationRequestAPI):
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = session_controller.get_user(access_token)
-        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id)
+        return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id)
 
     @staticmethod
     @get(router, '/get-all/', response_model=list[ProductDownturnSaveObject])

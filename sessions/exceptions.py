@@ -4,6 +4,7 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 JARVIS_EXCEPTION_KEY = 'jarvis_exception'
+JARVIS_DESCRIPTION_KEY = 'description'
 
 
 class JarvisExceptionsCode:
@@ -25,6 +26,9 @@ class JarvisExceptionsCode:
     INCORRECT_TOKEN = 2010
     EXPIRED_TOKEN = 2020
 
+    # accessible
+    INCORRECT_GRANT_TYPE = 3010
+
 
 class JarvisExceptions:
     @staticmethod
@@ -33,7 +37,7 @@ class JarvisExceptions:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=json.dumps({
                 JARVIS_EXCEPTION_KEY: exception_code,
-                'description': 'Exception: ' + description
+                JARVIS_DESCRIPTION_KEY: 'Exception: ' + description
             })
         )
 

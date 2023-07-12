@@ -1,10 +1,10 @@
 from fastapi import Depends
 from jorm.market.infrastructure import Niche, Warehouse
-from jorm.market.person import User
+from jorm.market.person import User, UserPrivilege
 from jorm.market.service import UnitEconomyRequest
 
 from app.calc.calculation import CalculationController
-from app.calc.calculation_request_api import CalculationRequestAPI
+from app.calc.calculation_request_api import SavableCalculationRequestAPI
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
@@ -15,17 +15,21 @@ from support.types import JEconomySaveObject
 from support.utils import jorm_to_pydantic, convert_save_objects
 
 
-class EconomyAnalyzeAPI(CalculationRequestAPI):
+class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
     UNIT_ECON_URL_PART = "/unit-econ"
-    router = CalculationRequestAPI._router()
+    router = SavableCalculationRequestAPI._router()
     router.prefix += UNIT_ECON_URL_PART
+
+    @classmethod
+    def get_minimum_privilege(cls) -> UserPrivilege:
+        return UserPrivilege.BASIC
 
     @staticmethod
     @post(router, '/calculate/', response_model=UnitEconomyResultObject)
     def calculate(unit_economy_item: UnitEconomyRequestObject,
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
-        user: User = session_controller.get_user(access_token)
+        user = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         niche: Niche = session_controller.get_niche(unit_economy_item.niche,
                                                     unit_economy_item.category, unit_economy_item.marketplace_id)
         warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
@@ -38,16 +42,17 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
              access_token: str = Depends(access_token_correctness_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
-        user: User = session_controller.get_user(access_token)
+        user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         jorm_economy_save_object: JEconomySaveObject = convert_save_objects(unit_economy_save_item, JEconomySaveObject)
-        return CalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_economy_save_object)
+        return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
+                                                                 jorm_economy_save_object)
 
     @staticmethod
     @get(router, '/get-all/', response_model=list[UnitEconomySaveObject])
     def get_all(access_token: str = Depends(access_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
-        user: User = session_controller.get_user(access_token)
+        user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         unit_economy_results_list = request_handler.get_all_request_results(user.user_id, JEconomySaveObject)
         result = [
             UnitEconomySaveObject.parse_obj({
@@ -68,5 +73,5 @@ class EconomyAnalyzeAPI(CalculationRequestAPI):
                access_token: str = Depends(access_token_correctness_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
-        user: User = session_controller.get_user(access_token)
+        user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         request_handler.delete_request(request_id, user.user_id, UnitEconomyRequest)

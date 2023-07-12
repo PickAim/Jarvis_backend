@@ -30,8 +30,6 @@ class JarvisSessionController:
         self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory(self.__db_controller)
 
     def get_user(self, any_session_token: str) -> User:
-        if self.__tokenizer.is_token_expired(any_session_token):
-            raise JarvisExceptions.INCORRECT_TOKEN
         user = self.__db_controller.get_user_by_id(
             self.__tokenizer.get_user_id(any_session_token)
         )
