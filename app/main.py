@@ -1,3 +1,4 @@
+import json
 import logging
 from os import path
 
@@ -11,7 +12,7 @@ from starlette.responses import PlainTextResponse
 from app.loggers import ERROR_LOGGER
 from app.routers import routers
 from sessions.controllers import CookieHandler
-from sessions.exceptions import JARVIS_EXCEPTION_KEY
+from sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY
 
 app = FastAPI()
 
@@ -47,9 +48,14 @@ async def exception_handler(_, exc):
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(_, exc):
+    logger = logging.getLogger(ERROR_LOGGER)
     if JARVIS_EXCEPTION_KEY not in exc.detail:
-        logger = logging.getLogger(ERROR_LOGGER)
         logger.exception("Unhandled http exception", stacklevel=5, exc_info=True)
+    else:
+        parsed_details = json.loads(exc.detail)
+        logger.warning(f"Jarvis handled warning - "
+                       f"{parsed_details[JARVIS_EXCEPTION_KEY]}: "
+                       f"{parsed_details[JARVIS_DESCRIPTION_KEY]}")
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
 
