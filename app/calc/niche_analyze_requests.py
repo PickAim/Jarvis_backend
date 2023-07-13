@@ -8,7 +8,6 @@ from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
 from sessions.request_items import RequestInfo, FrequencyRequest, FrequencyResult, FrequencySaveObject, \
     NicheCharacteristicsResultObject, NicheRequest
-from support.request_api import post, get
 from support.types import JFrequencySaveObject
 from support.utils import convert_save_objects_to_jorm, convert_save_objects_to_pydantic
 
@@ -23,7 +22,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @post(router, '/calculate/', response_model=FrequencyResult)
+    @router.post('/calculate/', response_model=FrequencyResult)
     def calculate(frequency_request: FrequencyRequest,
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
@@ -36,7 +35,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         return converted_result
 
     @staticmethod
-    @post(router, '/save/', response_model=RequestInfo)
+    @router.post('/save/', response_model=RequestInfo)
     def save(frequency_save_item: FrequencySaveObject,
              access_token: str = Depends(access_token_correctness_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
@@ -46,7 +45,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_save_object)
 
     @staticmethod
-    @get(router, '/get-all/', response_model=list[FrequencySaveObject])
+    @router.get('/get-all/', response_model=list[FrequencySaveObject])
     def get_all(access_token: str = Depends(access_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
@@ -59,7 +58,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         return result
 
     @staticmethod
-    @get(router, '/delete/')
+    @router.get('/delete/')
     def delete(request_id: int, access_token: str = Depends(access_token_correctness_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):

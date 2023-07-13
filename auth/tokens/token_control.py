@@ -24,7 +24,7 @@ class TokenController:
         self.token_encoder: PyJwtTokenEncoder = PyJwtTokenEncoder(self.__SECRET_KEY, self.__algorythm)
         self.token_decoder: PyJwtTokenDecoder = PyJwtTokenDecoder(self.__SECRET_KEY, [self.__algorythm])
 
-    def create_access_token(self, user_id: int, expires_delta: timedelta = timedelta(minutes=5.0)) -> str:
+    def create_access_token(self, user_id: int, expires_delta: timedelta = timedelta(hours=1.0)) -> str:
         return self.__create_session_token(user_id, TokenType.ACCESS, expires_delta, add_random_part=True,
                                            length_of_rand_part=60)
 

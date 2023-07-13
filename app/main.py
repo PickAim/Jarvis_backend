@@ -11,10 +11,11 @@ from starlette.responses import PlainTextResponse
 
 from app.loggers import ERROR_LOGGER
 from app.routers import routers
+from app.tags import tags_metadata, OTHER_TAG
 from sessions.controllers import CookieHandler
 from sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY
 
-app = FastAPI()
+app = FastAPI(openapi_tags=tags_metadata)
 
 origins = [
     # "http://localhost",  # temp
@@ -33,7 +34,7 @@ for router in routers:
     app.include_router(router)
 
 
-@app.post("/delete_all_cookie/")
+@app.post("/delete_all_cookie/", tags=[OTHER_TAG])
 def delete_cookie():
     response = JSONResponse(content="deleted")
     return CookieHandler.delete_all_cookie(response)

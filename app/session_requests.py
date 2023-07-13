@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from starlette.responses import JSONResponse
 
 from app.constants import ACCESS_TOKEN_USAGE_URL_PART
+from app.tags import AUTH_TAG
 from app.tokens.dependencies import (
     imprint_token_correctness_depend,
     access_token_correctness_depend,
@@ -10,7 +11,7 @@ from app.tokens.dependencies import (
 from app.tokens.util import save_and_return_all_tokens
 from sessions.controllers import CookieHandler, JarvisSessionController
 from sessions.request_items import AuthenticationObject, RegistrationObject
-from support.request_api import RequestAPI, post, get
+from support.request_api import RequestAPI
 
 
 class SessionAPI(RequestAPI):
@@ -19,15 +20,16 @@ class SessionAPI(RequestAPI):
         return APIRouter()
 
     router = _router()
+    router.tags = [AUTH_TAG]
 
     @staticmethod
-    @post(router, '/reg/')  # TODO recheck all request for names comparison
+    @router.post('/reg/')  # TODO recheck all request for names comparison
     def registrate_user(auth_item: RegistrationObject,
                         session_controller: JarvisSessionController = Depends(session_controller_depend)):
         session_controller.register_user(auth_item.email, auth_item.password, auth_item.phone)
 
     @staticmethod
-    @post(router, '/auth/')
+    @router.post('/auth/', tags=[AUTH_TAG])
     def authenticate_user(auth_item: AuthenticationObject,
                           imprint_token: str | None = Depends(imprint_token_correctness_depend),
                           session_controller: JarvisSessionController = Depends(session_controller_depend)):
@@ -36,13 +38,13 @@ class SessionAPI(RequestAPI):
         return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
     @staticmethod
-    @get(router, ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
+    @router.get(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
     def auth_by_token(_: str = Depends(access_token_correctness_depend),
                       __: str = Depends(imprint_token_correctness_depend)):
         return True
 
     @staticmethod
-    @get(router, ACCESS_TOKEN_USAGE_URL_PART + '/logout/')
+    @router.get(ACCESS_TOKEN_USAGE_URL_PART + '/logout/')
     def log_out(access_token: str = Depends(access_token_correctness_depend),
                 imprint_token: str = Depends(imprint_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend)):

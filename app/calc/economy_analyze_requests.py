@@ -9,7 +9,6 @@ from sessions.controllers import JarvisSessionController
 from sessions.request_handler import RequestHandler
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, \
     RequestInfo
-from support.request_api import post, get
 from support.types import JEconomySaveObject
 from support.utils import convert_save_objects_to_jorm, convert_save_objects_to_pydantic
 
@@ -24,7 +23,7 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @post(router, '/calculate/', response_model=UnitEconomyResultObject)
+    @router.post('/calculate/', response_model=UnitEconomyResultObject)
     def calculate(unit_economy_item: UnitEconomyRequestObject,
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
@@ -36,7 +35,7 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
         return result
 
     @staticmethod
-    @post(router, '/save/', response_model=RequestInfo)
+    @router.post('/save/', response_model=RequestInfo)
     def save(unit_economy_save_item: UnitEconomySaveObject,
              access_token: str = Depends(access_token_correctness_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
@@ -48,7 +47,7 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                                                                  jorm_economy_save_object)
 
     @staticmethod
-    @get(router, '/get-all/', response_model=list[UnitEconomySaveObject])
+    @router.get('/get-all/', response_model=list[UnitEconomySaveObject])
     def get_all(access_token: str = Depends(access_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
@@ -61,7 +60,7 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
         return result
 
     @staticmethod
-    @get(router, '/delete/')
+    @router.get('/delete/')
     def delete(request_id: int,
                access_token: str = Depends(access_token_correctness_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
