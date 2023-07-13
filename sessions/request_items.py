@@ -13,10 +13,14 @@ class BasicSaveObject(BaseModel):
     info: RequestInfo = RequestInfo.parse_obj({'name': "", 'id': None, 'timestamp': 0.0})
 
 
-class FrequencyRequest(BaseModel):
-    niche_name: str
-    category_name: str
+class NicheRequest(BaseModel):
+    niche: str
+    category: str
     marketplace_id: int
+
+
+class FrequencyRequest(NicheRequest):
+    pass
 
 
 class FrequencyResult(BaseModel):
@@ -29,12 +33,9 @@ class FrequencySaveObject(BasicSaveObject):
     result: FrequencyResult
 
 
-class UnitEconomyRequestObject(BaseModel):
+class UnitEconomyRequestObject(NicheRequest):
     buy: int
     pack: int
-    niche: str
-    category: str
-    marketplace_id: int
     transit_count: int = -1
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
@@ -63,8 +64,22 @@ class ProductDownturnResultObject(BaseModel):
     result_dict: dict[int, dict[int, dict[str, int]]]
 
 
-class ProductDownturnSaveObject(BasicSaveObject):
-    result: ProductDownturnResultObject
+class ProductTurnoverResultObject(BaseModel):
+    result_dict: dict[int, dict[int, dict[str, float]]]
+
+
+class NicheCharacteristicsResultObject(BaseModel):
+    card_count: int
+    niche_profit: int
+    card_trade_count: int
+    mean_card_rating: float
+    card_with_trades_count: int
+    daily_mean_niche_profit: int
+    daily_mean_trade_count: int
+    mean_traded_card_cost: int
+    month_mean_niche_profit_per_card: int
+    monopoly_percent: float
+    maximum_profit_idx: int
 
 
 class RegistrationObject(BaseModel):

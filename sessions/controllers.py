@@ -128,6 +128,7 @@ class JarvisSessionController:
         return 0
 
     def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
+        # TODO add here lower() and trim() with extra spaces deletion
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_name, marketplace_id)
         if result_niche is not None:
             LOGGER.debug(f"get_niche: niche loaded from category.")

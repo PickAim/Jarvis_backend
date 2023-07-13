@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import TypeVar, Type
 
 from dacite import from_dict
+from jorm.market.service import RequestInfo as JReqeustInfo
 from jorm.market.service import RequestInfo as JRequestInfo, Request, Result
 from pydantic import BaseModel
 
@@ -36,14 +37,18 @@ def convert_save_objects_to_jorm(save_object: BasicSaveObject, type_to_convert: 
 
 
 def convert_save_objects_to_pydantic(type_to_convert: Type[BasicSaveObject], request: Request,
-                                     result: Result, info: RequestInfo):
+                                     result: Result, info: JReqeustInfo):
     pydantic_request = jorm_to_pydantic(request, type_to_convert.__annotations__['request'])
     pydantic_result = jorm_to_pydantic(result, type_to_convert.__annotations__['result'])
-    pydantic_info = jorm_to_pydantic(info, RequestInfo)
+    pydantic_info_dict = {
+        "name": info.name,
+        "id": info.id,
+        "timestamp": info.date.timestamp()
+    }
     return type_to_convert.parse_obj(
         {
             'request': pydantic_request,
             'result': pydantic_result,
-            'info': pydantic_info
+            'info': RequestInfo.parse_obj(pydantic_info_dict)
         }
     )
