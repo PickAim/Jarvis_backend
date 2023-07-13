@@ -9,7 +9,7 @@ from sessions.request_handler import RequestHandler
 from sessions.request_items import RequestInfo, FrequencyRequest, FrequencyResult, FrequencySaveObject
 from support.request_api import post, get
 from support.types import JFrequencySaveObject
-from support.utils import convert_save_objects
+from support.utils import convert_save_objects_to_jorm, convert_save_objects_to_pydantic
 
 
 class NicheFrequencyAPI(SavableCalculationRequestAPI):
@@ -31,10 +31,8 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
                                              frequency_request.category_name,
                                              frequency_request.marketplace_id)
         result = CalculationController.calc_frequencies(niche)
-        return {
-            'x': result[0],
-            'y': result[1]
-        }
+        converted_result = FrequencyResult.parse_obj(result)
+        return converted_result
 
     @staticmethod
     @post(router, '/save/', response_model=RequestInfo)
@@ -43,19 +41,26 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
-        jorm_save_object: JFrequencySaveObject = convert_save_objects(frequency_save_item, JFrequencySaveObject)
+        jorm_save_object: JFrequencySaveObject = convert_save_objects_to_jorm(frequency_save_item, JFrequencySaveObject)
         return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_save_object)
 
     @staticmethod
-    @get(router, '/get-all/', response_model=RequestInfo)
+    @get(router, '/get-all/', response_model=list[FrequencySaveObject])
     def get_all(access_token: str = Depends(access_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
-        pass
+        user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
+        frequencies_results_list = request_handler.get_all_request_results(user.user_id, JFrequencySaveObject)
+        result = [
+            convert_save_objects_to_pydantic(FrequencySaveObject, *frequency_result)
+            for frequency_result in frequencies_results_list
+        ]
+        return result
 
     @staticmethod
     @get(router, '/delete/')
     def delete(request_id: int, access_token: str = Depends(access_token_correctness_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
-        pass
+        user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
+        request_handler.delete_request(request_id, user.user_id, JFrequencySaveObject)

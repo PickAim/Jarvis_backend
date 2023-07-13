@@ -20,7 +20,8 @@ class FrequencyRequest(BaseModel):
 
 
 class FrequencyResult(BaseModel):
-    frequencies: dict[int, int]
+    x: list[int]
+    y: list[int]
 
 
 class FrequencySaveObject(BasicSaveObject):

@@ -13,8 +13,12 @@ from support.utils import jorm_to_pydantic
 
 class CalculationController:
     @staticmethod
-    def calc_frequencies(niche: Niche) -> tuple[list[int], list[int]]:
-        return NicheHistCalculator.calculate(niche)
+    def calc_frequencies(niche: Niche) -> dict[str, list[int]]:
+        result = NicheHistCalculator.calculate(niche)
+        return {
+            'x': result[0],
+            'y': result[1]
+        }
 
     @staticmethod
     def calc_unit_economy(data: UnitEconomyRequestObject,
