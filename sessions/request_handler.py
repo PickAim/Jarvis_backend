@@ -8,21 +8,13 @@ from jorm.market.service import UnitEconomyRequest, FrequencyRequest, RequestInf
 from support.types import JBasicSaveObject, JEconomySaveObject, JFrequencySaveObject
 
 
-def __save_unit_economy_request(db_controller: DBController, save_object: JEconomySaveObject,
-                                user_id: int) -> int:
+def __save_unit_economy_request(db_controller: DBController, save_object: JEconomySaveObject, user_id: int) -> int:
     request = save_object.request
     result = save_object.result
     info = save_object.info
     if not isinstance(request, UnitEconomyRequest) or not isinstance(result, UnitEconomyResult):
-        raise Exception(str(type(RequestHandler)) + ": unexpected request or result type")
-    try:
-        return db_controller.save_unit_economy_request(request, result, info, user_id)
-    except Exception:
-        print("SAVED TO DEFAULT NICHE")
-        request.niche = JORMClassesFactory.create_default_niche().name
-        request.category = JORMClassesFactory.create_default_category().name
-        request.warehouse_name = JORMClassesFactory.create_simple_default_warehouse().name
-        return db_controller.save_unit_economy_request(request, result, info, user_id)
+        raise Exception(str(type(RequestHandler)) + " - unexpected request or result type")
+    return db_controller.save_unit_economy_request(request, result, info, user_id)
 
 
 def __save_frequency_request(db_controller: DBController, save_object: JFrequencySaveObject, user_id: int):
@@ -30,7 +22,7 @@ def __save_frequency_request(db_controller: DBController, save_object: JFrequenc
     result = save_object.result
     info = save_object.info
     if not isinstance(request, FrequencyRequest) or not isinstance(result, FrequencyResult):
-        raise Exception(str(type(RequestHandler)) + ": unexpected request or result type")
+        raise Exception(str(type(RequestHandler)) + " - unexpected request or result type")
     return db_controller.save_frequency_request(request, result, info, user_id)
 
 
@@ -139,12 +131,24 @@ class RequestHandler:
 
     def save_request(self, user_id: int, save_object: JBasicSaveObject) -> int:
         save_method = self.__get_executed_method(type(save_object), self.__SAVE_METHODS)
-        return save_method(self.__db_controller, save_object, user_id)
+        return self.__save_request_by_method(save_method, self.__db_controller, save_object, user_id)
 
-    def get_all_request_results(self, user_id: int, request_type: T) -> list[tuple[Request, Result, RequestInfo]]:
+    @staticmethod
+    def __save_request_by_method(save_method: Callable[[DBController, JBasicSaveObject, int], int],
+                                 db_controller: DBController, save_object: JBasicSaveObject, user_id: int) -> int:
+        try:
+            return save_method(db_controller, save_object, user_id)
+        except Exception:
+            print("SAVED TO DEFAULT NICHE")
+            save_object.request.category = JORMClassesFactory.create_default_category().name
+            save_object.request.warehouse_name = JORMClassesFactory.create_simple_default_warehouse().name
+            return save_method(db_controller, save_object, user_id)
+
+    def get_all_request_results(self, user_id: int, request_type: Type[JBasicSaveObject]) \
+            -> list[tuple[Request, Result, RequestInfo]]:
         get_all_method = self.__get_executed_method(request_type, self.__GET_ALL_METHODS)
         return get_all_method(self.__db_controller, user_id)
 
-    def delete_request(self, request_id: int, user_id: int, request_type: T) -> None:
+    def delete_request(self, request_id: int, user_id: int, request_type: Type[JBasicSaveObject]) -> None:
         delete_method = self.__get_executed_method(request_type, self.__DELETE_METHODS)
         delete_method(self.__db_controller, request_id, user_id)
