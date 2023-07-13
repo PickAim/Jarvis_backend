@@ -1,7 +1,6 @@
 from fastapi import Depends
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, UserPrivilege
-from jorm.market.service import UnitEconomyRequest
 
 from app.calc.calculation import CalculationController
 from app.calc.calculation_request_api import SavableCalculationRequestAPI
@@ -12,7 +11,7 @@ from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultOb
     RequestInfo
 from support.request_api import post, get
 from support.types import JEconomySaveObject
-from support.utils import jorm_to_pydantic, convert_save_objects
+from support.utils import convert_save_objects_to_jorm, convert_save_objects_to_pydantic
 
 
 class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
@@ -43,7 +42,8 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
-        jorm_economy_save_object: JEconomySaveObject = convert_save_objects(unit_economy_save_item, JEconomySaveObject)
+        jorm_economy_save_object: JEconomySaveObject = convert_save_objects_to_jorm(unit_economy_save_item,
+                                                                                    JEconomySaveObject)
         return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id,
                                                                  jorm_economy_save_object)
 
@@ -55,15 +55,8 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
         user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         unit_economy_results_list = request_handler.get_all_request_results(user.user_id, JEconomySaveObject)
         result = [
-            UnitEconomySaveObject.parse_obj({
-                "request": jorm_to_pydantic(unit_economy_result[0], UnitEconomyRequestObject),
-                "result": jorm_to_pydantic(unit_economy_result[1], UnitEconomyResultObject),
-                "info": RequestInfo.parse_obj({
-                    "name": unit_economy_result[2].name,
-                    "id": unit_economy_result[2].id,
-                    "timestamp": unit_economy_result[2].date.timestamp()
-                })
-            }) for unit_economy_result in unit_economy_results_list
+            convert_save_objects_to_pydantic(UnitEconomySaveObject, *unit_economy_result)
+            for unit_economy_result in unit_economy_results_list
         ]
         return result
 
@@ -74,4 +67,4 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
-        request_handler.delete_request(request_id, user.user_id, UnitEconomyRequest)
+        request_handler.delete_request(request_id, user.user_id, JEconomySaveObject)

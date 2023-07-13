@@ -1,7 +1,5 @@
 from jorm.market.service import FrequencyRequest, FrequencyResult, UnitEconomyRequest, UnitEconomyResult, Request, \
-    Result
-
-from sessions.request_items import RequestInfo
+    Result, RequestInfo
 
 
 class JBasicSaveObject:
