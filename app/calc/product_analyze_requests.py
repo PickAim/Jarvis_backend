@@ -49,6 +49,6 @@ class ProductTurnoverAPI(CalculationRequestAPI):
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
         return {
-            product.global_id: CalculationController.calc_downturn_days(product, datetime.utcnow())
+            product.global_id: CalculationController.calc_turnover(product, datetime.utcnow())
             for product in user_products
         }
