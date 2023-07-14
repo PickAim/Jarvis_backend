@@ -6,6 +6,7 @@ from app.calc.calculation import CalculationController
 from app.calc.calculation_request_api import SavableCalculationRequestAPI
 from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
 from sessions.controllers import JarvisSessionController
+from sessions.exceptions import JarvisExceptions
 from sessions.request_handler import RequestHandler
 from sessions.request_items import UnitEconomyRequestObject, UnitEconomyResultObject, UnitEconomySaveObject, \
     RequestInfo
@@ -28,8 +29,11 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
-        niche: Niche = session_controller.get_niche(unit_economy_item.niche,
-                                                    unit_economy_item.category, unit_economy_item.marketplace_id)
+        niche: Niche = session_controller.get_relaxed_niche(unit_economy_item.niche,
+                                                            unit_economy_item.category,
+                                                            unit_economy_item.marketplace_id)
+        if niche is None:
+            raise JarvisExceptions.INCORRECT_NICHE
         warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
         result = CalculationController.calc_unit_economy(unit_economy_item, niche, warehouse, user)
         return result

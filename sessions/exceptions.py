@@ -29,6 +29,9 @@ class JarvisExceptionsCode:
     # accessible
     INCORRECT_GRANT_TYPE = 3010
 
+    # incorrect requests
+    INCORRECT_NICHE = 4010
+
 
 class JarvisExceptions:
     @staticmethod
@@ -51,3 +54,6 @@ class JarvisExceptions:
 
     EXISTING_LOGIN: HTTPException = \
         create_exception_with_code(JarvisExceptionsCode.REGISTER_EXISTING_LOGIN, "Existing login exception")
+
+    INCORRECT_NICHE: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_NICHE, "Incorrect niche requested")

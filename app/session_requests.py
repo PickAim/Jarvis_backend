@@ -23,7 +23,7 @@ class SessionAPI(RequestAPI):
     router.tags = [AUTH_TAG]
 
     @staticmethod
-    @router.post('/reg/')  # TODO recheck all request for names comparison
+    @router.post('/reg/')
     def registrate_user(auth_item: RegistrationObject,
                         session_controller: JarvisSessionController = Depends(session_controller_depend)):
         session_controller.register_user(auth_item.email, auth_item.password, auth_item.phone)

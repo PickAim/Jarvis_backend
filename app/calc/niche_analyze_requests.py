@@ -27,9 +27,9 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
-        niche = session_controller.get_niche(frequency_request.niche,
-                                             frequency_request.category,
-                                             frequency_request.marketplace_id)
+        niche = session_controller.get_relaxed_niche(frequency_request.niche,
+                                                     frequency_request.category,
+                                                     frequency_request.marketplace_id)
         result = CalculationController.calc_frequencies(niche)
         converted_result = FrequencyResult.parse_obj(result)
         return converted_result
@@ -81,6 +81,7 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
     def calculate(niche_request: NicheRequest, access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
-        niche = session_controller.get_niche(niche_request.niche, niche_request.category, niche_request.marketplace_id)
+        niche = session_controller.get_relaxed_niche(niche_request.niche,
+                                                     niche_request.category, niche_request.marketplace_id)
         result = CalculationController.calc_niche_characteristics(niche)
         return result

@@ -127,11 +127,17 @@ class JarvisSessionController:
             return JarvisExceptionsCode.HAS_WHITE_SPACES
         return 0
 
-    def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
-        # TODO add here lower() and trim() with extra spaces deletion
+    def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche | None:
+        niche_name = self.__prepare_strings(niche_name)
+        category_name = self.__prepare_strings(category_name)
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_name, marketplace_id)
+        return result_niche
+
+    def get_relaxed_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
+        niche_name = self.__prepare_strings(niche_name)
+        category_name = self.__prepare_strings(category_name)
+        result_niche = self.get_niche(niche_name, category_name, marketplace_id)
         if result_niche is not None:
-            LOGGER.debug(f"get_niche: niche loaded from category.")
             return result_niche
         result_niche = self.__db_controller.get_niche(niche_name, DEFAULT_CATEGORY_NAME, marketplace_id)
         if result_niche is not None:
@@ -143,6 +149,12 @@ class JarvisSessionController:
             return result_niche
         LOGGER.debug(f"get_niche: default niche created.")
         return JORMClassesFactory(self.__db_controller).create_default_niche()
+
+    @staticmethod
+    def __prepare_strings(string: str):
+        string = string.strip()
+        string = re.sub(' +', ' ', string)
+        return string.lower()
 
     def get_warehouse(self, warehouse_name: str) -> Warehouse:
         warehouse = self.__jorm_classes_factory.warehouse(warehouse_name)
