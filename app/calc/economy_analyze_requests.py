@@ -29,12 +29,13 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                   access_token: str = Depends(access_token_correctness_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
-        niche: Niche = session_controller.get_relaxed_niche(unit_economy_item.niche,
-                                                            unit_economy_item.category,
-                                                            unit_economy_item.marketplace_id)
+        niche: Niche = session_controller.get_niche(unit_economy_item.niche,
+                                                    unit_economy_item.category,
+                                                    unit_economy_item.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
-        warehouse: Warehouse = session_controller.get_warehouse(unit_economy_item.warehouse_name)
+        warehouse: Warehouse = \
+            session_controller.get_warehouse(unit_economy_item.warehouse_name, unit_economy_item.marketplace_id)
         result = CalculationController.calc_unit_economy(unit_economy_item, niche, warehouse, user)
         return result
 
