@@ -148,7 +148,7 @@ class JarvisSessionController:
             LOGGER.debug(f"get_niche: niche loaded just in time.")
             return result_niche
         LOGGER.debug(f"get_niche: default niche created.")
-        return JORMClassesFactory(self.__db_controller).create_default_niche()
+        return self.__jorm_classes_factory.create_default_niche()
 
     @staticmethod
     def __prepare_strings(string: str):
@@ -156,11 +156,12 @@ class JarvisSessionController:
         string = re.sub(' +', ' ', string)
         return string.lower()
 
-    def get_warehouse(self, warehouse_name: str) -> Warehouse:
-        warehouse = self.__jorm_classes_factory.warehouse(warehouse_name)
+    def get_warehouse(self, warehouse_name: str, marketplace_id: int) -> Warehouse:
+        warehouse = self.__db_controller.get_warehouse(warehouse_name, marketplace_id)
         if warehouse is not None:
             return warehouse
-        return JORMClassesFactory(self.__db_controller).create_default_warehouse()
+        reference_warehouses = self.__db_controller.get_all_warehouses(marketplace_id)
+        return self.__jorm_classes_factory.create_default_warehouse(reference_warehouses)
 
     def get_products_by_user(self, user_id: int) -> list[Product]:
         return self.__db_controller.get_products_by_user(user_id)
