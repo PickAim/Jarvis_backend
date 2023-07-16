@@ -1,11 +1,14 @@
 from fastapi import Depends
 from jarvis_db.services.market.infrastructure.warehouse_service import WarehouseService
+from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 from jorm.market.infrastructure import Warehouse, HandlerType, Address
 from jorm.market.items import Product
 
+from sessions.controllers import JarvisSessionController
 from sessions.db_context import DbContext
+from sessions.request_handler import RequestHandler, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS
 
 __DB_CONTEXT = None
 __DEFAULTS_INITED = False
@@ -94,3 +97,13 @@ def session_depend(db_context: DbContext = Depends(db_context_depends)):
             init_defaults(session)
             __DEFAULTS_INITED = True
         yield session
+
+
+def session_controller_depend(session=Depends(session_depend)) -> JarvisSessionController:
+    db_controller = JCalcClassesFactory.create_db_controller(session)
+    return JarvisSessionController(db_controller)
+
+
+def request_handler_depend(session=Depends(session_depend)) -> RequestHandler:
+    db_controller = JCalcClassesFactory.create_db_controller(session)
+    return RequestHandler(db_controller, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS)

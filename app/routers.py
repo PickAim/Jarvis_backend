@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 
-from app.calc.economy_analyze_requests import EconomyAnalyzeAPI
-from app.calc.niche_analyze_requests import NicheFrequencyAPI, NicheCharacteristicsAPI
-from app.calc.product_analyze_requests import ProductDownturnAPI, ProductTurnoverAPI
-from app.session_requests import SessionAPI
-from app.tokens.requests import TokenAPI
+from app.auth_api import SessionAPI
+from app.calc.economy_analyze_api import EconomyAnalyzeAPI
+from app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
+from app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
+from app.info_api import InfoAPI
+from app.tokens.token_api import TokenAPI
 
 routers: list[APIRouter] = [
     TokenAPI.router,
@@ -13,5 +14,6 @@ routers: list[APIRouter] = [
     EconomyAnalyzeAPI.router,
     ProductDownturnAPI.router,
     ProductTurnoverAPI.router,
-    NicheCharacteristicsAPI.router
+    NicheCharacteristicsAPI.router,
+    InfoAPI.router
 ]

@@ -5,13 +5,12 @@ from jorm.market.service import UnitEconomyResult
 from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_CATEGORY_NAME
 from starlette.exceptions import HTTPException
 
-from app.calc.economy_analyze_requests import EconomyAnalyzeAPI
+from app.auth_api import SessionAPI
+from app.calc.economy_analyze_api import EconomyAnalyzeAPI
 from app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
-from app.session_requests import SessionAPI
-from app.tokens.dependencies import session_controller_depend, request_handler_depend
-from app.tokens.requests import TokenAPI
+from app.tokens.token_api import TokenAPI
 from sessions.controllers import JarvisSessionController
-from sessions.dependencies import db_context_depends, init_defaults
+from sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, request_handler_depend
 from sessions.request_handler import RequestHandler
 from sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject

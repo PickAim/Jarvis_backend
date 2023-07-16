@@ -15,7 +15,7 @@ class BasicSaveObject(BaseModel):
 
 class NicheRequest(BaseModel):
     niche: str
-    category: str
+    category_id: int
     marketplace_id: int
 
 

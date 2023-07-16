@@ -127,16 +127,14 @@ class JarvisSessionController:
             return JarvisExceptionsCode.HAS_WHITE_SPACES
         return 0
 
-    def get_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche | None:
+    def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         niche_name = self.__prepare_strings(niche_name)
-        category_name = self.__prepare_strings(category_name)
-        result_niche: Niche = self.__db_controller.get_niche(niche_name, category_name, marketplace_id)
+        result_niche: Niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
         return result_niche
 
-    def get_relaxed_niche(self, niche_name: str, category_name: str, marketplace_id: int) -> Niche:
+    def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche:
         niche_name = self.__prepare_strings(niche_name)
-        category_name = self.__prepare_strings(category_name)
-        result_niche = self.get_niche(niche_name, category_name, marketplace_id)
+        result_niche = self.get_niche(niche_name, category_id, marketplace_id)
         if result_niche is not None:
             return result_niche
         result_niche = self.__db_controller.get_niche(niche_name, DEFAULT_CATEGORY_NAME, marketplace_id)
@@ -165,6 +163,27 @@ class JarvisSessionController:
 
     def get_products_by_user(self, user_id: int) -> list[Product]:
         return self.__db_controller.get_products_by_user(user_id)
+
+    def get_all_marketplaces(self) -> dict[int, str]:
+        id_to_marketplace = self.__db_controller.get_all_marketplaces()
+        return {
+            marketplace_id: id_to_marketplace[marketplace_id].name
+            for marketplace_id in id_to_marketplace
+        }
+
+    def get_all_categories(self, marketplace_id: int) -> dict[int, str]:
+        id_to_category = self.__db_controller.get_all_categories(marketplace_id)
+        return {
+            category_id: id_to_category[category_id].name
+            for category_id in id_to_category
+        }
+
+    def get_all_niches(self, category_id: int, marketplace_id: int) -> dict[int, str]:
+        id_to_niche = self.__db_controller.get_all_niches(category_id, marketplace_id)
+        return {
+            niche_id: id_to_niche[niche_id].name
+            for niche_id in id_to_niche
+        }
 
 
 class CookieHandler:

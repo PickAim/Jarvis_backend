@@ -3,8 +3,9 @@ from jorm.market.person import User, UserPrivilege
 
 from app.calc.calculation import CalculationController
 from app.calc.calculation_request_api import SavableCalculationRequestAPI, CalculationRequestAPI
-from app.tokens.dependencies import access_token_correctness_depend, session_controller_depend, request_handler_depend
+from app.tokens.dependencies import access_token_correctness_depend
 from sessions.controllers import JarvisSessionController
+from sessions.dependencies import session_controller_depend, request_handler_depend
 from sessions.exceptions import JarvisExceptions
 from sessions.request_handler import RequestHandler
 from sessions.request_items import RequestInfo, FrequencyRequest, FrequencyResult, FrequencySaveObject, \
@@ -30,7 +31,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
         # TODO switch to relaxed niche as soon as implemented
         niche = session_controller.get_niche(frequency_request.niche,
-                                             frequency_request.category,
+                                             frequency_request.category_id,
                                              frequency_request.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
@@ -87,7 +88,7 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
         NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
         # TODO switch to relaxed niche as soon as implemented
         niche = session_controller.get_niche(niche_request.niche,
-                                             niche_request.category, niche_request.marketplace_id)
+                                             niche_request.category_id, niche_request.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         result = CalculationController.calc_niche_characteristics(niche)
