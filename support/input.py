@@ -34,6 +34,7 @@ class InputValidator:
     __DIGIT_CONTAINING_PATTERN = re.compile(r"\d")
     __SPECIAL_SIGNS_PATTERN = re.compile(r"[!@#$%^&*()_+~]")
     __WHITE_SPACE_CONTAINING_PATTERN = re.compile(r"[ \t\n]")
+    __EMAIL_VALIDATION_PATTERN = re.compile(r"\b[A-Za-z\d._%+-]+@[A-Za-z\d.-]+\.[A-Z|a-z]{2,7}\b")
 
     def check_password_correctness(self, password: str) -> int:
         if len(password) < 8:
@@ -60,3 +61,6 @@ class InputValidator:
             return 0
         except NumberParseException as e:
             raise JarvisExceptions.create_exception_with_code(JarvisExceptionsCode.INVALID_PHONE_NUMBER, str(e))
+
+    def check_email_correctness(self, email: str):
+        return re.match(self.__EMAIL_VALIDATION_PATTERN, email)

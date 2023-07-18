@@ -20,6 +20,26 @@ from support.input import InputValidator, InputPreparer
 LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
 
 
+class InputController:
+    @staticmethod
+    def process_phone_number(phone_number: str) -> str:
+        input_preparer = InputPreparer()
+        input_validator = InputValidator()
+        phone_number = input_preparer.prepare_phone_number(phone_number)
+        phone_check_status = input_validator.check_phone_number_correctness(phone_number)
+        if phone_check_status != 0:
+            raise JarvisExceptions.create_exception_with_code(phone_check_status, "Phone number check failed")
+        return phone_number
+
+    @staticmethod
+    def process_password(password: str) -> str:
+        input_validator = InputValidator()
+        password_check_status: int = input_validator.check_password_correctness(password)
+        if password_check_status != 0:
+            raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
+        return password
+
+
 class JarvisSessionController:
     def __init__(self, db_controller):
         self.temp_user_count: int = 0
@@ -100,15 +120,8 @@ class JarvisSessionController:
         account: Account = self.__db_controller.get_account(email, phone_number)
         if account is not None:
             raise JarvisExceptions.EXISTING_LOGIN
-        input_validator = InputValidator()
-        password_check_status: int = input_validator.check_password_correctness(password)
-        if password_check_status != 0:
-            raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
-        input_preparer = InputPreparer()
-        phone_number = input_preparer.prepare_phone_number(phone_number)
-        phone_check_status = input_validator.check_phone_number_correctness(phone_number)
-        if phone_check_status != 0:
-            raise JarvisExceptions.create_exception_with_code(password_check_status, "Phone number check failed")
+        password = InputController.process_password(password)
+        phone_number = InputController.process_phone_number(phone_number)
         hashed_password: str = self.__password_hasher.hash(password)
         account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
         user: User = self.__jorm_classes_factory.create_user(self.temp_user_count)
