@@ -19,6 +19,9 @@ class JarvisExceptionsCode:
     NOT_HAS_SPECIAL_SIGNS = 1060
     HAS_WHITE_SPACES = 1070
 
+    # phone number correctness exceptions
+    INVALID_PHONE_NUMBER = 1080
+
     # registration exceptions
     REGISTER_EXISTING_LOGIN = 1080
 

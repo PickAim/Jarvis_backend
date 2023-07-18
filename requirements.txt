@@ -8,3 +8,4 @@ passlib>=1.7.4
 dacite>=1.8.1
 pydantic>=1.10.7
 SQLAlchemy>=2.0.12
+phonenumbers>=8.13.16
