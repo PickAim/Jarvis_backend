@@ -3,14 +3,14 @@ from pydantic import BaseModel
 
 class RequestInfo(BaseModel):
     name: str
-    id: int = None
+    id: int | None = -1
     timestamp: float = 0.0
 
 
 class BasicSaveObject(BaseModel):
     request: BaseModel = ""
     result: BaseModel = ""
-    info: RequestInfo = RequestInfo.parse_obj({'name': "", 'id': None, 'timestamp': 0.0})
+    info: RequestInfo = RequestInfo.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
 
 
 class NicheRequest(BaseModel):

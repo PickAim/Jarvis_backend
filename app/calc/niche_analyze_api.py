@@ -36,7 +36,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         result = CalculationController.calc_frequencies(niche)
-        converted_result = FrequencyResult.parse_obj(result)
+        converted_result = FrequencyResult.model_validate(result)
         return converted_result
 
     @staticmethod

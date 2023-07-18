@@ -14,11 +14,11 @@ T = TypeVar("T")
 
 
 def pydantic_to_jorm(data_class: Type[T], base_model_object: BaseModel) -> T:
-    return from_dict(data_class, json.loads(base_model_object.json()))
+    return from_dict(data_class, json.loads(base_model_object.model_dump_json()))
 
 
 def jorm_to_pydantic(obj, base_model_class: Type[T]) -> T:
-    return base_model_class.parse_obj(obj.__dict__)
+    return base_model_class.model_validate(obj.__dict__)
 
 
 def transform_info(info: RequestInfo) -> JRequestInfo:
@@ -45,10 +45,10 @@ def convert_save_objects_to_pydantic(type_to_convert: Type[BasicSaveObject], req
         "id": info.id,
         "timestamp": info.date.timestamp()
     }
-    return type_to_convert.parse_obj(
+    return type_to_convert.model_validate(
         {
             'request': pydantic_request,
             'result': pydantic_result,
-            'info': RequestInfo.parse_obj(pydantic_info_dict)
+            'info': RequestInfo.model_validate(pydantic_info_dict)
         }
     )

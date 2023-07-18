@@ -62,9 +62,9 @@ class IntegrationTest(unittest.TestCase):
             "login": "+78914561245",
             "password": "MyPass1234!",
         }
-        reg_item = RegistrationObject.parse_obj(registration_object)
-        auth_item_with_email = AuthenticationObject.parse_obj(authentication_by_email_object)
-        auth_item_with_phone = AuthenticationObject.parse_obj(authentication_by_phone_object)
+        reg_item = RegistrationObject.model_validate(registration_object)
+        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+        auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
         db_context = db_context_depends()
         self.session = get_session(db_context)
         self.session_controller = session_controller_depend(self.session)
@@ -121,7 +121,7 @@ class IntegrationTest(unittest.TestCase):
             "warehouse_name": "DEFAULT_WAREHOUSE",
             "marketplace_id": marketplace_id
         }
-        request_object = UnitEconomyRequestObject.parse_obj(unit_economy_object)
+        request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
         calculation_result = self.economy_api.calculate(
             request_object,
             self.access_token, self.session_controller
@@ -130,7 +130,7 @@ class IntegrationTest(unittest.TestCase):
             'request': request_object,
             'result': calculation_result
         }
-        unit_economy_save_item = UnitEconomySaveObject.parse_obj(save_dict)
+        unit_economy_save_item = UnitEconomySaveObject.model_validate(save_dict)
         self.economy_api.save(unit_economy_save_item, self.access_token, self.session_controller, self.request_handler)
         result = self.economy_api.get_all(self.access_token, self.session_controller, self.request_handler)
         saved_object = result[0]
