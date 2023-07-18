@@ -74,3 +74,18 @@ class ValidationTest(unittest.TestCase):
         with self.assertRaises(HTTPException) as catcher:
             InputController.process_password(password)
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.HAS_WHITE_SPACES, catcher.exception)
+
+    def test_email_validation(self):
+        email = "myEmail@mail.ngs.com"
+        result_email = InputController.process_email(email)
+        self.assertEqual(email, result_email)
+
+    def test_invalid_email_validation(self):
+        email = "myEmail.ngs.com"
+        with self.assertRaises(HTTPException) as catcher:
+            InputController.process_email(email)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INVALID_EMAIL, catcher.exception)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -23,6 +23,8 @@ LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
 class InputController:
     @staticmethod
     def process_phone_number(phone_number: str) -> str:
+        if phone_number is None or phone_number == '':
+            return ''
         input_preparer = InputPreparer()
         input_validator = InputValidator()
         phone_number = input_preparer.prepare_phone_number(phone_number)
@@ -38,6 +40,17 @@ class InputController:
         if password_check_status != 0:
             raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
         return password
+
+    @staticmethod
+    def process_email(email: str) -> str:
+        if email is None or email == '':
+            return ''
+        email = email.strip()
+        input_validator = InputValidator()
+        email_check_status = input_validator.check_email_correctness(email)
+        if email_check_status != 0:
+            raise JarvisExceptions.create_exception_with_code(email_check_status, "Email check failed")
+        return email
 
 
 class JarvisSessionController:
@@ -113,15 +126,12 @@ class JarvisSessionController:
         return access_token, update_token, imprint_token
 
     def register_user(self, email: str, password: str, phone_number: str):
-        if email == '':
-            email = None
-        if phone_number == '':
-            phone_number = None
+        email = InputController.process_email(email)
+        phone_number = InputController.process_phone_number(phone_number)
         account: Account = self.__db_controller.get_account(email, phone_number)
         if account is not None:
             raise JarvisExceptions.EXISTING_LOGIN
         password = InputController.process_password(password)
-        phone_number = InputController.process_phone_number(phone_number)
         hashed_password: str = self.__password_hasher.hash(password)
         account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
         user: User = self.__jorm_classes_factory.create_user(self.temp_user_count)

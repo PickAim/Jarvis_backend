@@ -62,5 +62,7 @@ class InputValidator:
         except NumberParseException as e:
             raise JarvisExceptions.create_exception_with_code(JarvisExceptionsCode.INVALID_PHONE_NUMBER, str(e))
 
-    def check_email_correctness(self, email: str):
-        return re.match(self.__EMAIL_VALIDATION_PATTERN, email)
+    def check_email_correctness(self, email: str) -> int:
+        if not re.fullmatch(self.__EMAIL_VALIDATION_PATTERN, email):
+            return JarvisExceptionsCode.INVALID_EMAIL
+        return 0

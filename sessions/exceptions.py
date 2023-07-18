@@ -8,6 +8,9 @@ JARVIS_DESCRIPTION_KEY = 'description'
 
 
 class JarvisExceptionsCode:
+    # registration exceptions
+    REGISTER_EXISTING_LOGIN = 1000
+
     # authorization exceptions
     INCORRECT_LOGIN_OR_PASSWORD = 1010
 
@@ -22,14 +25,14 @@ class JarvisExceptionsCode:
     # phone number correctness exceptions
     INVALID_PHONE_NUMBER = 1080
 
-    # registration exceptions
-    REGISTER_EXISTING_LOGIN = 1080
+    # email correctness exceptions
+    INVALID_EMAIL = 1090
 
     # token exceptions
     INCORRECT_TOKEN = 2010
     EXPIRED_TOKEN = 2020
 
-    # accessible
+    # accessibility
     INCORRECT_GRANT_TYPE = 3010
 
     # incorrect requests
