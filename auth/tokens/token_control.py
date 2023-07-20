@@ -10,7 +10,6 @@ letters = string.printable
 
 
 # "3ARtLTXRn9urnRK9d6rzDbj5Jy5vp/iG8dlaseZliD4="
-# TODO split token controller 
 
 class TokenController:
     def __init__(self, key: str = "3ARtLTXRn9urnRK9d6rzDbj5Jy5vp/iG8dlaseZliD4=", algorythm: str = "HS256"):

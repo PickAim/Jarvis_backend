@@ -187,8 +187,8 @@ class JarvisSessionController:
             for category_id in id_to_category
         }
 
-    def get_all_niches(self, category_id: int, marketplace_id: int) -> dict[int, str]:
-        id_to_niche = self.__db_controller.get_all_niches(category_id, marketplace_id)
+    def get_all_niches(self, category_id: int) -> dict[int, str]:
+        id_to_niche = self.__db_controller.get_all_niches(category_id)
         return {
             niche_id: id_to_niche[niche_id].name
             for niche_id in id_to_niche
