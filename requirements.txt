@@ -1,9 +1,9 @@
-jarvis_calc@ git+https://github.com/PickAim/jarvis_calc.git@v.0.1.5
-jarvis_factory@ git+https://github.com/PickAim/jarvis_factory.git@v.0.1.3
+jarvis_calc@ git+https://github.com/PickAim/jarvis_calc.git@v.0.1.10
+jarvis_factory@ git+https://github.com/PickAim/jarvis_factory.git@v.0.1.4
 fastapi>=0.100.0
-starlette>=0.27.0
+starlette==0.27.0 # do not use newer cause of fastapi depends
 uvicorn>=0.23.1
-PyJWT>=2.7.0
+PyJWT==2.7.0 # do not use newer cause of fastapi depends
 passlib>=1.7.4
 dacite>=1.8.1
 pydantic>=2.0.3
