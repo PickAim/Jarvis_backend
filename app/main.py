@@ -1,9 +1,11 @@
+import asyncio
 import json
 import logging
+import time
 from os import path
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -13,9 +15,11 @@ from app.loggers import ERROR_LOGGER
 from app.routers import routers
 from app.tags import tags_metadata, OTHER_TAG
 from sessions.controllers import CookieHandler
-from sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY
+from sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, JarvisExceptions
 
 app = FastAPI(openapi_tags=tags_metadata)
+
+REQUEST_TIMEOUT_ERROR = 300
 
 origins = [
     # "http://localhost",  # temp
@@ -32,6 +36,21 @@ app.add_middleware(
 
 for router in routers:
     app.include_router(router)
+
+
+@app.middleware("http")
+@app.middleware("https")
+async def timeout_middleware(request: Request, call_next):
+    start_time = time.time()
+    try:
+        return await asyncio.wait_for(call_next(request), timeout=REQUEST_TIMEOUT_ERROR)
+    except asyncio.TimeoutError:
+        process_time = time.time() - start_time
+        raise JarvisExceptions.create_exception_with_code(
+            JarvisExceptionsCode.TIMEOUT,
+            f"Request processing time exceed limit({REQUEST_TIMEOUT_ERROR})."
+            f"Processing time: {process_time}"
+        )
 
 
 @app.post("/delete_all_cookie/", tags=[OTHER_TAG])

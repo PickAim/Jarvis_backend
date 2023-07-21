@@ -15,6 +15,7 @@ from app.loggers import CONTROLLERS_LOGGER
 from auth.hashing.hasher import PasswordHasher
 from auth.tokens.token_control import TokenController
 from sessions.exceptions import JarvisExceptions
+from support.decorators import timeout
 from support.input import InputValidator, InputPreparer
 
 LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
@@ -62,6 +63,7 @@ class JarvisSessionController:
             CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
         self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory(self.__db_controller)
 
+    @timeout(1)
     def get_user(self, any_session_token: str) -> User:
         user = self.__db_controller.get_user_by_id(
             self.__token_controller.get_user_id(any_session_token)
@@ -76,6 +78,7 @@ class JarvisSessionController:
         rnd_part: str = self.__token_controller.get_random_part(token)
         return self.__db_controller.check_token_rnd_part(rnd_part, user_id, imprint_token, token_type)
 
+    @timeout(1)
     def update_tokens(self, update_token: str) -> tuple[str, str]:
         user_id: int = self.__token_controller.get_user_id(update_token)
         old_update_token_rnd_token: str = self.__token_controller.get_random_part(update_token)
@@ -90,6 +93,7 @@ class JarvisSessionController:
         except Exception:
             raise JarvisExceptions.INCORRECT_TOKEN
 
+    @timeout(1)
     def authenticate_user_by_access_token(self, access_token: str, imprint_token: str) -> tuple[str, str, str]:
         user_id = self.__token_controller.get_user_id(access_token)
         user: User = self.__db_controller.get_user_by_id(user_id)
@@ -97,10 +101,12 @@ class JarvisSessionController:
             return self.__create_tokens_for_user(user.user_id, imprint_token)
         raise JarvisExceptions.INCORRECT_TOKEN
 
+    @timeout(1)
     def logout(self, access_token: str, imprint_token: str):
         user_id = self.__token_controller.get_user_id(access_token)
         self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
 
+    @timeout(1)
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
         account: Account = self.__db_controller.get_account(login, login)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
@@ -125,6 +131,7 @@ class JarvisSessionController:
         self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
         return access_token, update_token, imprint_token
 
+    @timeout(1)
     def register_user(self, email: str, password: str, phone_number: str):
         email = InputController.process_email(email)
         phone_number = InputController.process_phone_number(phone_number)
@@ -140,12 +147,14 @@ class JarvisSessionController:
         self.__db_controller.save_user_and_account(user, account)
         return
 
+    @timeout(2)
     def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
         return result_niche
 
+    @timeout(10)
     def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
@@ -163,6 +172,7 @@ class JarvisSessionController:
         LOGGER.debug(f"default niche created.")
         return self.__jorm_classes_factory.create_default_niche()
 
+    @timeout(1)
     def get_warehouse(self, warehouse_name: str, marketplace_id: int) -> Warehouse:
         warehouse = self.__db_controller.get_warehouse(warehouse_name, marketplace_id)
         if warehouse is not None:
@@ -170,9 +180,11 @@ class JarvisSessionController:
         reference_warehouses = self.__db_controller.get_all_warehouses(marketplace_id)
         return self.__jorm_classes_factory.create_default_warehouse(reference_warehouses)
 
+    @timeout(1)
     def get_products_by_user(self, user_id: int) -> list[Product]:
         return self.__db_controller.get_products_by_user(user_id)
 
+    @timeout(1)
     def get_all_marketplaces(self) -> dict[int, str]:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
         return {
@@ -180,6 +192,7 @@ class JarvisSessionController:
             for marketplace_id in id_to_marketplace
         }
 
+    @timeout(1)
     def get_all_categories(self, marketplace_id: int) -> dict[int, str]:
         id_to_category = self.__db_controller.get_all_categories(marketplace_id)
         return {
@@ -187,6 +200,7 @@ class JarvisSessionController:
             for category_id in id_to_category
         }
 
+    @timeout(1)
     def get_all_niches(self, category_id: int) -> dict[int, str]:
         id_to_niche = self.__db_controller.get_all_niches(category_id)
         return {

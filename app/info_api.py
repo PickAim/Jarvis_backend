@@ -22,8 +22,8 @@ class InfoAPI(RequestAPI):
 
     @staticmethod
     @router.get('/get-all-categories/', response_model=dict[int, str])
-    def get_all_marketplaces(marketplace_id: int,
-                             session_controller: JarvisSessionController = Depends(session_controller_depend)) \
+    def get_all_categories(marketplace_id: int,
+                           session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, str]:
         return session_controller.get_all_categories(marketplace_id)
 

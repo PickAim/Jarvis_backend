@@ -38,6 +38,10 @@ class JarvisExceptionsCode:
     # incorrect requests
     INCORRECT_NICHE = 4010
 
+    # session exceptions
+
+    TIMEOUT = 5040
+
 
 class JarvisExceptions:
     @staticmethod
