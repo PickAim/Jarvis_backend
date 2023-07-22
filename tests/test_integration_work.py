@@ -52,14 +52,14 @@ class IntegrationTest(unittest.TestCase):
         registration_object = {
             "email": "any@mail.com",
             "password": "MyPass1234!",
-            "phone": "+78914561245"
+            "phone": "+16034134121"
         }
         authentication_by_email_object = {
             "login": "any@mail.com",
             "password": "MyPass1234!",
         }
         authentication_by_phone_object = {
-            "login": "+78914561245",
+            "login": "+16034134121",
             "password": "MyPass1234!",
         }
         reg_item = RegistrationObject.model_validate(registration_object)
@@ -114,7 +114,7 @@ class IntegrationTest(unittest.TestCase):
             "buy": buy,
             "pack": pack,
             "niche": niche_name,
-            "category": category_name,
+            "category_id": 1,
             "transit_count": transit_count,
             "transit_price": transit_price,
             "market_place_transit_price": marketplace_transit_price,
@@ -146,11 +146,11 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.product_cost, saved_object.result.product_cost)
         self.assertEqual(jorm_result.pack_cost, saved_object.result.product_cost)
         self.assertEqual(jorm_result.marketplace_commission, saved_object.result.marketplace_commission)
-        # self.assertEqual(jorm_result.roi, saved_object.result.roi)
+        self.assertEqual(jorm_result.roi, saved_object.result.roi)
         self.assertEqual(jorm_result.logistic_price, saved_object.result.logistic_price)
         self.assertEqual(jorm_result.storage_price, saved_object.result.storage_price)
         self.assertEqual(jorm_result.margin, saved_object.result.margin)
-        # self.assertEqual(jorm_result.transit_margin, saved_object.result.transit_margin)
+        self.assertEqual(jorm_result.transit_margin, saved_object.result.transit_margin)
         self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
         self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
 
