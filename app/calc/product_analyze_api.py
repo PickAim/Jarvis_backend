@@ -26,6 +26,8 @@ class ProductDownturnAPI(CalculationRequestAPI):
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
+        if user_products is None:
+            return {}
         return {
             product.global_id: CalculationController.calc_downturn_days(product, datetime.utcnow())
             for product in user_products
@@ -48,6 +50,8 @@ class ProductTurnoverAPI(CalculationRequestAPI):
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
+        if user_products is None:
+            return {}
         return {
             product.global_id: CalculationController.calc_turnover(product, datetime.utcnow())
             for product in user_products
