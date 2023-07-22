@@ -1,6 +1,6 @@
 from fastapi import Depends
 from jarvis_db.factories.services import create_marketplace_service, create_warehouse_service, \
-    create_category_service, create_niche_service
+    create_category_service, create_niche_service, create_product_card_service
 from jarvis_db.services.market.infrastructure.warehouse_service import WarehouseService
 from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
@@ -42,20 +42,20 @@ def init_defaults(session):
     if niche_service.find_by_name(default_niche.name, default_category_id) is None:
         niche_service.create(default_niche, default_category_id)
     _, default_niche_id = niche_service.find_by_name(default_niche.name, default_category_id)
-    # product_service = create_product_card_service(session)
-    # filtered_product_ids = set(
-    #     product_service.filter_existing_global_ids(
-    #         default_niche_id,
-    #         [product.global_id
-    #          for product in default_niche.products]
-    #     )
-    # )
-    # if len(filtered_product_ids) > 0:
-    #     __check_warehouse_filled(default_niche.products, warehouse_service, default_marketplace_id)
-    #     _, default_niche_id = niche_service.find_by_name(default_niche.name, default_category_id)
-    #     for product in default_niche.products:
-    #         if product.global_id in filtered_product_ids:
-    #             product_service.create_product(product, default_niche_id)
+    product_service = create_product_card_service(session)
+    filtered_product_ids = set(
+        product_service.filter_existing_global_ids(
+            default_niche_id,
+            [product.global_id
+             for product in default_niche.products]
+        )
+    )
+    if len(filtered_product_ids) > 0:
+        __check_warehouse_filled(default_niche.products, warehouse_service, default_marketplace_id)
+        _, default_niche_id = niche_service.find_by_name(default_niche.name, default_category_id)
+        for product in default_niche.products:
+            if product.global_id in filtered_product_ids:
+                product_service.create_product(product, default_niche_id)
 
 
 def __check_warehouse_filled(products: list[Product], warehouse_service: WarehouseService, marketplace_id: int):

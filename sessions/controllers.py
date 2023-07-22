@@ -154,7 +154,7 @@ class JarvisSessionController:
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
         return result_niche
 
-    @timeout(10)
+    @timeout(60)
     def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
