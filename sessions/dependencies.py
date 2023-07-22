@@ -27,16 +27,20 @@ def db_context_depends() -> DbContext:
 
 
 def __init_admin_account(session):
+    __account_service = JDBServiceFactory.create_account_service(session)
+    admin_email = "admin@mail.com"
+    admin_phone = "+11111111111"
+    if __account_service.find_by_email_or_phone(admin_email, admin_phone) is not None:
+        return
     admin_password = "Apassword123!"
     hashed_password = PasswordHasher(CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")).hash(admin_password)
-    admin_account = Account("admin@mail.com", hashed_password, "+11111111111", is_verified_email=True)
-    __account_service = JDBServiceFactory.create_account_service(session)
+    admin_account = Account(admin_email, hashed_password, admin_phone, is_verified_email=True)
     __account_service.create(admin_account)
     _, account_id = __account_service.find_by_email(admin_account.email)
     admin_user = User(1, name="ADMIN", privilege=UserPrivilege.DUNGEON_MASTER)
     __user_service = JDBServiceFactory.create_user_service(session)
     __user_service.create(admin_user, account_id)
-    
+
 
 def init_defaults(session):
     __init_admin_account(session)
