@@ -4,9 +4,13 @@ from jarvis_db.factories.services import create_marketplace_service, create_ware
 from jarvis_db.services.market.infrastructure.warehouse_service import WarehouseService
 from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
+from jarvis_factory.support.jdb.services import JDBServiceFactory
 from jorm.market.infrastructure import Warehouse, HandlerType, Address
 from jorm.market.items import Product
+from jorm.market.person import Account, User, UserPrivilege
+from passlib.context import CryptContext
 
+from auth.hashing.hasher import PasswordHasher
 from sessions.controllers import JarvisSessionController
 from sessions.db_context import DbContext
 from sessions.request_handler import RequestHandler, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS
@@ -22,7 +26,20 @@ def db_context_depends() -> DbContext:
     return __DB_CONTEXT
 
 
+def __init_admin_account(session):
+    admin_password = "Apassword123!"
+    hashed_password = PasswordHasher(CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")).hash(admin_password)
+    admin_account = Account("admin@mail.com", hashed_password, "+11111111111", is_verified_email=True)
+    __account_service = JDBServiceFactory.create_account_service(session)
+    __account_service.create(admin_account)
+    _, account_id = __account_service.find_by_email(admin_account.email)
+    admin_user = User(1, name="ADMIN", privilege=UserPrivilege.DUNGEON_MASTER)
+    __user_service = JDBServiceFactory.create_user_service(session)
+    __user_service.create(admin_user, account_id)
+    
+
 def init_defaults(session):
+    __init_admin_account(session)
     marketplace_service = create_marketplace_service(session)
     default_marketplace = JORMClassesFactory.create_default_marketplace()
     if marketplace_service.find_by_name(default_marketplace.name) is None:
