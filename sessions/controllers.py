@@ -1,4 +1,5 @@
 import logging
+import re
 
 from fastapi import Cookie
 from jarvis_calc.database_interactors.db_controller import DBController
@@ -184,29 +185,36 @@ class JarvisSessionController:
     def get_products_by_user(self, user_id: int) -> list[Product]:
         return self.__db_controller.get_products_by_user(user_id)
 
+    @staticmethod
+    def __is_default_object(object_name: str) -> bool:
+        return re.search('default', object_name, re.IGNORECASE) is not None
+
     @timeout(1)
     def get_all_marketplaces(self) -> dict[int, str]:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
-        return {
-            marketplace_id: id_to_marketplace[marketplace_id].name
-            for marketplace_id in id_to_marketplace
-        }
+        result = {}
+        for marketplace_id in id_to_marketplace:
+            if not self.__is_default_object(id_to_marketplace[marketplace_id].name):
+                result[marketplace_id] = id_to_marketplace[marketplace_id].name
+        return result
 
     @timeout(1)
     def get_all_categories(self, marketplace_id: int) -> dict[int, str]:
         id_to_category = self.__db_controller.get_all_categories(marketplace_id)
-        return {
-            category_id: id_to_category[category_id].name
-            for category_id in id_to_category
-        }
+        result = {}
+        for category_id in id_to_category:
+            if not self.__is_default_object(id_to_category[category_id].name):
+                result[category_id] = id_to_category[category_id].name
+        return result
 
     @timeout(1)
     def get_all_niches(self, category_id: int) -> dict[int, str]:
         id_to_niche = self.__db_controller.get_all_niches(category_id)
-        return {
-            niche_id: id_to_niche[niche_id].name
-            for niche_id in id_to_niche
-        }
+        result = {}
+        for niche_id in id_to_niche:
+            if not self.__is_default_object(id_to_niche[niche_id].name):
+                result[niche_id] = id_to_niche[niche_id].name
+        return result
 
 
 class CookieHandler:
