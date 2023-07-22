@@ -7,7 +7,7 @@ from sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
 def timeout(timeout_time_in_seconds: float = -1):
     def decorated(func):
         def wrapper(*args, **kwargs):
-            if timeout_time_in_seconds != -1:
+            if timeout_time_in_seconds != -1 and not __debug__:
                 result = [Exception('timeout marker')]
 
                 def inner_callable():
@@ -22,8 +22,8 @@ def timeout(timeout_time_in_seconds: float = -1):
                 except Exception as thread_starting_exception:
                     raise thread_starting_exception
                 to_return = result[0]
-                if isinstance(to_return, BaseException):
-                    process_time = time.time() - start_time
+                process_time = time.time() - start_time
+                if process_time > timeout_time_in_seconds and isinstance(to_return, BaseException):
                     raise JarvisExceptions.create_exception_with_code(
                         JarvisExceptionsCode.TIMEOUT,
                         f"Request processing time exceed limit({timeout_time_in_seconds})."
