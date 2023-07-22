@@ -1,13 +1,14 @@
 import time
 from threading import Thread
 
+from app.constants import IS_DEBUG
 from sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
 
 
 def timeout(timeout_time_in_seconds: float = -1):
     def decorated(func):
         def wrapper(*args, **kwargs):
-            if timeout_time_in_seconds != -1 and not __debug__:
+            if timeout_time_in_seconds != -1 and not IS_DEBUG:
                 result = [Exception('timeout marker')]
 
                 def inner_callable():
