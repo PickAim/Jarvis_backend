@@ -27,11 +27,11 @@ class ProductDownturnAPI(CalculationRequestAPI):
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
         if user_products is None:
-            return {}
-        return {
+            return ProductDownturnResultObject.model_validate({"result_dict": {}})
+        return ProductDownturnResultObject.model_validate({"result_dict": {
             product.global_id: CalculationController.calc_downturn_days(product, datetime.utcnow())
             for product in user_products
-        }
+        }})
 
 
 class ProductTurnoverAPI(CalculationRequestAPI):
@@ -51,8 +51,8 @@ class ProductTurnoverAPI(CalculationRequestAPI):
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
         if user_products is None:
-            return {}
-        return {
+            return ProductTurnoverResultObject.model_validate({"result_dict": {}})
+        return ProductTurnoverResultObject.model_validate({"result_dict": {
             product.global_id: CalculationController.calc_turnover(product, datetime.utcnow())
             for product in user_products
-        }
+        }})
