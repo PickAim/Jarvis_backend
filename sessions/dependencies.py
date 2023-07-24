@@ -19,10 +19,10 @@ __DB_CONTEXT = None
 __DEFAULTS_INITED = False
 
 
-def db_context_depends(connection_string: str = "sqlite:///test.db") -> DbContext:
+def db_context_depends() -> DbContext:
     global __DB_CONTEXT
     if __DB_CONTEXT is None:
-        __DB_CONTEXT = DbContext(connection_string)
+        __DB_CONTEXT = DbContext("sqlite:///test.db")
     return __DB_CONTEXT
 
 

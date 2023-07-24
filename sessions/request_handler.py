@@ -4,25 +4,44 @@ from jarvis_calc.database_interactors.db_controller import DBController
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.service import UnitEconomyRequest, FrequencyRequest, RequestInfo, \
     Request, Result, UnitEconomyResult, FrequencyResult
+from jorm.support.constants import DEFAULT_CATEGORY_NAME
 
 from support.types import JBasicSaveObject, JEconomySaveObject, JFrequencySaveObject
 
 
-def __save_unit_economy_request(db_controller: DBController, save_object: JEconomySaveObject, user_id: int) -> int:
+def __get_default_category_id(db_controller: DBController, marketplace_id: int) -> int:
+    id_to_category = db_controller.get_all_categories(marketplace_id)
+    for category_id in id_to_category:
+        if id_to_category[category_id].name == DEFAULT_CATEGORY_NAME:
+            return category_id
+    return -1
+
+
+def __save_unit_economy_request(db_controller: DBController,
+                                save_object: JEconomySaveObject,
+                                user_id: int, is_save_to_default: bool = False) -> int:
     request = save_object.request
     result = save_object.result
     info = save_object.info
     if not isinstance(request, UnitEconomyRequest) or not isinstance(result, UnitEconomyResult):
         raise Exception(str(type(RequestHandler)) + " - unexpected request or result type")
+    request.niche = request.niche.lower()
+    if is_save_to_default:
+        request.category_id = __get_default_category_id(db_controller, request.marketplace_id)
     return db_controller.save_unit_economy_request(request, result, info, user_id)
 
 
-def __save_frequency_request(db_controller: DBController, save_object: JFrequencySaveObject, user_id: int):
+def __save_frequency_request(db_controller: DBController,
+                             save_object: JFrequencySaveObject,
+                             user_id: int, is_save_to_default: bool = False):
     request = save_object.request
     result = save_object.result
     info = save_object.info
     if not isinstance(request, FrequencyRequest) or not isinstance(result, FrequencyResult):
         raise Exception(str(type(RequestHandler)) + " - unexpected request or result type")
+    request.niche = request.niche.lower()
+    if is_save_to_default:
+        request.category_id = __get_default_category_id(db_controller, request.marketplace_id)
     return db_controller.save_frequency_request(request, result, info, user_id)
 
 
@@ -31,7 +50,7 @@ SAVE_METHODS: dict[Type[JBasicSaveObject],
                        [
                            DBController,
                            JBasicSaveObject | JEconomySaveObject | JFrequencySaveObject,
-                           int
+                           int, bool
                        ],
                        int]] = {
     JEconomySaveObject: __save_unit_economy_request,
@@ -134,15 +153,14 @@ class RequestHandler:
         return self.__save_request_by_method(save_method, self.__db_controller, save_object, user_id)
 
     @staticmethod
-    def __save_request_by_method(save_method: Callable[[DBController, JBasicSaveObject, int], int],
+    def __save_request_by_method(save_method: Callable[[DBController, JBasicSaveObject, int, bool], int],
                                  db_controller: DBController, save_object: JBasicSaveObject, user_id: int) -> int:
         try:
-            return save_method(db_controller, save_object, user_id)
+            return save_method(db_controller, save_object, user_id, False)
         except Exception:
             print("SAVED TO DEFAULT NICHE")
-            save_object.request.category = JORMClassesFactory.create_default_category().name
             save_object.request.warehouse_name = JORMClassesFactory.create_simple_default_warehouse().name
-            return save_method(db_controller, save_object, user_id)
+            return save_method(db_controller, save_object, user_id, True)
 
     def get_all_request_results(self, user_id: int, request_type: Type[JBasicSaveObject]) \
             -> list[tuple[Request, Result, RequestInfo]]:

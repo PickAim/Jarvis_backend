@@ -179,8 +179,7 @@ class JarvisSessionController:
         if warehouse is not None:
             return warehouse
         reference_warehouses = self.__db_controller.get_all_warehouses(marketplace_id)
-        return self.__jorm_classes_factory.create_default_warehouse([reference_warehouses[warehouse_id]
-                                                                     for warehouse_id in reference_warehouses])
+        return self.__jorm_classes_factory.create_default_warehouse(reference_warehouses)  # todo
 
     @timeout(1)
     def get_products_by_user(self, user_id: int) -> dict[int, Product]:

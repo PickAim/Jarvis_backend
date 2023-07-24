@@ -65,7 +65,7 @@ class IntegrationTest(unittest.TestCase):
         reg_item = RegistrationObject.model_validate(registration_object)
         auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
         auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
-        db_context = db_context_depends("sqlite:///test.db")
+        db_context = db_context_depends()
         self.session = get_session(db_context)
         self.session_controller = session_controller_depend(self.session)
         self.request_handler = request_handler_depend(self.session)
