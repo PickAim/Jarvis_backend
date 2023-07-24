@@ -29,8 +29,8 @@ class ProductDownturnAPI(CalculationRequestAPI):
         if user_products is None:
             return ProductDownturnResultObject.model_validate({"result_dict": {}})
         return ProductDownturnResultObject.model_validate({"result_dict": {
-            product.global_id: CalculationController.calc_downturn_days(product, datetime.utcnow())
-            for product in user_products
+            product_id: CalculationController.calc_downturn_days(user_products[product_id], datetime.utcnow())
+            for product_id in user_products
         }})
 
 
@@ -53,6 +53,6 @@ class ProductTurnoverAPI(CalculationRequestAPI):
         if user_products is None:
             return ProductTurnoverResultObject.model_validate({"result_dict": {}})
         return ProductTurnoverResultObject.model_validate({"result_dict": {
-            product.global_id: CalculationController.calc_turnover(product, datetime.utcnow())
-            for product in user_products
+            product_id: CalculationController.calc_turnover(user_products[product_id], datetime.utcnow())
+            for product_id in user_products
         }})
