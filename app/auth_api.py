@@ -38,7 +38,7 @@ class SessionAPI(RequestAPI):
         return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
     @staticmethod
-    @router.get(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
+    @router.post(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
     def auth_by_token(_: str = Depends(access_token_correctness_depend),
                       __: str = Depends(imprint_token_correctness_depend)):
         return True
