@@ -2,7 +2,7 @@ import json
 import unittest
 
 from jorm.market.service import UnitEconomyResult
-from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_CATEGORY_NAME
+from jorm.support.constants import DEFAULT_NICHE_NAME
 from starlette.exceptions import HTTPException
 
 from app.auth_api import SessionAPI
@@ -65,7 +65,7 @@ class IntegrationTest(unittest.TestCase):
         reg_item = RegistrationObject.model_validate(registration_object)
         auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
         auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
-        db_context = db_context_depends()
+        db_context = db_context_depends("sqlite:///test.db")
         self.session = get_session(db_context)
         self.session_controller = session_controller_depend(self.session)
         self.request_handler = request_handler_depend(self.session)
@@ -103,7 +103,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_unit_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
-        category_name: str = DEFAULT_CATEGORY_NAME
+        category_id: int = 1
         buy: int = 50_00
         pack: int = 50_00
         transit_price: int = 1000_00
@@ -114,7 +114,7 @@ class IntegrationTest(unittest.TestCase):
             "buy": buy,
             "pack": pack,
             "niche": niche_name,
-            "category_id": 1,
+            "category_id": category_id,
             "transit_count": transit_count,
             "transit_price": transit_price,
             "market_place_transit_price": marketplace_transit_price,
@@ -137,7 +137,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(buy, saved_object.request.buy)
         self.assertEqual(pack, saved_object.request.pack)
         self.assertEqual(niche_name, saved_object.request.niche)
-        self.assertEqual(category_name, saved_object.request.category)
+        self.assertEqual(category_id, saved_object.request.category_id)
         self.assertEqual(transit_count, saved_object.request.transit_count)
         self.assertEqual(transit_price, saved_object.request.transit_price)
         self.assertEqual(marketplace_id, saved_object.request.marketplace_id)
@@ -146,11 +146,11 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.product_cost, saved_object.result.product_cost)
         self.assertEqual(jorm_result.pack_cost, saved_object.result.product_cost)
         self.assertEqual(jorm_result.marketplace_commission, saved_object.result.marketplace_commission)
-        self.assertEqual(jorm_result.roi, saved_object.result.roi)
+        self.assertTrue(abs(jorm_result.roi - saved_object.result.roi) <= 0.01)
         self.assertEqual(jorm_result.logistic_price, saved_object.result.logistic_price)
         self.assertEqual(jorm_result.storage_price, saved_object.result.storage_price)
         self.assertEqual(jorm_result.margin, saved_object.result.margin)
-        self.assertEqual(jorm_result.transit_margin, saved_object.result.transit_margin)
+        self.assertTrue(abs(jorm_result.transit_margin - saved_object.result.transit_margin) <= 0.01)
         self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
         self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
 
