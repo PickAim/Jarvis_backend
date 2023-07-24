@@ -3,20 +3,43 @@ from pydantic import BaseModel
 
 class RequestInfo(BaseModel):
     name: str
-    id: int = None
+    id: int | None = -1
     timestamp: float = 0.0
 
 
-class UnitEconomyRequestObject(BaseModel):
+class BasicSaveObject(BaseModel):
+    request: BaseModel = ""
+    result: BaseModel = ""
+    info: RequestInfo = RequestInfo.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
+
+
+class NicheRequest(BaseModel):
+    niche: str
+    category_id: int
+    marketplace_id: int
+
+
+class FrequencyRequest(NicheRequest):
+    pass
+
+
+class FrequencyResult(BaseModel):
+    x: list[int]
+    y: list[int]
+
+
+class FrequencySaveObject(BasicSaveObject):
+    request: FrequencyRequest
+    result: FrequencyResult
+
+
+class UnitEconomyRequestObject(NicheRequest):
     buy: int
     pack: int
-    niche: str
-    category: str
     transit_count: int = -1
     transit_price: int = -1  # from China to me
     market_place_transit_price: int = -1  # from me to customer
     warehouse_name: str = ""
-    marketplace_id: int = 0
 
 
 class UnitEconomyResultObject(BaseModel):
@@ -32,10 +55,31 @@ class UnitEconomyResultObject(BaseModel):
     transit_margin: float  # Маржа с транзита (%)
 
 
-class UnitEconomySaveObject(BaseModel):
+class UnitEconomySaveObject(BasicSaveObject):
     request: UnitEconomyRequestObject
     result: UnitEconomyResultObject
-    info: RequestInfo
+
+
+class ProductDownturnResultObject(BaseModel):
+    result_dict: dict[int, dict[int, dict[str, int]]]
+
+
+class ProductTurnoverResultObject(BaseModel):
+    result_dict: dict[int, dict[int, dict[str, float]]]
+
+
+class NicheCharacteristicsResultObject(BaseModel):
+    card_count: int
+    niche_profit: int
+    card_trade_count: int
+    mean_card_rating: float
+    card_with_trades_count: int
+    daily_mean_niche_profit: int
+    daily_mean_trade_count: int
+    mean_traded_card_cost: int
+    month_mean_niche_profit_per_card: int
+    monopoly_percent: float
+    maximum_profit_idx: int
 
 
 class RegistrationObject(BaseModel):

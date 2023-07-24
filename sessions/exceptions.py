@@ -3,8 +3,14 @@ import json
 from starlette import status
 from starlette.exceptions import HTTPException
 
+JARVIS_EXCEPTION_KEY = 'jarvis_exception'
+JARVIS_DESCRIPTION_KEY = 'description'
+
 
 class JarvisExceptionsCode:
+    # registration exceptions
+    REGISTER_EXISTING_LOGIN = 1000
+
     # authorization exceptions
     INCORRECT_LOGIN_OR_PASSWORD = 1010
 
@@ -16,12 +22,25 @@ class JarvisExceptionsCode:
     NOT_HAS_SPECIAL_SIGNS = 1060
     HAS_WHITE_SPACES = 1070
 
-    # registration exceptions
-    REGISTER_EXISTING_LOGIN = 1080
+    # phone number correctness exceptions
+    INVALID_PHONE_NUMBER = 1080
+
+    # email correctness exceptions
+    INVALID_EMAIL = 1090
 
     # token exceptions
     INCORRECT_TOKEN = 2010
     EXPIRED_TOKEN = 2020
+
+    # accessibility
+    INCORRECT_GRANT_TYPE = 3010
+
+    # incorrect requests
+    INCORRECT_NICHE = 4010
+
+    # session exceptions
+
+    TIMEOUT = 5040
 
 
 class JarvisExceptions:
@@ -30,8 +49,8 @@ class JarvisExceptions:
         return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=json.dumps({
-                'jarvis_exception': exception_code,
-                'description': 'Exception: ' + description
+                JARVIS_EXCEPTION_KEY: exception_code,
+                JARVIS_DESCRIPTION_KEY: 'Exception: ' + description
             })
         )
 
@@ -45,3 +64,6 @@ class JarvisExceptions:
 
     EXISTING_LOGIN: HTTPException = \
         create_exception_with_code(JarvisExceptionsCode.REGISTER_EXISTING_LOGIN, "Existing login exception")
+
+    INCORRECT_NICHE: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_NICHE, "Incorrect niche requested")

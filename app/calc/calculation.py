@@ -1,37 +1,50 @@
 from datetime import datetime
 
-from jarvis_calc.calculators.economy_analyze import UnitEconomyCalculator
-from jarvis_calc.calculators.niche_analyze import NicheAnalyzeCalculator
-from jarvis_calc.calculators.product_analyze import DownturnCalculator
+from jarvis_calc.calculators.economy_analyze import UnitEconomyCalculator, UnitEconomyCalculateData
+from jarvis_calc.calculators.niche_analyze import NicheHistCalculator, NicheCharacteristicsCalculator
+from jarvis_calc.calculators.product_analyze import DownturnCalculator, TurnoverCalculator
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User
 
-from sessions.request_items import UnitEconomyResultObject
+from sessions.request_items import UnitEconomyResultObject, UnitEconomyRequestObject, NicheCharacteristicsResultObject
+from support.utils import jorm_to_pydantic
 
 
 class CalculationController:
-    def __init__(self):
-        self.__frequency_calculator = NicheAnalyzeCalculator()
-        self.__unit_economy_calculator = UnitEconomyCalculator()
-        self.__downturn_calculator = DownturnCalculator()
+    @staticmethod
+    def calc_frequencies(niche: Niche) -> dict[str, list[int]]:
+        result = NicheHistCalculator.calculate(niche)
+        return {
+            'x': result[0],
+            'y': result[1]
+        }
 
-    def calc_frequencies(self, niche: Niche) -> tuple[list[float], list[int]]:
-        return self.__frequency_calculator.calculate_niche_hist(niche)
+    @staticmethod
+    def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsResultObject:
+        result = NicheCharacteristicsCalculator.calculate(niche)
+        return jorm_to_pydantic(result, NicheCharacteristicsResultObject)
 
-    def calc_unit_economy(self, buy_price: int,
-                          pack_price: int,
+    @staticmethod
+    def calc_unit_economy(data: UnitEconomyRequestObject,
                           niche: Niche,
                           warehouse: Warehouse,
-                          user: User,
-                          transit_price: int = 0.0,
-                          transit_count: int = 0.0,
-                          market_place_transit_price: int = 0.0) -> UnitEconomyResultObject:
-        return UnitEconomyResultObject.parse_obj(
-            self.__unit_economy_calculator.calculate(buy_price, pack_price, niche, warehouse,
-                                                     user, transit_price, transit_count,
-                                                     market_place_transit_price)
+                          user: User) -> UnitEconomyResultObject:
+        result = UnitEconomyCalculator.calculate(
+            UnitEconomyCalculateData(
+                buy_price=data.buy,
+                pack_price=data.pack,
+                transit_price=data.transit_price,
+                transit_count=data.transit_count,
+                market_place_transit_price=data.market_place_transit_price,
+            ), niche, warehouse, user
         )
+        return jorm_to_pydantic(result, UnitEconomyResultObject)
 
-    def calc_downturn_days(self, product: Product, from_date: datetime):
-        return self.__downturn_calculator.calculate(product, from_date)
+    @staticmethod
+    def calc_downturn_days(product: Product, from_date: datetime) -> dict[int, dict[str, int]]:
+        return DownturnCalculator.calculate(product, from_date)
+
+    @staticmethod
+    def calc_turnover(product: Product, from_date: datetime) -> dict[int, dict[str, float]]:
+        return TurnoverCalculator.calculate(product, from_date)

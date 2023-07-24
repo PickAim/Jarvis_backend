@@ -1,20 +1,9 @@
 from fastapi import Depends
-from jarvis_factory.factories.jcalc import JCalcClassesFactory
 
 from auth import TokenController
-from sessions.controllers import CookieHandler, JarvisSessionController, RequestHandler
-from sessions.dependencies import session_depend
+from sessions.controllers import CookieHandler, JarvisSessionController
+from sessions.dependencies import session_controller_depend
 from sessions.exceptions import JarvisExceptions
-
-
-def session_controller_depend(session=Depends(session_depend)) -> JarvisSessionController:
-    db_controller = JCalcClassesFactory.create_db_controller(session)
-    return JarvisSessionController(db_controller)
-
-
-def request_handler_depend(session=Depends(session_depend)) -> RequestHandler:
-    db_controller = JCalcClassesFactory.create_db_controller(session)
-    return RequestHandler(db_controller)
 
 
 def check_token_correctness(any_session_token: str, imprint_token: str,
@@ -56,8 +45,8 @@ def access_token_correctness_depend(access_token: str = None,
 def update_token_correctness_depend(update_token: str = None,
                                     cookie_update_token: str = CookieHandler.load_update_token(),
                                     imprint_token: str = Depends(imprint_token_correctness_depend),
-                                    session_controller: JarvisSessionController = Depends(
-                                        session_controller_depend)) -> str:
+                                    session_controller: JarvisSessionController = Depends(session_controller_depend)) \
+        -> str:
     if cookie_update_token is not None:
         return check_token_correctness(cookie_update_token, imprint_token, session_controller)
     elif update_token is not None:
