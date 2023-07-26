@@ -51,7 +51,7 @@ def init_defaults(session):
     _, default_marketplace_id = marketplace_service.find_by_name(default_marketplace.name)
     warehouse_service = create_warehouse_service(session)
     default_warehouse = JORMClassesFactory.create_simple_default_warehouse()
-    if warehouse_service.find_warehouse_by_name(default_warehouse.name) is None:
+    if warehouse_service.find_warehouse_by_name(default_warehouse.name, default_marketplace_id) is None:
         warehouse_service.create_warehouse(default_warehouse, default_marketplace_id)
     category_service = create_category_service(session)
     default_category = JORMClassesFactory.create_default_category()
