@@ -82,9 +82,9 @@ def init_defaults(session):
 def __check_warehouse_filled(products: list[Product], warehouse_service: WarehouseService, marketplace_id: int):
     warehouse_ids: set[int] = set()
     for product in products:
-        warehouse_id_to_leftovers = product.history.get_all_leftovers()
-        for warehouse_id in warehouse_id_to_leftovers:
-            warehouse_ids.add(warehouse_id)
+        for history_unit in product.history.get_history():
+            for warehouse_id in history_unit.leftover:
+                warehouse_ids.add(warehouse_id)
     filtered_warehouse_global_ids = warehouse_service.fileter_existing_global_ids(warehouse_ids)
     warehouse_to_add_as_unfilled: list[Warehouse] = []
     for global_id in filtered_warehouse_global_ids:
