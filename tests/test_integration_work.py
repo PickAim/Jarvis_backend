@@ -1,19 +1,20 @@
 import json
 import unittest
 
-from jorm.market.service import UnitEconomyResult
+from jorm.market.service import UnitEconomyResult, FrequencyResult
 from jorm.support.constants import DEFAULT_NICHE_NAME
 from starlette.exceptions import HTTPException
 
 from app.auth_api import SessionAPI
 from app.calc.economy_analyze_api import EconomyAnalyzeAPI
+from app.calc.niche_analyze_api import NicheFrequencyAPI
 from app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
 from app.tokens.token_api import TokenAPI
 from sessions.controllers import JarvisSessionController
 from sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, request_handler_depend
 from sessions.request_handler import RequestHandler
 from sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
-    UnitEconomySaveObject
+    UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject
 from support.utils import pydantic_to_jorm
 
 __DEFAULTS_INITED = False
@@ -38,6 +39,7 @@ class IntegrationTest(unittest.TestCase):
     session_api = SessionAPI()
     token_api = TokenAPI()
     economy_api = EconomyAnalyzeAPI()
+    niche_frequency_api = NicheFrequencyAPI()
 
     def assertAuthentication(self, auth_item, session_controller) -> tuple[str, str, str]:
         response = self.session_api.authenticate_user(auth_item, None, session_controller)
@@ -133,6 +135,8 @@ class IntegrationTest(unittest.TestCase):
         unit_economy_save_item = UnitEconomySaveObject.model_validate(save_dict)
         self.economy_api.save(unit_economy_save_item, self.access_token, self.session_controller, self.request_handler)
         result = self.economy_api.get_all(self.access_token, self.session_controller, self.request_handler)
+
+        self.assertEqual(1, len(result))
         saved_object = result[0]
         self.assertEqual(buy, saved_object.request.buy)
         self.assertEqual(pack, saved_object.request.pack)
@@ -153,6 +157,39 @@ class IntegrationTest(unittest.TestCase):
         self.assertTrue(abs(jorm_result.transit_margin - saved_object.result.transit_margin) <= 0.01)
         self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
         self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
+
+    def test_frequency_request(self):
+        niche_name: str = DEFAULT_NICHE_NAME
+        category_id: int = 1
+        marketplace_id = 1
+        unit_economy_object = {
+            "niche": niche_name,
+            "category_id": category_id,
+            "marketplace_id": marketplace_id
+        }
+        request_object = FrequencyRequest.model_validate(unit_economy_object)
+        calculation_result = self.niche_frequency_api.calculate(
+            request_object,
+            self.access_token, self.session_controller
+        )
+        save_dict = {
+            'request': request_object,
+            'result': calculation_result
+        }
+        frequency_save_item = FrequencySaveObject.model_validate(save_dict)
+        self.niche_frequency_api.save(frequency_save_item, self.access_token,
+                                      self.session_controller, self.request_handler)
+        result = self.niche_frequency_api.get_all(self.access_token, self.session_controller, self.request_handler)
+        
+        self.assertEqual(1, len(result))
+        saved_object = result[0]
+        self.assertEqual(niche_name, saved_object.request.niche)
+        self.assertEqual(category_id, saved_object.request.category_id)
+        self.assertEqual(marketplace_id, saved_object.request.marketplace_id)
+
+        jorm_result = pydantic_to_jorm(FrequencyResult, calculation_result)
+        self.assertEqual(jorm_result.x, saved_object.result.x)
+        self.assertEqual(jorm_result.y, saved_object.result.y)
 
 
 if __name__ == '__main__':
