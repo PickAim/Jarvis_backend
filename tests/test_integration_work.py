@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException
 from app.auth_api import SessionAPI
 from app.calc.economy_analyze_api import EconomyAnalyzeAPI
 from app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
+from app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
 from app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
 from app.tokens.token_api import TokenAPI
 from sessions.controllers import JarvisSessionController
@@ -38,9 +39,6 @@ class IntegrationTest(unittest.TestCase):
     request_handler: RequestHandler
     session_api = SessionAPI()
     token_api = TokenAPI()
-    economy_api = EconomyAnalyzeAPI()
-    niche_frequency_api = NicheFrequencyAPI()
-    niche_characteristics_api = NicheCharacteristicsAPI()
 
     def assertAuthentication(self, auth_item, session_controller) -> tuple[str, str, str]:
         response = self.session_api.authenticate_user(auth_item, None, session_controller)
@@ -125,7 +123,7 @@ class IntegrationTest(unittest.TestCase):
             "marketplace_id": marketplace_id
         }
         request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
-        calculation_result = self.economy_api.calculate(
+        calculation_result = EconomyAnalyzeAPI.calculate(
             request_object,
             self.access_token, self.session_controller
         )
@@ -134,8 +132,8 @@ class IntegrationTest(unittest.TestCase):
             'result': calculation_result
         }
         unit_economy_save_item = UnitEconomySaveObject.model_validate(save_dict)
-        self.economy_api.save(unit_economy_save_item, self.access_token, self.session_controller, self.request_handler)
-        result = self.economy_api.get_all(self.access_token, self.session_controller, self.request_handler)
+        EconomyAnalyzeAPI.save(unit_economy_save_item, self.access_token, self.session_controller, self.request_handler)
+        result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
 
         self.assertEqual(1, len(result))
         saved_object = result[0]
@@ -169,7 +167,7 @@ class IntegrationTest(unittest.TestCase):
             "marketplace_id": marketplace_id
         }
         request_object = FrequencyRequest.model_validate(niche_request_object)
-        calculation_result = self.niche_frequency_api.calculate(
+        calculation_result = NicheFrequencyAPI.calculate(
             request_object,
             self.access_token, self.session_controller
         )
@@ -178,9 +176,8 @@ class IntegrationTest(unittest.TestCase):
             'result': calculation_result
         }
         frequency_save_item = FrequencySaveObject.model_validate(save_dict)
-        self.niche_frequency_api.save(frequency_save_item, self.access_token,
-                                      self.session_controller, self.request_handler)
-        result = self.niche_frequency_api.get_all(self.access_token, self.session_controller, self.request_handler)
+        NicheFrequencyAPI.save(frequency_save_item, self.access_token, self.session_controller, self.request_handler)
+        result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
 
         self.assertEqual(1, len(result))
         saved_object = result[0]
@@ -192,7 +189,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.x, saved_object.result.x)
         self.assertEqual(jorm_result.y, saved_object.result.y)
 
-    def _test_niche_characteristics_request(self):
+    def test_niche_characteristics_request(self):
         # todo waiting for fix JDB#62
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
@@ -203,10 +200,22 @@ class IntegrationTest(unittest.TestCase):
             "marketplace_id": marketplace_id
         }
         request_object = NicheRequest.model_validate(niche_request_object)
-        calculation_result = self.niche_characteristics_api.calculate(
+        calculation_result = NicheCharacteristicsAPI.calculate(
             request_object,
             self.access_token, self.session_controller
         )
+        print(calculation_result)
+
+    def test_product_downturn_request(self):
+        # todo waiting JDB user's product save
+        calculation_result = ProductDownturnAPI.calculate(self.access_token, self.session_controller)
+        self.assertIsNotNone(calculation_result)
+        print(calculation_result)
+
+    def test_product_turnover_request(self):
+        # todo waiting JDB user's product save
+        calculation_result = ProductTurnoverAPI.calculate(self.access_token, self.session_controller)
+        self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
 
