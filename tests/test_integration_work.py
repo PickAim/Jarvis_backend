@@ -176,6 +176,28 @@ class IntegrationTest(unittest.TestCase):
         with self.assertRaises(HTTPException):
             ProductTurnoverAPI.calculate(incorrect_access_token, self.session_controller)
 
+    def test_token_correctness_check(self):
+        self.assertTrue(self.session_controller.check_token_correctness(self.access_token, self.imprint_token))
+        self.assertTrue(self.session_controller.check_token_correctness(self.update_token, self.imprint_token))
+        token_controller = TokenController()
+        with self.assertRaises(HTTPException):
+            incorrect_access_token = token_controller.create_access_token(456)
+            self.session_controller.check_token_correctness(incorrect_access_token, self.imprint_token)
+        with self.assertRaises(HTTPException):
+            incorrect_update_token = token_controller.create_update_token(456)
+            self.session_controller.check_token_correctness(incorrect_update_token, self.imprint_token)
+
+        decoded = token_controller.decode_data(self.access_token)
+        decoded.pop("r")
+        access_token_with_interrupted_random_part = \
+            token_controller.create_basic_token(decoded, add_random_part=True, length_of_rand_part=60)
+        self.assertFalse(
+            self.session_controller.check_token_correctness(
+                access_token_with_interrupted_random_part,
+                self.imprint_token
+            )
+        )
+
     def test_unit_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1

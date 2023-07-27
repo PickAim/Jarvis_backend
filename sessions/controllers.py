@@ -78,7 +78,10 @@ class JarvisSessionController:
         user_id: int = self.__token_controller.get_user_id(token)
         token_type: int = self.__token_controller.get_token_type(token)
         rnd_part: str = self.__token_controller.get_random_part(token)
-        return self.__db_controller.check_token_rnd_part(rnd_part, user_id, imprint_token, token_type)
+        try:
+            return self.__db_controller.check_token_rnd_part(rnd_part, user_id, imprint_token, token_type)
+        except Exception:
+            raise JarvisExceptions.INCORRECT_TOKEN
 
     @timeout(1)
     def update_tokens(self, update_token: str) -> tuple[str, str]:
