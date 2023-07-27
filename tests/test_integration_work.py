@@ -38,11 +38,9 @@ class IntegrationTest(unittest.TestCase):
     session_controller: JarvisSessionController
     session: any
     request_handler: RequestHandler
-    session_api = SessionAPI()
-    token_api = TokenAPI()
 
     def assertAuthentication(self, auth_item, session_controller) -> tuple[str, str, str]:
-        response = self.session_api.authenticate_user(auth_item, None, session_controller)
+        response = SessionAPI.authenticate_user(auth_item, None, session_controller)
         self.assertIsNotNone(response)
         response_dict = json.loads(response.body.decode())
         self.assertTrue(ACCESS_TOKEN_NAME in response_dict)
@@ -73,7 +71,7 @@ class IntegrationTest(unittest.TestCase):
         self.request_handler = request_handler_depend(self.session)
         # Registration
         try:
-            self.session_api.registrate_user(reg_item, self.session_controller)
+            SessionAPI.registrate_user(reg_item, self.session_controller)
         except HTTPException:
             pass
 
@@ -84,7 +82,7 @@ class IntegrationTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         # Logout
-        response = self.session_api.log_out(self.access_token, self.imprint_token, self.session_controller)
+        response = SessionAPI.log_out(self.access_token, self.imprint_token, self.session_controller)
         self.session.close()
         self.assertIsNotNone(response)
 
@@ -106,7 +104,7 @@ class IntegrationTest(unittest.TestCase):
         auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
         auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
         try:
-            self.session_api.registrate_user(reg_item, self.session_controller)
+            SessionAPI.registrate_user(reg_item, self.session_controller)
         except HTTPException:
             pass
 
@@ -133,7 +131,7 @@ class IntegrationTest(unittest.TestCase):
         auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
         auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
         try:
-            self.session_api.registrate_user(reg_item, self.session_controller)
+            SessionAPI.registrate_user(reg_item, self.session_controller)
         except HTTPException:
             pass
 
@@ -150,15 +148,15 @@ class IntegrationTest(unittest.TestCase):
         }
         reg_item = RegistrationObject.model_validate(registration_object)
         with self.assertRaises(HTTPException):
-            self.session_api.registrate_user(reg_item, self.session_controller)
+            SessionAPI.registrate_user(reg_item, self.session_controller)
 
     def test_work_with_tokens(self):
         # Auth with token using
-        response = self.session_api.auth_by_token(self.access_token, self.imprint_token)
+        response = SessionAPI.auth_by_token(self.access_token, self.imprint_token)
         self.assertTrue(response)
 
         # Try to update tokens
-        response = self.token_api.update_tokens(self.update_token, self.session_controller)
+        response = TokenAPI.update_tokens(self.update_token, self.session_controller)
         self.assertIsNotNone(response)
         response_dict = json.loads(response.body.decode())
         self.assertTrue(ACCESS_TOKEN_NAME in response_dict)
@@ -197,6 +195,11 @@ class IntegrationTest(unittest.TestCase):
                 self.imprint_token
             )
         )
+
+    def test_token_update_with_incorrect_update_token(self):
+        with self.assertRaises(HTTPException):
+            incorrect_update_token = TokenController().create_update_token(456)
+            TokenAPI.update_tokens(incorrect_update_token, self.session_controller)
 
     def test_unit_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
