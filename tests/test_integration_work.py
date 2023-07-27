@@ -11,6 +11,7 @@ from app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAP
 from app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
 from app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
 from app.tokens.token_api import TokenAPI
+from auth import TokenController
 from sessions.controllers import JarvisSessionController
 from sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, request_handler_depend
 from sessions.request_handler import RequestHandler
@@ -165,6 +166,15 @@ class IntegrationTest(unittest.TestCase):
 
         self.access_token = response_dict[ACCESS_TOKEN_NAME]
         self.update_token = response_dict[UPDATE_TOKEN_NAME]
+
+    def test_incorrect_token(self):
+        with self.assertRaises(HTTPException):
+            ProductTurnoverAPI.calculate(self.access_token + "wrong", self.session_controller)
+
+    def test_incorrect_encoded_token(self):
+        incorrect_access_token = TokenController().create_access_token(456)
+        with self.assertRaises(HTTPException):
+            ProductTurnoverAPI.calculate(incorrect_access_token, self.session_controller)
 
     def test_unit_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME

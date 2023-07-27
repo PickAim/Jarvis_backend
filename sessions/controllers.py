@@ -66,12 +66,13 @@ class JarvisSessionController:
 
     @timeout(1)
     def get_user(self, any_session_token: str) -> User:
-        user = self.__db_controller.get_user_by_id(
-            self.__token_controller.get_user_id(any_session_token)
-        )
-        if user:
+        try:
+            user = self.__db_controller.get_user_by_id(
+                self.__token_controller.get_user_id(any_session_token)
+            )
             return user
-        raise JarvisExceptions.INCORRECT_TOKEN
+        except Exception:
+            raise JarvisExceptions.INCORRECT_TOKEN
 
     def check_token_correctness(self, token: str, imprint_token: str) -> bool:
         user_id: int = self.__token_controller.get_user_id(token)

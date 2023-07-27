@@ -5,6 +5,7 @@ from datetime import timedelta, datetime
 from jorm.server.token.types import TokenType
 
 from auth.tokens import PyJwtTokenEncoder, PyJwtTokenDecoder
+from sessions.exceptions import JarvisExceptions
 
 letters = string.printable
 
@@ -54,7 +55,10 @@ class TokenController:
         return self.token_encoder.encode_token(to_encode)
 
     def decode_data(self, token: str) -> any:
-        return self.token_decoder.decode_payload(token)
+        try:
+            return self.token_decoder.decode_payload(token)
+        except Exception:
+            raise JarvisExceptions.INCORRECT_TOKEN
 
     def is_token_expired(self, token: str) -> bool:
         decoded_data = self.decode_data(token)
