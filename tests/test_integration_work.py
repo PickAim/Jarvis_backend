@@ -161,6 +161,33 @@ class IntegrationTest(unittest.TestCase):
         result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
+    def test_unit_economy_request_with_invalid_niche(self):
+        niche_name: str = "invalid_name"
+        category_id: int = 1
+        buy: int = 50_00
+        pack: int = 50_00
+        transit_price: int = 1000_00
+        transit_count: int = 1000
+        marketplace_transit_price: int = 1500_00
+        marketplace_id = 1
+        unit_economy_object = {
+            "buy": buy,
+            "pack": pack,
+            "niche": niche_name,
+            "category_id": category_id,
+            "transit_count": transit_count,
+            "transit_price": transit_price,
+            "market_place_transit_price": marketplace_transit_price,
+            "warehouse_name": "DEFAULT_WAREHOUSE",
+            "marketplace_id": marketplace_id
+        }
+        request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
+        with self.assertRaises(HTTPException):
+            EconomyAnalyzeAPI.calculate(
+                request_object,
+                self.access_token, self.session_controller
+            )
+
     def test_frequency_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
