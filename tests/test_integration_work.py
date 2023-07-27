@@ -189,6 +189,22 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.x, saved_object.result.x)
         self.assertEqual(jorm_result.y, saved_object.result.y)
 
+    def test_frequency_request_with_invalid_niche(self):
+        niche_name: str = "invalid_name"
+        category_id: int = 1
+        marketplace_id = 1
+        niche_request_object = {
+            "niche": niche_name,
+            "category_id": category_id,
+            "marketplace_id": marketplace_id
+        }
+        request_object = FrequencyRequest.model_validate(niche_request_object)
+        with self.assertRaises(HTTPException):
+            NicheFrequencyAPI.calculate(
+                request_object,
+                self.access_token, self.session_controller
+            )
+
     def test_niche_characteristics_request(self):
         # todo waiting for fix JDB#62
         niche_name: str = DEFAULT_NICHE_NAME

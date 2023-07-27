@@ -156,7 +156,7 @@ class JarvisSessionController:
         return result_niche
 
     @timeout(60)
-    def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche:
+    def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
         result_niche = self.get_niche(niche_name, category_id, marketplace_id)
@@ -168,10 +168,12 @@ class JarvisSessionController:
             return result_niche
         result_niche = self.__db_controller.load_new_niche(niche_name)
         if result_niche is not None:
+            if len(result_niche.products) == 0:
+                # todo waiting for JDU#36
+                return None
             LOGGER.debug(f"niche loaded just in time.")
             return result_niche
-        LOGGER.debug(f"default niche created.")
-        return self.__jorm_classes_factory.create_default_niche()
+        return result_niche
 
     @timeout(1)
     def get_warehouse(self, warehouse_name: str, marketplace_id: int) -> Warehouse:
