@@ -157,6 +157,10 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
         self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
 
+        EconomyAnalyzeAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
+        self.assertEqual(0, len(result))
+
     def test_frequency_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
@@ -188,6 +192,10 @@ class IntegrationTest(unittest.TestCase):
         jorm_result = pydantic_to_jorm(FrequencyResult, calculation_result)
         self.assertEqual(jorm_result.x, saved_object.result.x)
         self.assertEqual(jorm_result.y, saved_object.result.y)
+
+        NicheFrequencyAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
+        self.assertEqual(0, len(result))
 
     def test_frequency_request_with_invalid_niche(self):
         niche_name: str = "invalid_name"
