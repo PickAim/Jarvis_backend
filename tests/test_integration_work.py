@@ -39,8 +39,26 @@ class IntegrationTest(unittest.TestCase):
     session: any
     request_handler: RequestHandler
 
-    def assertAuthentication(self, auth_item, session_controller) -> tuple[str, str, str]:
-        response = SessionAPI.authenticate_user(auth_item, None, session_controller)
+    registration_object = {
+        "email": "any@mail.com",
+        "password": "MyPass1234!",
+        "phone": "+16034134121"
+    }
+    authentication_by_email_object = {
+        "login": "any@mail.com",
+        "password": "MyPass1234!",
+    }
+    authentication_by_phone_object = {
+        "login": "+16034134121",
+        "password": "MyPass1234!",
+    }
+    default_reg_item = RegistrationObject.model_validate(registration_object)
+    default_auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+    default_auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+
+    def assertAuthentication(self, auth_item, session_controller,
+                             imprint_token: str | None = None) -> tuple[str, str, str]:
+        response = SessionAPI.authenticate_user(auth_item, imprint_token, session_controller)
         self.assertIsNotNone(response)
         response_dict = json.loads(response.body.decode())
         self.assertTrue(ACCESS_TOKEN_NAME in response_dict)
@@ -49,42 +67,30 @@ class IntegrationTest(unittest.TestCase):
         return response_dict[ACCESS_TOKEN_NAME], response_dict[UPDATE_TOKEN_NAME], response_dict[IMPRINT_TOKEN_NAME]
 
     def setUp(self) -> None:
-        registration_object = {
-            "email": "any@mail.com",
-            "password": "MyPass1234!",
-            "phone": "+16034134121"
-        }
-        authentication_by_email_object = {
-            "login": "any@mail.com",
-            "password": "MyPass1234!",
-        }
-        authentication_by_phone_object = {
-            "login": "+16034134121",
-            "password": "MyPass1234!",
-        }
-        reg_item = RegistrationObject.model_validate(registration_object)
-        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
-        auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
         db_context = db_context_depends()
         self.session = get_session(db_context)
         self.session_controller = session_controller_depend(self.session)
         self.request_handler = request_handler_depend(self.session)
         # Registration
         try:
-            SessionAPI.registrate_user(reg_item, self.session_controller)
+            SessionAPI.registrate_user(self.default_reg_item, self.session_controller)
         except HTTPException:
             pass
 
         # Authorization by email
-        self.assertAuthentication(auth_item_with_email, self.session_controller)
+        self.assertAuthentication(self.default_auth_item_with_email, self.session_controller)
         self.access_token, self.update_token, self.imprint_token = \
-            self.assertAuthentication(auth_item_with_phone, self.session_controller)
+            self.assertAuthentication(self.default_auth_item_with_phone, self.session_controller)
 
     def tearDown(self) -> None:
         # Logout
         response = SessionAPI.log_out(self.access_token, self.imprint_token, self.session_controller)
         self.session.close()
         self.assertIsNotNone(response)
+
+    def test_existing_registration(self):
+        with self.assertRaises(HTTPException):
+            SessionAPI.registrate_user(self.default_reg_item, self.session_controller)
 
     def test_registration_and_auth_with_empty_number(self):
         registration_object = {
@@ -149,6 +155,10 @@ class IntegrationTest(unittest.TestCase):
         reg_item = RegistrationObject.model_validate(registration_object)
         with self.assertRaises(HTTPException):
             SessionAPI.registrate_user(reg_item, self.session_controller)
+
+    def test_auth_with_empty_imprint_token(self):
+        self.assertAuthentication(self.default_auth_item_with_email,
+                                  self.session_controller, imprint_token=self.imprint_token)
 
     def test_work_with_tokens(self):
         # Auth with token using

@@ -99,14 +99,6 @@ class JarvisSessionController:
             raise JarvisExceptions.INCORRECT_TOKEN
 
     @timeout(1)
-    def authenticate_user_by_access_token(self, access_token: str, imprint_token: str) -> tuple[str, str, str]:
-        user_id = self.__token_controller.get_user_id(access_token)
-        user: User = self.__db_controller.get_user_by_id(user_id)
-        if user is not None:
-            return self.__create_tokens_for_user(user.user_id, imprint_token)
-        raise JarvisExceptions.INCORRECT_TOKEN
-
-    @timeout(1)
     def logout(self, access_token: str, imprint_token: str):
         user_id = self.__token_controller.get_user_id(access_token)
         self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
@@ -125,12 +117,9 @@ class JarvisSessionController:
         update_token: str = self.__token_controller.create_update_token(user_id)
         update_token_rnd_part: str = self.__token_controller.get_random_part(update_token)
         if imprint_token is not None and imprint_token != 'None':
-            try:
-                self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
-                                                                      imprint_token, user_id)
-                return access_token, update_token, imprint_token
-            except Exception:
-                imprint_token = self.__token_controller.create_imprint_token()
+            self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
+                                                                  imprint_token, user_id)
+            return access_token, update_token, imprint_token
         else:
             imprint_token = self.__token_controller.create_imprint_token()
         self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)

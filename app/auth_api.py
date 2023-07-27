@@ -24,9 +24,9 @@ class SessionAPI(RequestAPI):
 
     @staticmethod
     @router.post('/reg/')
-    def registrate_user(auth_item: RegistrationObject,
+    def registrate_user(reg_item: RegistrationObject,
                         session_controller: JarvisSessionController = Depends(session_controller_depend)):
-        session_controller.register_user(auth_item.email, auth_item.password, auth_item.phone)
+        session_controller.register_user(reg_item.email, reg_item.password, reg_item.phone)
 
     @staticmethod
     @router.post('/auth/', tags=[AUTH_TAG])
