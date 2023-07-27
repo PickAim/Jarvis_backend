@@ -87,6 +87,70 @@ class IntegrationTest(unittest.TestCase):
         self.session.close()
         self.assertIsNotNone(response)
 
+    def test_registration_and_auth_with_empty_number(self):
+        registration_object = {
+            "email": "anyAnother@mail.com",
+            "password": "MyPass1234!",
+            "phone": ""
+        }
+        authentication_by_email_object = {
+            "login": "anyAnother@mail.com",
+            "password": "MyPass1234!",
+        }
+        authentication_by_phone_object = {
+            "login": "+79138990213",  # incorrect number
+            "password": "MyPass1234!",
+        }
+        reg_item = RegistrationObject.model_validate(registration_object)
+        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+        auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+        try:
+            self.session_api.registrate_user(reg_item, self.session_controller)
+        except HTTPException:
+            pass
+
+        # Authorization by email
+        self.assertAuthentication(auth_item_with_email, self.session_controller)
+        with self.assertRaises(HTTPException):
+            self.assertAuthentication(auth_item_with_phone, self.session_controller)
+
+    def test_registration_and_auth_with_empty_email(self):
+        registration_object = {
+            "email": "",
+            "password": "MyPass1234!",
+            "phone": "+79138990213"
+        }
+        authentication_by_email_object = {
+            "login": "anyAnother@mail.com",  # incorrect email
+            "password": "MyPass1234!",
+        }
+        authentication_by_phone_object = {
+            "login": "+79138990213",
+            "password": "MyPass1234!",
+        }
+        reg_item = RegistrationObject.model_validate(registration_object)
+        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+        auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+        try:
+            self.session_api.registrate_user(reg_item, self.session_controller)
+        except HTTPException:
+            pass
+
+        # Authorization by email
+        self.assertAuthentication(auth_item_with_phone, self.session_controller)
+        with self.assertRaises(HTTPException):
+            self.assertAuthentication(auth_item_with_email, self.session_controller)
+
+    def test_registration_with_empty_login_fields(self):
+        registration_object = {
+            "email": "",
+            "password": "MyPass1234!",
+            "phone": ""
+        }
+        reg_item = RegistrationObject.model_validate(registration_object)
+        with self.assertRaises(HTTPException):
+            self.session_api.registrate_user(reg_item, self.session_controller)
+
     def test_work_with_tokens(self):
         # Auth with token using
         response = self.session_api.auth_by_token(self.access_token, self.imprint_token)
