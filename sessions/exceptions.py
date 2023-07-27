@@ -10,6 +10,7 @@ JARVIS_DESCRIPTION_KEY = 'description'
 class JarvisExceptionsCode:
     # registration exceptions
     REGISTER_EXISTING_LOGIN = 1000
+    REGISTER_WITHOUT_LOGIN = 1001
 
     # authorization exceptions
     INCORRECT_LOGIN_OR_PASSWORD = 1010
@@ -53,6 +54,9 @@ class JarvisExceptions:
                 JARVIS_DESCRIPTION_KEY: 'Exception: ' + description
             })
         )
+
+    REGISTER_WITHOUT_LOGIN: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.REGISTER_WITHOUT_LOGIN, "You not specify any login information")
 
     INCORRECT_TOKEN: HTTPException = \
         create_exception_with_code(JarvisExceptionsCode.INCORRECT_TOKEN, "Incorrect session token")

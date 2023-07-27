@@ -136,6 +136,8 @@ class JarvisSessionController:
     def register_user(self, email: str, password: str, phone_number: str):
         email = InputController.process_email(email)
         phone_number = InputController.process_phone_number(phone_number)
+        if (email == "" or email is None) and (phone_number == "" or phone_number is None):
+            raise JarvisExceptions.REGISTER_WITHOUT_LOGIN
         account: Account = self.__db_controller.get_account(email, phone_number)
         if account is not None:
             raise JarvisExceptions.EXISTING_LOGIN

@@ -51,7 +51,6 @@ def timeout(timeout_time_in_seconds: float = -1):
                 thread_executor.run()
                 to_return = result[0]
                 process_time = time.time() - start_time
-                print(to_return, str(args))
                 if process_time > timeout_time_in_seconds and isinstance(to_return, Exception):
                     raise JarvisExceptions.create_exception_with_code(
                         JarvisExceptionsCode.TIMEOUT,
