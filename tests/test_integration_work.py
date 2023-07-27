@@ -222,6 +222,22 @@ class IntegrationTest(unittest.TestCase):
         )
         print(calculation_result)
 
+    def test_niche_characteristics_request_with_invalid_niche(self):
+        niche_name: str = "invalid_name"
+        category_id: int = 1
+        marketplace_id = 1
+        niche_request_object = {
+            "niche": niche_name,
+            "category_id": category_id,
+            "marketplace_id": marketplace_id
+        }
+        request_object = NicheRequest.model_validate(niche_request_object)
+        with self.assertRaises(HTTPException):
+            NicheCharacteristicsAPI.calculate(
+                request_object,
+                self.access_token, self.session_controller
+            )
+
     def test_product_downturn_request(self):
         # todo waiting JDB user's product save
         calculation_result = ProductDownturnAPI.calculate(self.access_token, self.session_controller)
