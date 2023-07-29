@@ -4,9 +4,9 @@ import unittest
 from passlib.context import CryptContext
 from starlette.exceptions import HTTPException
 
-from auth.hashing.hasher import PasswordHasher
-from auth.hashing.passlib_encoder import PasslibEncoder
-from support.decorators import timeout
+from jarvis_backend.auth.hashing.hasher import PasswordHasher
+from jarvis_backend.auth.hashing.passlib_encoder import PasslibEncoder
+from jarvis_backend.support.decorators import timeout
 
 
 class UtilsTest(unittest.TestCase):

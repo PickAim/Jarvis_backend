@@ -3,8 +3,8 @@ import unittest
 
 from starlette.exceptions import HTTPException
 
-from sessions.controllers import InputController
-from sessions.exceptions import JARVIS_EXCEPTION_KEY, JarvisExceptionsCode
+from jarvis_backend.sessions.controllers import InputController
+from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JarvisExceptionsCode
 
 
 class ValidationTest(unittest.TestCase):
