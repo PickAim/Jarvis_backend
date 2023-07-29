@@ -5,19 +5,20 @@ from jorm.market.service import UnitEconomyResult, FrequencyResult
 from jorm.support.constants import DEFAULT_NICHE_NAME
 from starlette.exceptions import HTTPException
 
-from app.auth_api import SessionAPI
-from app.calc.economy_analyze_api import EconomyAnalyzeAPI
-from app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
-from app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
-from app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
-from app.tokens.token_api import TokenAPI
-from auth import TokenController
-from sessions.controllers import JarvisSessionController
-from sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, request_handler_depend
-from sessions.request_handler import RequestHandler
-from sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
+from jarvis_backend.app.auth_api import SessionAPI
+from jarvis_backend.app.calc.economy_analyze_api import EconomyAnalyzeAPI
+from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
+from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
+from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
+from jarvis_backend.app.tokens.token_api import TokenAPI
+from jarvis_backend.auth import TokenController
+from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, \
+    request_handler_depend
+from jarvis_backend.sessions.request_handler import RequestHandler
+from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest
-from support.utils import pydantic_to_jorm
+from jarvis_backend.support.utils import pydantic_to_jorm
 
 __DEFAULTS_INITED = False
 
