@@ -17,7 +17,7 @@ from jarvis_backend.sessions.dependencies import db_context_depends, init_defaul
     request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
-    UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest
+    UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 
 __DEFAULTS_INITED = False
@@ -75,8 +75,8 @@ class IntegrationTest(unittest.TestCase):
         # Registration
         try:
             SessionAPI.registrate_user(self.default_reg_item, self.session_controller)
-        except HTTPException:
-            pass
+        except HTTPException as e:
+            print(e)
 
         # Authorization by email
         self.assertAuthentication(self.default_auth_item_with_email, self.session_controller)
@@ -351,7 +351,6 @@ class IntegrationTest(unittest.TestCase):
             )
 
     def test_niche_characteristics_request(self):
-        # todo waiting for fix JDB#62
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
         marketplace_id = 1
@@ -365,7 +364,21 @@ class IntegrationTest(unittest.TestCase):
             request_object,
             self.access_token, self.session_controller
         )
-        print(calculation_result)
+        expected_result = {
+            "card_count": 604,
+            "niche_profit": 1266157987,
+            "card_trade_count": 8783,
+            "mean_card_rating": 4.0,
+            "card_with_trades_count": 538,
+            "daily_mean_niche_profit": 42205266,
+            "daily_mean_trade_count": 292,
+            "mean_traded_card_cost": 144160,
+            "month_mean_niche_profit_per_card": 2096288,
+            "monopoly_percent": 0.0,
+            "maximum_profit_idx": 0,
+        }
+        expected_response = NicheCharacteristicsResultObject.model_validate(expected_result)
+        self.assertEqual(expected_response, calculation_result)
 
     def test_niche_characteristics_request_with_invalid_niche(self):
         niche_name: str = "invalid_name"

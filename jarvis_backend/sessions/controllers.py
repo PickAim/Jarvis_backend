@@ -57,7 +57,6 @@ class InputController:
 
 class JarvisSessionController:
     def __init__(self, db_controller):
-        self.temp_user_count: int = 0
         self.__db_controller: DBController = db_controller
         self.__token_controller = TokenController()
         self.__password_hasher: PasswordHasher = PasswordHasher(
@@ -66,13 +65,12 @@ class JarvisSessionController:
 
     @timeout(1)
     def get_user(self, any_session_token: str) -> User:
-        try:
-            user = self.__db_controller.get_user_by_id(
-                self.__token_controller.get_user_id(any_session_token)
-            )
-            return user
-        except Exception:
+        user = self.__db_controller.get_user_by_id(
+            self.__token_controller.get_user_id(any_session_token)
+        )
+        if user is None:
             raise JarvisExceptions.INCORRECT_TOKEN
+        return user
 
     def check_token_correctness(self, token: str, imprint_token: str) -> bool:
         user_id: int = self.__token_controller.get_user_id(token)
@@ -137,9 +135,7 @@ class JarvisSessionController:
         password = InputController.process_password(password)
         hashed_password: str = self.__password_hasher.hash(password)
         account: Account = self.__jorm_classes_factory.create_account(email, hashed_password, phone_number)
-        user: User = self.__jorm_classes_factory.create_user(self.temp_user_count)
-        user.user_id = self.temp_user_count
-        self.temp_user_count += 1  # TODO remove it after real JDB implementation
+        user: User = self.__jorm_classes_factory.create_user()
         self.__db_controller.save_user_and_account(user, account)
         return
 
@@ -176,7 +172,8 @@ class JarvisSessionController:
         if warehouse is not None:
             return warehouse
         reference_warehouses = self.__db_controller.get_all_warehouses(marketplace_id)
-        return self.__jorm_classes_factory.create_default_warehouse(reference_warehouses)  # todo
+        return self.__jorm_classes_factory.create_default_warehouse([reference_warehouses[warehouse_id]
+                                                                     for warehouse_id in reference_warehouses])
 
     @timeout(1)
     def get_products_by_user(self, user_id: int) -> dict[int, Product]:
