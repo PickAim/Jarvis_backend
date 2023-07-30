@@ -1,9 +1,11 @@
 from fastapi import Depends
 
 from jarvis_backend.auth import TokenController
-from jarvis_backend.sessions.controllers import CookieHandler, JarvisSessionController
+from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions
+from jarvis_backend.sessions.request_items import AccessTokenObject, UpdateTokenObject, CookieUpdateTokenObject, \
+    CookieAccessTokenObject, ImprintTokenObject, CookieImprintTokenObject
 
 
 def check_token_correctness(any_session_token: str, imprint_token: str,
@@ -14,42 +16,55 @@ def check_token_correctness(any_session_token: str, imprint_token: str,
         raise JarvisExceptions.INCORRECT_TOKEN
 
 
-def imprint_token_correctness_depend(imprint_token: str = None,
-                                     cookie_imprint_token: str = CookieHandler.load_imprint_token()) -> str | None:
-    if cookie_imprint_token is not None:
-        return cookie_imprint_token
-    elif imprint_token is not None:
-        return imprint_token
+def imprint_token_correctness_depend(imprint_token_object: ImprintTokenObject = Depends(),
+                                     cookie_imprint_token_object: CookieImprintTokenObject = Depends()) -> str | None:
+    if imprint_token_object.imprint_token is not None \
+            and imprint_token_object.imprint_token != "":
+        return imprint_token_object.imprint_token
+    elif cookie_imprint_token_object.cookie_imprint_token is not None \
+            and cookie_imprint_token_object.cookie_imprint_token:
+        return cookie_imprint_token_object.cookie_imprint_token
     else:
         return None
 
 
-def access_token_correctness_depend(access_token: str = None,
-                                    cookie_access_token: str = CookieHandler.load_access_token(),
-                                    imprint_token: str = Depends(imprint_token_correctness_depend),
-                                    session_controller: JarvisSessionController = Depends(
-                                        session_controller_depend)) -> str:
-    token_to_check: str
-    if cookie_access_token is not None:
-        token_to_check = cookie_access_token
-    elif access_token is not None:
-        token_to_check = access_token
-    else:
-        raise JarvisExceptions.INCORRECT_TOKEN
+def get_non_empty_token(first_token: str | None, second_token: str | None) -> str:
+    if first_token is not None and first_token != "":
+        return first_token
+    elif second_token is not None and second_token != "":
+        return second_token
+    raise JarvisExceptions.INCORRECT_TOKEN
 
-    if TokenController().is_token_expired(token_to_check):
+
+def access_token_correctness_post_depend(access_token_object: AccessTokenObject = Depends(),
+                                         cookie_access_token_object: CookieAccessTokenObject = Depends(),
+                                         session_controller: JarvisSessionController = Depends(
+                                             session_controller_depend)) -> str:
+    access_token = get_non_empty_token(
+        cookie_access_token_object.cookie_access_token,
+        access_token_object.access_token
+    )
+    imprint_token = get_non_empty_token(
+        cookie_access_token_object.cookie_imprint_token,
+        access_token_object.imprint_token
+    )
+    if TokenController().is_token_expired(access_token):
         raise JarvisExceptions.EXPIRED_TOKEN
-    return check_token_correctness(token_to_check, imprint_token, session_controller)
+    return check_token_correctness(access_token, imprint_token, session_controller)
 
 
-def update_token_correctness_depend(update_token: str = None,
-                                    cookie_update_token: str = CookieHandler.load_update_token(),
-                                    imprint_token: str = Depends(imprint_token_correctness_depend),
-                                    session_controller: JarvisSessionController = Depends(session_controller_depend)) \
-        -> str:
-    if cookie_update_token is not None:
-        return check_token_correctness(cookie_update_token, imprint_token, session_controller)
-    elif update_token is not None:
-        return check_token_correctness(update_token, imprint_token, session_controller)
-    else:
-        raise JarvisExceptions.INCORRECT_TOKEN
+def update_token_correctness_post_depend(update_token_object: UpdateTokenObject = Depends(),
+                                         cookie_update_token_object: CookieUpdateTokenObject = Depends(),
+                                         session_controller: JarvisSessionController = Depends(
+                                             session_controller_depend)) -> str:
+    access_token = get_non_empty_token(
+        cookie_update_token_object.cookie_update_token,
+        update_token_object.update_token
+    )
+    imprint_token = get_non_empty_token(
+        cookie_update_token_object.cookie_imprint_token,
+        update_token_object.imprint_token
+    )
+    if TokenController().is_token_expired(access_token):
+        raise JarvisExceptions.EXPIRED_TOKEN
+    return check_token_correctness(access_token, imprint_token, session_controller)

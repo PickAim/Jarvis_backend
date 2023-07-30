@@ -1,10 +1,12 @@
-from fastapi import Depends
+from typing import Annotated
+
+from fastapi import Depends, Body
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, UserPrivilege
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import SavableCalculationRequestAPI
-from jarvis_backend.app.tokens.dependencies import access_token_correctness_depend
+from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, request_handler_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions
@@ -28,7 +30,7 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
     @staticmethod
     @router.post('/calculate/', response_model=UnitEconomyResultObject)
     def calculate(unit_economy_item: UnitEconomyRequestObject,
-                  access_token: str = Depends(access_token_correctness_depend),
+                  access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         # TODO get_niche
@@ -45,7 +47,7 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
     @staticmethod
     @router.post('/save/', response_model=RequestInfo)
     def save(unit_economy_save_item: UnitEconomySaveObject,
-             access_token: str = Depends(access_token_correctness_depend),
+             access_token: str = Depends(access_token_correctness_post_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
@@ -55,8 +57,8 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                                                                  jorm_economy_save_object)
 
     @staticmethod
-    @router.get('/get-all/', response_model=list[UnitEconomySaveObject])
-    def get_all(access_token: str = Depends(access_token_correctness_depend),
+    @router.post('/get-all/', response_model=list[UnitEconomySaveObject])
+    def get_all(access_token: str = Depends(access_token_correctness_post_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
@@ -68,9 +70,9 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
         return result
 
     @staticmethod
-    @router.get('/delete/')
-    def delete(request_id: int,
-               access_token: str = Depends(access_token_correctness_depend),
+    @router.post('/delete/')
+    def delete(request_id: Annotated[int, Body()],
+               access_token: str = Depends(access_token_correctness_post_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)

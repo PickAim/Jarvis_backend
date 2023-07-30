@@ -178,12 +178,12 @@ class IntegrationTest(unittest.TestCase):
 
     def test_incorrect_token(self):
         with self.assertRaises(HTTPException):
-            ProductTurnoverAPI.calculate(self.access_token + "wrong", self.session_controller)
+            ProductTurnoverAPI.calculate([], self.access_token + "wrong", self.session_controller)
 
     def test_incorrect_encoded_token(self):
         incorrect_access_token = TokenController().create_access_token(456)
         with self.assertRaises(HTTPException):
-            ProductTurnoverAPI.calculate(incorrect_access_token, self.session_controller)
+            ProductTurnoverAPI.calculate([], incorrect_access_token, self.session_controller)
 
     def test_token_correctness_check(self):
         self.assertTrue(self.session_controller.check_token_correctness(self.access_token, self.imprint_token))
@@ -404,7 +404,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_product_turnover_request(self):
         # todo waiting JDB user's product save
-        calculation_result = ProductTurnoverAPI.calculate(self.access_token, self.session_controller)
+        calculation_result = ProductTurnoverAPI.calculate([], self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
