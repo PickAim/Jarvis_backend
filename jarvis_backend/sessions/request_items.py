@@ -1,4 +1,45 @@
+from fastapi import Body
 from pydantic import BaseModel
+
+from jarvis_backend.sessions.controllers import CookieHandler
+
+
+class ImprintTokenObject(object):
+    def __init__(self, imprint_token: str = Body(None)):
+        self.imprint_token = imprint_token
+
+
+class CookieImprintTokenObject(object):
+    def __init__(self, cookie_imprint_token: str = CookieHandler.load_imprint_token()):
+        self.cookie_imprint_token = cookie_imprint_token
+
+
+class AccessTokenObject(object):
+    def __init__(self, access_token: str = Body(None), imprint_token: str = Body(None)):
+        self.access_token: str = access_token
+        self.imprint_token = imprint_token
+
+
+class CookieAccessTokenObject(object):
+    def __init__(self,
+                 cookie_access_token: str = CookieHandler.load_access_token(),
+                 cookie_imprint_token: str = CookieHandler.load_imprint_token()):
+        self.cookie_access_token: str = cookie_access_token
+        self.cookie_imprint_token = cookie_imprint_token
+
+
+class UpdateTokenObject(object):
+    def __init__(self, update_token: str = Body(None), imprint_token: str = Body(None)):
+        self.update_token: str = update_token
+        self.imprint_token = imprint_token
+
+
+class CookieUpdateTokenObject(object):
+    def __init__(self,
+                 cookie_update_token: str = CookieHandler.load_update_token(),
+                 cookie_imprint_token: str = CookieHandler.load_imprint_token()):
+        self.cookie_update_token: str = cookie_update_token
+        self.cookie_imprint_token = cookie_imprint_token
 
 
 class RequestInfo(BaseModel):

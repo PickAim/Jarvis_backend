@@ -14,7 +14,6 @@ from jarvis_backend.sessions.db_context import DbContext
 from jarvis_backend.sessions.request_handler import RequestHandler, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS
 
 __DB_CONTEXT = None
-__DEFAULTS_INITED = False
 
 
 def db_context_depends() -> DbContext:
@@ -111,11 +110,7 @@ def __fill_warehouses(warehouses: list[Warehouse], warehouse_service: WarehouseS
 
 
 def session_depend(db_context: DbContext = Depends(db_context_depends)):
-    global __DEFAULTS_INITED
     with db_context.session() as session, session.begin():
-        if not __DEFAULTS_INITED:
-            init_defaults(session)
-            __DEFAULTS_INITED = True
         yield session
 
 

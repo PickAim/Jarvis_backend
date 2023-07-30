@@ -23,7 +23,7 @@ from jarvis_backend.support.utils import pydantic_to_jorm
 __DEFAULTS_INITED = False
 
 
-def get_session(db_context):
+def _get_session(db_context):
     global __DEFAULTS_INITED
     with db_context.session() as session, session.begin():
         if not __DEFAULTS_INITED:
@@ -69,7 +69,7 @@ class IntegrationTest(unittest.TestCase):
 
     def setUp(self) -> None:
         db_context = db_context_depends()
-        self.session = get_session(db_context)
+        self.session = _get_session(db_context)
         self.session_controller = session_controller_depend(self.session)
         self.request_handler = request_handler_depend(self.session)
         # Registration
@@ -178,12 +178,12 @@ class IntegrationTest(unittest.TestCase):
 
     def test_incorrect_token(self):
         with self.assertRaises(HTTPException):
-            ProductTurnoverAPI.calculate(self.access_token + "wrong", self.session_controller)
+            ProductTurnoverAPI.calculate([], self.access_token + "wrong", self.session_controller)
 
     def test_incorrect_encoded_token(self):
         incorrect_access_token = TokenController().create_access_token(456)
         with self.assertRaises(HTTPException):
-            ProductTurnoverAPI.calculate(incorrect_access_token, self.session_controller)
+            ProductTurnoverAPI.calculate([], incorrect_access_token, self.session_controller)
 
     def test_token_correctness_check(self):
         self.assertTrue(self.session_controller.check_token_correctness(self.access_token, self.imprint_token))
@@ -398,13 +398,13 @@ class IntegrationTest(unittest.TestCase):
 
     def test_product_downturn_request(self):
         # todo waiting JDB user's product save
-        calculation_result = ProductDownturnAPI.calculate(self.access_token, self.session_controller)
+        calculation_result = ProductDownturnAPI.calculate([], self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
     def test_product_turnover_request(self):
         # todo waiting JDB user's product save
-        calculation_result = ProductTurnoverAPI.calculate(self.access_token, self.session_controller)
+        calculation_result = ProductTurnoverAPI.calculate([], self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 

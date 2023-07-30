@@ -4,7 +4,7 @@ from fastapi import Depends, APIRouter
 
 from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import CALCULATION_TAG
-from jarvis_backend.app.tokens.dependencies import access_token_correctness_depend
+from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
@@ -27,7 +27,7 @@ class CalculationRequestAPI(RequestAPIWithCheck):
 
     @staticmethod
     @abstractmethod
-    def calculate(access_token: str = Depends(access_token_correctness_depend),
+    def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         pass
 
@@ -35,14 +35,14 @@ class CalculationRequestAPI(RequestAPIWithCheck):
 class SavableCalculationRequestAPI(CalculationRequestAPI):
     @staticmethod
     @abstractmethod
-    def save(access_token: str = Depends(access_token_correctness_depend),
+    def save(access_token: str = Depends(access_token_correctness_post_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         pass
 
     @staticmethod
     @abstractmethod
-    def get_all(access_token: str = Depends(access_token_correctness_depend),
+    def get_all(access_token: str = Depends(access_token_correctness_post_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
         pass
@@ -50,7 +50,7 @@ class SavableCalculationRequestAPI(CalculationRequestAPI):
     @staticmethod
     @abstractmethod
     def delete(request_id: int,
-               access_token: str = Depends(access_token_correctness_depend),
+               access_token: str = Depends(access_token_correctness_post_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
         pass

@@ -5,7 +5,7 @@ from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import AUTH_TAG
 from jarvis_backend.app.tokens.dependencies import (
     imprint_token_correctness_depend,
-    access_token_correctness_depend,
+    access_token_correctness_post_depend,
     session_controller_depend
 )
 from jarvis_backend.app.tokens.util import save_and_return_all_tokens
@@ -39,13 +39,13 @@ class SessionAPI(RequestAPI):
 
     @staticmethod
     @router.post(ACCESS_TOKEN_USAGE_URL_PART + '/auth/')
-    def auth_by_token(_: str = Depends(access_token_correctness_depend),
+    def auth_by_token(_: str = Depends(access_token_correctness_post_depend),
                       __: str = Depends(imprint_token_correctness_depend)):
         return True
 
     @staticmethod
-    @router.get(ACCESS_TOKEN_USAGE_URL_PART + '/logout/')
-    def log_out(access_token: str = Depends(access_token_correctness_depend),
+    @router.post(ACCESS_TOKEN_USAGE_URL_PART + '/logout/')
+    def log_out(access_token: str = Depends(access_token_correctness_post_depend),
                 imprint_token: str = Depends(imprint_token_correctness_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend)):
         session_controller.logout(access_token, imprint_token)

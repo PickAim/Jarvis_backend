@@ -1,9 +1,11 @@
-from fastapi import Depends
+from typing import Annotated
+
+from fastapi import Depends, Body
 from jorm.market.person import User, UserPrivilege
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import SavableCalculationRequestAPI, CalculationRequestAPI
-from jarvis_backend.app.tokens.dependencies import access_token_correctness_depend
+from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, request_handler_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions
@@ -26,7 +28,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
     @staticmethod
     @router.post('/calculate/', response_model=FrequencyResult)
     def calculate(frequency_request: FrequencyRequest,
-                  access_token: str = Depends(access_token_correctness_depend),
+                  access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
         # TODO switch to relaxed niche as soon as implemented
@@ -42,7 +44,7 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
     @staticmethod
     @router.post('/save/', response_model=RequestInfo)
     def save(frequency_save_item: FrequencySaveObject,
-             access_token: str = Depends(access_token_correctness_depend),
+             access_token: str = Depends(access_token_correctness_post_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
@@ -50,8 +52,8 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_save_object)
 
     @staticmethod
-    @router.get('/get-all/', response_model=list[FrequencySaveObject])
-    def get_all(access_token: str = Depends(access_token_correctness_depend),
+    @router.post('/get-all/', response_model=list[FrequencySaveObject])
+    def get_all(access_token: str = Depends(access_token_correctness_post_depend),
                 session_controller: JarvisSessionController = Depends(session_controller_depend),
                 request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
@@ -63,8 +65,8 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
         return result
 
     @staticmethod
-    @router.get('/delete/')
-    def delete(request_id: int, access_token: str = Depends(access_token_correctness_depend),
+    @router.post('/delete/')
+    def delete(request_id: Annotated[int, Body()], access_token: str = Depends(access_token_correctness_post_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
@@ -83,7 +85,7 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate/', response_model=NicheCharacteristicsResultObject)
-    def calculate(niche_request: NicheRequest, access_token: str = Depends(access_token_correctness_depend),
+    def calculate(niche_request: NicheRequest, access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
         # TODO switch to relaxed niche as soon as implemented
