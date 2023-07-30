@@ -398,7 +398,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_product_downturn_request(self):
         # todo waiting JDB user's product save
-        calculation_result = ProductDownturnAPI.calculate(self.access_token, self.session_controller)
+        calculation_result = ProductDownturnAPI.calculate([], self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
