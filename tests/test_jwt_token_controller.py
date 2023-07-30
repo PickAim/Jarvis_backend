@@ -1,7 +1,7 @@
 import datetime
 import unittest
 
-from auth import TokenController
+from jarvis_backend.auth import TokenController
 
 
 class TokenControllerTest(unittest.TestCase):

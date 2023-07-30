@@ -3,7 +3,7 @@ from datetime import datetime
 
 import jwt
 
-from auth.tokens import PyJwtTokenDecoder
+from jarvis_backend.auth.tokens import PyJwtTokenDecoder
 
 
 class JwtTokenDecoderTest(unittest.TestCase):
