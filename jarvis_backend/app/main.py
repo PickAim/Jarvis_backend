@@ -15,6 +15,7 @@ from jarvis_backend.app.loggers import ERROR_LOGGER
 from jarvis_backend.app.routers import routers
 from jarvis_backend.app.tags import tags_metadata, OTHER_TAG
 from jarvis_backend.sessions.controllers import CookieHandler
+from jarvis_backend.sessions.dependencies import init_defaults, db_context_depends
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
 
@@ -81,5 +82,8 @@ async def http_exception_handler(_, exc):
 
 
 if __name__ == '__main__':
+    db_context = db_context_depends()
+    with db_context.session() as session, session.begin():
+        init_defaults(session)
     log_file_path = path.join(path.dirname(path.abspath(__file__)), 'log.ini')
     uvicorn.run(app=app, port=8090, log_config=log_file_path)

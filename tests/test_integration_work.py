@@ -13,22 +13,16 @@ from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, I
 from jarvis_backend.app.tokens.token_api import TokenAPI
 from jarvis_backend.auth import TokenController
 from jarvis_backend.sessions.controllers import JarvisSessionController
-from jarvis_backend.sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, \
+from jarvis_backend.sessions.dependencies import db_context_depends, session_controller_depend, \
     request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 
-__DEFAULTS_INITED = False
-
 
 def get_session(db_context):
-    global __DEFAULTS_INITED
     with db_context.session() as session, session.begin():
-        if not __DEFAULTS_INITED:
-            init_defaults(session)
-            __DEFAULTS_INITED = True
         return session
 
 
