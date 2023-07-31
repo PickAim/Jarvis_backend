@@ -8,7 +8,8 @@ from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAPI
 from jarvis_backend.app.tokens.dependencies import session_controller_depend, access_token_correctness_post_depend
 from jarvis_backend.sessions.controllers import JarvisSessionController
-from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject
+from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject, \
+    AllProductCalculateResultObject
 
 
 class ProductDownturnAPI(CalculationRequestAPI):
@@ -61,3 +62,26 @@ class ProductTurnoverAPI(CalculationRequestAPI):
             product_id: CalculationController.calc_turnover(user_products[product_id], datetime.utcnow())
             for product_id in filtered_ids
         }})
+
+
+class AllProductCalculateAPI(CalculationRequestAPI):
+    ALL_PRODUCT_CALCULATE_URL_PART = "/all-product-calculation"
+
+    router = CalculationRequestAPI._router()
+    router.prefix += ALL_PRODUCT_CALCULATE_URL_PART
+
+    @classmethod
+    def get_minimum_privilege(cls) -> UserPrivilege:
+        return UserPrivilege.BASIC
+
+    @staticmethod
+    @router.post('/calculate/', response_model=AllProductCalculateResultObject)
+    def calculate(product_ids: list[int] = Body([]),
+                  access_token: str = Depends(access_token_correctness_post_depend),
+                  session_controller: JarvisSessionController = Depends(session_controller_depend)) \
+            -> AllProductCalculateResultObject:
+        result_dict = {
+            'downturn': ProductDownturnAPI.calculate(product_ids, access_token, session_controller),
+            'turnover': ProductTurnoverAPI.calculate(product_ids, access_token, session_controller)
+        }
+        return AllProductCalculateResultObject.model_validate(result_dict)

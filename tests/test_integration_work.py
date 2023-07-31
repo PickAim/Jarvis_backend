@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException
 from jarvis_backend.app.auth_api import SessionAPI
 from jarvis_backend.app.calc.economy_analyze_api import EconomyAnalyzeAPI
 from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
-from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
+from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI, AllProductCalculateAPI
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
 from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.token_api import TokenAPI
@@ -417,6 +417,12 @@ class IntegrationTest(unittest.TestCase):
     def test_product_turnover_request(self):
         # todo waiting JDB user's product save
         calculation_result = ProductTurnoverAPI.calculate([], self.access_token, self.session_controller)
+        self.assertIsNotNone(calculation_result)
+        print(calculation_result)
+
+    def test_all_product_calculation_request(self):
+        # todo waiting JDB user's product save
+        calculation_result = AllProductCalculateAPI.calculate([], self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 

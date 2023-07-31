@@ -109,6 +109,11 @@ class ProductTurnoverResultObject(BaseModel):
     result_dict: dict[int, dict[int, dict[str, float]]]
 
 
+class AllProductCalculateResultObject(BaseModel):
+    downturn: ProductDownturnResultObject
+    turnover: ProductTurnoverResultObject
+
+
 class NicheCharacteristicsResultObject(BaseModel):
     card_count: int
     niche_profit: int
