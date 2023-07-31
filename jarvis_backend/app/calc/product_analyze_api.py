@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import Depends, Body
+from jorm.market.items import Product
 from jorm.market.person import User, UserPrivilege
 from jorm.support.utils import intersection
 
@@ -10,6 +11,16 @@ from jarvis_backend.app.tokens.dependencies import session_controller_depend, ac
 from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject, \
     AllProductCalculateResultObject
+
+
+def _extract_filtered_user_products(ids_to_filter: list[int],
+                                    user_id: int, session_controller: JarvisSessionController) -> dict[int, Product]:
+    user_products = session_controller.get_products_by_user(user_id)
+    filtered_ids = intersection(user_products.keys(), ids_to_filter)
+    return {
+        product_id: user_products[product_id]
+        for product_id in filtered_ids
+    }
 
 
 class ProductDownturnAPI(CalculationRequestAPI):
@@ -28,13 +39,10 @@ class ProductDownturnAPI(CalculationRequestAPI):
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
-        user_products = session_controller.get_products_by_user(user.user_id)
-        if user_products is None:
-            return ProductDownturnResultObject.model_validate({"result_dict": {}})
-        filtered_ids = intersection(user_products.keys(), product_ids)
+        filtered_user_products = _extract_filtered_user_products(product_ids, user.user_id, session_controller)
         return ProductDownturnResultObject.model_validate({"result_dict": {
-            product_id: CalculationController.calc_downturn_days(user_products[product_id], datetime.utcnow())
-            for product_id in filtered_ids
+            product_id: CalculationController.calc_downturn_days(filtered_user_products[product_id], datetime.utcnow())
+            for product_id in filtered_user_products
         }})
 
 
@@ -53,14 +61,11 @@ class ProductTurnoverAPI(CalculationRequestAPI):
     def calculate(product_ids: list[int] = Body([]),
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
-        user: User = session_controller.get_user(access_token)
-        user_products = session_controller.get_products_by_user(user.user_id)
-        if user_products is None:
-            return ProductTurnoverResultObject.model_validate({"result_dict": {}})
-        filtered_ids = intersection(user_products.keys(), product_ids)
+        user: User = ProductTurnoverAPI.check_and_get_user(session_controller, access_token)
+        filtered_user_products = _extract_filtered_user_products(product_ids, user.user_id, session_controller)
         return ProductTurnoverResultObject.model_validate({"result_dict": {
-            product_id: CalculationController.calc_turnover(user_products[product_id], datetime.utcnow())
-            for product_id in filtered_ids
+            product_id: CalculationController.calc_turnover(filtered_user_products[product_id], datetime.utcnow())
+            for product_id in filtered_user_products
         }})
 
 
@@ -80,6 +85,7 @@ class AllProductCalculateAPI(CalculationRequestAPI):
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> AllProductCalculateResultObject:
+        AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
         result_dict = {
             'downturn': ProductDownturnAPI.calculate(product_ids, access_token, session_controller),
             'turnover': ProductTurnoverAPI.calculate(product_ids, access_token, session_controller)

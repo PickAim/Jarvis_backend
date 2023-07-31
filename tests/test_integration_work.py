@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import unittest
 
 from jorm.market.service import UnitEconomyResult, FrequencyResult
@@ -15,24 +16,16 @@ from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.token_api import TokenAPI
 from jarvis_backend.auth import TokenController
 from jarvis_backend.sessions.controllers import JarvisSessionController
-from jarvis_backend.sessions.dependencies import db_context_depends, init_defaults, session_controller_depend, \
+from jarvis_backend.sessions.dependencies import session_controller_depend, \
     request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
     RequestInfo
 from jarvis_backend.support.utils import pydantic_to_jorm
+from tests.dependencies import db_context_depends, _get_session
 
-__DEFAULTS_INITED = False
-
-
-def _get_session(db_context):
-    global __DEFAULTS_INITED
-    with db_context.session() as session, session.begin():
-        if not __DEFAULTS_INITED:
-            init_defaults(session)
-            __DEFAULTS_INITED = True
-        return session
+os.remove('test.db')
 
 
 class IntegrationTest(unittest.TestCase):
@@ -89,6 +82,7 @@ class IntegrationTest(unittest.TestCase):
     def tearDown(self) -> None:
         # Logout
         response = SessionAPI.log_out(self.access_token, self.imprint_token, self.session_controller)
+        self.session.commit()
         self.session.close()
         self.assertIsNotNone(response)
 
@@ -127,14 +121,14 @@ class IntegrationTest(unittest.TestCase):
         registration_object = {
             "email": "",
             "password": "MyPass1234!",
-            "phone": "+79138990213"
+            "phone": "+79138990214"
         }
         authentication_by_email_object = {
             "login": "anyAnother@mail.com",  # incorrect email
             "password": "MyPass1234!",
         }
         authentication_by_phone_object = {
-            "login": "+79138990213",
+            "login": "+79138990214",
             "password": "MyPass1234!",
         }
         reg_item = RegistrationObject.model_validate(registration_object)
@@ -274,8 +268,67 @@ class IntegrationTest(unittest.TestCase):
         result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
+    def test_unit_economy_request_with_non_default_niche(self):
+        niche_name: str = 'хурма 16'
+        category_id: int = 0
+        buy: int = 50_00
+        pack: int = 50_00
+        transit_price: int = 1000_00
+        transit_count: int = 1000
+        marketplace_transit_price: int = 1500_00
+        marketplace_id = 2
+        unit_economy_object = {
+            "buy": buy,
+            "pack": pack,
+            "niche": niche_name,
+            "category_id": category_id,
+            "transit_count": transit_count,
+            "transit_price": transit_price,
+            "market_place_transit_price": marketplace_transit_price,
+            "warehouse_name": "DEFAULT_WAREHOUSE",
+            "marketplace_id": marketplace_id
+        }
+        request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
+        calculation_result = EconomyAnalyzeAPI.calculate(
+            request_object,
+            self.access_token, self.session_controller
+        )
+        save_dict = {
+            'request': request_object,
+            'result': calculation_result
+        }
+        unit_economy_save_item = UnitEconomySaveObject.model_validate(save_dict)
+        EconomyAnalyzeAPI.save(unit_economy_save_item, self.access_token, self.session_controller, self.request_handler)
+        result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
+
+        self.assertEqual(1, len(result))
+        saved_object = result[0]
+        self.assertEqual(buy, saved_object.request.buy)
+        self.assertEqual(pack, saved_object.request.pack)
+        self.assertEqual(niche_name, saved_object.request.niche)
+        self.assertEqual(2, saved_object.request.category_id)  # expected 2 as a default category id for WB
+        self.assertEqual(transit_count, saved_object.request.transit_count)
+        self.assertEqual(transit_price, saved_object.request.transit_price)
+        self.assertEqual(marketplace_id, saved_object.request.marketplace_id)
+
+        jorm_result = pydantic_to_jorm(UnitEconomyResult, calculation_result)
+        self.assertEqual(jorm_result.product_cost, saved_object.result.product_cost)
+        self.assertEqual(jorm_result.pack_cost, saved_object.result.product_cost)
+        self.assertEqual(jorm_result.marketplace_commission, saved_object.result.marketplace_commission)
+        self.assertTrue(abs(jorm_result.roi - saved_object.result.roi) <= 0.01)
+        self.assertEqual(jorm_result.logistic_price, saved_object.result.logistic_price)
+        self.assertEqual(jorm_result.storage_price, saved_object.result.storage_price)
+        self.assertEqual(jorm_result.margin, saved_object.result.margin)
+        self.assertTrue(abs(jorm_result.transit_margin - saved_object.result.transit_margin) <= 0.01)
+        self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
+        self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
+
+        EconomyAnalyzeAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
+        self.assertEqual(0, len(result))
+
     def test_unit_economy_request_with_invalid_niche(self):
-        niche_name: str = "invalid_name"
+        niche_name: str = "invalid_name3"
         category_id: int = 1
         buy: int = 50_00
         pack: int = 50_00
@@ -346,6 +399,51 @@ class IntegrationTest(unittest.TestCase):
         result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
+    def test_frequency_request_with_non_default_niche(self):
+        niche_name: str = 'хурма 15'
+        category_id: int = 0
+        marketplace_id = 2
+        niche_request_object = {
+            "niche": niche_name,
+            "category_id": category_id,
+            "marketplace_id": marketplace_id
+        }
+        request_object = FrequencyRequest.model_validate(niche_request_object)
+        calculation_result = NicheFrequencyAPI.calculate(
+            request_object,
+            self.access_token, self.session_controller
+        )
+        request_info_object = RequestInfo.model_validate({
+            'name': "MyRequest",
+            'id': None,
+            'timestamp': datetime.datetime.utcnow().timestamp()
+        })
+        save_dict = {
+            'request': request_object,
+            'result': calculation_result,
+            'info': request_info_object
+        }
+        frequency_save_item = FrequencySaveObject.model_validate(save_dict)
+        NicheFrequencyAPI.save(frequency_save_item, self.access_token, self.session_controller, self.request_handler)
+        result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
+
+        self.assertEqual(1, len(result))
+        saved_object = result[0]
+        self.assertEqual(request_info_object.name, saved_object.info.name)
+        self.assertEqual(request_info_object.timestamp, saved_object.info.timestamp)
+
+        self.assertEqual(niche_name, saved_object.request.niche)
+        self.assertEqual(2, saved_object.request.category_id)  # expected 2 as a default category id for WB
+        self.assertEqual(marketplace_id, saved_object.request.marketplace_id)
+
+        jorm_result = pydantic_to_jorm(FrequencyResult, calculation_result)
+        self.assertEqual(jorm_result.x, saved_object.result.x)
+        self.assertEqual(jorm_result.y, saved_object.result.y)
+
+        NicheFrequencyAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
+        self.assertEqual(0, len(result))
+
     def test_frequency_request_with_invalid_niche(self):
         niche_name: str = "invalid_name"
         category_id: int = 1
@@ -393,7 +491,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(expected_response, calculation_result)
 
     def test_niche_characteristics_request_with_invalid_niche(self):
-        niche_name: str = "invalid_name"
+        niche_name: str = "invalid_name2"
         category_id: int = 1
         marketplace_id = 1
         niche_request_object = {
@@ -461,6 +559,11 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual({
             1: DEFAULT_NICHE_NAME
         }, id_to_niche)
+
+    def test_info_api_get_all_user_products(self):
+        id_to_user_products = InfoAPI.get_all_user_products(self.access_token,
+                                                            session_controller=self.session_controller)
+        self.assertEqual({}, id_to_user_products)
 
 
 if __name__ == '__main__':

@@ -39,9 +39,10 @@ class InfoAPI(RequestAPI):
         return session_controller.get_all_niches(category_id, is_allow_defaults)
 
     @staticmethod
-    @router.get('/get-all-user-products/')
+    @router.get('/get-all-user-products/', response_model=dict[int, dict])
     def get_all_user_products(access_token: str = Depends(access_token_correctness_post_depend),
-                              session_controller: JarvisSessionController = Depends(session_controller_depend)):
+                              session_controller: JarvisSessionController = Depends(session_controller_depend)) \
+            -> dict[int, dict]:
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
         return {
