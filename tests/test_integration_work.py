@@ -1,8 +1,9 @@
+import datetime
 import json
 import unittest
 
 from jorm.market.service import UnitEconomyResult, FrequencyResult
-from jorm.support.constants import DEFAULT_NICHE_NAME
+from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_MARKETPLACE_NAME, DEFAULT_CATEGORY_NAME
 from starlette.exceptions import HTTPException
 
 from jarvis_backend.app.auth_api import SessionAPI
@@ -10,6 +11,7 @@ from jarvis_backend.app.calc.economy_analyze_api import EconomyAnalyzeAPI
 from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
 from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
+from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.token_api import TokenAPI
 from jarvis_backend.auth import TokenController
 from jarvis_backend.sessions.controllers import JarvisSessionController
@@ -17,7 +19,8 @@ from jarvis_backend.sessions.dependencies import db_context_depends, init_defaul
     request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
-    UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject
+    UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
+    RequestInfo
 from jarvis_backend.support.utils import pydantic_to_jorm
 
 __DEFAULTS_INITED = False
@@ -312,9 +315,15 @@ class IntegrationTest(unittest.TestCase):
             request_object,
             self.access_token, self.session_controller
         )
+        request_info_object = RequestInfo.model_validate({
+            'name': "MyRequest",
+            'id': None,
+            'timestamp': datetime.datetime.utcnow().timestamp()
+        })
         save_dict = {
             'request': request_object,
-            'result': calculation_result
+            'result': calculation_result,
+            'info': request_info_object
         }
         frequency_save_item = FrequencySaveObject.model_validate(save_dict)
         NicheFrequencyAPI.save(frequency_save_item, self.access_token, self.session_controller, self.request_handler)
@@ -322,6 +331,9 @@ class IntegrationTest(unittest.TestCase):
 
         self.assertEqual(1, len(result))
         saved_object = result[0]
+        self.assertEqual(request_info_object.name, saved_object.info.name)
+        self.assertEqual(request_info_object.timestamp, saved_object.info.timestamp)
+
         self.assertEqual(niche_name, saved_object.request.niche)
         self.assertEqual(category_id, saved_object.request.category_id)
         self.assertEqual(marketplace_id, saved_object.request.marketplace_id)
@@ -407,6 +419,42 @@ class IntegrationTest(unittest.TestCase):
         calculation_result = ProductTurnoverAPI.calculate([], self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
+
+    def test_info_api_get_marketplaces_without_defaults(self):
+        id_to_marketplace = InfoAPI.get_all_marketplaces(session_controller=self.session_controller)
+        self.assertEqual({
+            2: 'wildberries'
+        }, id_to_marketplace)
+
+    def test_info_api_get_marketplaces_with_defaults(self):
+        id_to_marketplace = InfoAPI.get_all_marketplaces(is_allow_defaults=True,
+                                                         session_controller=self.session_controller)
+        self.assertEqual({
+            1: DEFAULT_MARKETPLACE_NAME.lower(),
+            2: 'wildberries'
+        }, id_to_marketplace)
+
+    def test_info_api_get_categories_without_defaults(self):
+        id_to_category = InfoAPI.get_all_categories(1, session_controller=self.session_controller)
+        self.assertEqual({}, id_to_category)
+
+    def test_info_api_get_categories_with_defaults(self):
+        id_to_category = InfoAPI.get_all_categories(1, is_allow_defaults=True,
+                                                    session_controller=self.session_controller)
+        self.assertEqual({
+            1: DEFAULT_CATEGORY_NAME
+        }, id_to_category)
+
+    def test_info_api_get_niches_without_defaults(self):
+        id_to_niche = InfoAPI.get_all_niches(1, session_controller=self.session_controller)
+        self.assertEqual({}, id_to_niche)
+
+    def test_info_api_get_niches_with_defaults(self):
+        id_to_niche = InfoAPI.get_all_niches(1, is_allow_defaults=True,
+                                             session_controller=self.session_controller)
+        self.assertEqual({
+            1: DEFAULT_NICHE_NAME
+        }, id_to_niche)
 
 
 if __name__ == '__main__':
