@@ -25,7 +25,8 @@ from jarvis_backend.sessions.request_items import AuthenticationObject, Registra
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.dependencies import db_context_depends, _get_session
 
-os.remove('test.db')
+if os.path.exists('test.db'):
+    os.remove('test.db')
 
 
 class IntegrationTest(unittest.TestCase):
