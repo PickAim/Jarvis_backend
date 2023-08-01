@@ -5,7 +5,8 @@ from jarvis_backend.app.tags import INFO_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend
-from jarvis_backend.sessions.request_items import GetAllMarketplacesObject, GetAllCategoriesObject, GetAllNichesObject
+from jarvis_backend.sessions.request_items import GetAllMarketplacesObject, GetAllCategoriesObject, GetAllNichesObject, \
+    GetUserProductsObject
 from jarvis_backend.support.request_api import RequestAPI
 
 
@@ -18,10 +19,11 @@ class InfoAPI(RequestAPI):
 
     @staticmethod
     @router.post('/get-all-marketplaces/', response_model=dict[int, str])
-    def get_all_marketplaces(request_data: GetAllMarketplacesObject,
+    def get_all_marketplaces(request_data: GetAllMarketplacesObject = None,
                              session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, str]:
-        return session_controller.get_all_marketplaces(request_data.is_allow_defaults)
+        is_allow_defaults = request_data.is_allow_defaults if request_data is not None else False
+        return session_controller.get_all_marketplaces(is_allow_defaults)
 
     @staticmethod
     @router.post('/get-all-categories/', response_model=dict[int, str])
@@ -39,7 +41,8 @@ class InfoAPI(RequestAPI):
 
     @staticmethod
     @router.post('/get-all-user-products/', response_model=dict[int, dict])
-    def get_all_user_products(access_token: str = Depends(access_token_correctness_post_depend),
+    def get_all_user_products(request_data: GetUserProductsObject,
+                              access_token: str = Depends(access_token_correctness_post_depend),
                               session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, dict]:
         user: User = session_controller.get_user(access_token)

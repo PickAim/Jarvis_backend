@@ -22,7 +22,7 @@ from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
     RequestInfo, BasicProductRequestObject, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
-    GetAllMarketplacesObject
+    GetAllMarketplacesObject, GetUserProductsObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.dependencies import db_context_depends, _get_session
 
@@ -127,6 +127,13 @@ class IntegrationTest(unittest.TestCase):
             "is_allow_defaults": is_allow_defaults
         }
         return GetAllNichesObject.model_validate(request_data)
+
+    @staticmethod
+    def create_get_user_products_object(marketplace_id: int) -> GetUserProductsObject:
+        request_data = {
+            "marketplace_id": marketplace_id
+        }
+        return GetUserProductsObject.model_validate(request_data)
 
     def test_existing_registration(self):
         with self.assertRaises(HTTPException):
@@ -576,8 +583,7 @@ class IntegrationTest(unittest.TestCase):
         print(calculation_result)
 
     def test_info_api_get_marketplaces_without_defaults(self):
-        request_data = self.create_get_all_marketplaces_object()
-        id_to_marketplace = InfoAPI.get_all_marketplaces(request_data, session_controller=self.session_controller)
+        id_to_marketplace = InfoAPI.get_all_marketplaces(session_controller=self.session_controller)
         self.assertEqual({
             2: 'wildberries'
         }, id_to_marketplace)
@@ -615,7 +621,9 @@ class IntegrationTest(unittest.TestCase):
         }, id_to_niche)
 
     def test_info_api_get_all_user_products(self):
-        id_to_user_products = InfoAPI.get_all_user_products(self.access_token,
+        request_data = self.create_get_user_products_object(1)
+        id_to_user_products = InfoAPI.get_all_user_products(request_data,
+                                                            self.access_token,
                                                             session_controller=self.session_controller)
         self.assertEqual({}, id_to_user_products)
 

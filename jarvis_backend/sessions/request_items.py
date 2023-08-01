@@ -161,3 +161,7 @@ class GetAllCategoriesObject(InfoGettingObject):
 
 class GetAllNichesObject(InfoGettingObject):
     category_id: int
+
+
+class GetUserProductsObject(BaseModel):
+    marketplace_id: int
