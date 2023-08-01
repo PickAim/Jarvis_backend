@@ -186,7 +186,7 @@ class JarvisSessionController:
     def __is_default_object(object_name: str) -> bool:
         return re.search('default', object_name, re.IGNORECASE) is not None
 
-    @timeout(1)
+    @timeout(3)
     def get_all_marketplaces(self, is_allow_defaults: bool) -> dict[int, str]:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
         result = {}
@@ -195,7 +195,7 @@ class JarvisSessionController:
                 result[marketplace_id] = id_to_marketplace[marketplace_id].name
         return result
 
-    @timeout(1)
+    @timeout(3)
     def get_all_categories(self, marketplace_id: int, is_allow_defaults: bool) -> dict[int, str]:
         id_to_category = self.__db_controller.get_all_categories(marketplace_id)
         result = {}
@@ -204,7 +204,7 @@ class JarvisSessionController:
                 result[category_id] = id_to_category[category_id].name
         return result
 
-    @timeout(1)
+    @timeout(3)
     def get_all_niches(self, category_id: int, is_allow_defaults: bool) -> dict[int, str]:
         id_to_niche = self.__db_controller.get_all_niches(category_id)
         result = {}
