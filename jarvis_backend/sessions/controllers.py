@@ -187,29 +187,29 @@ class JarvisSessionController:
         return re.search('default', object_name, re.IGNORECASE) is not None
 
     @timeout(1)
-    def get_all_marketplaces(self) -> dict[int, str]:
+    def get_all_marketplaces(self, is_allow_defaults: bool) -> dict[int, str]:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
         result = {}
         for marketplace_id in id_to_marketplace:
-            if not self.__is_default_object(id_to_marketplace[marketplace_id].name):
+            if is_allow_defaults or not self.__is_default_object(id_to_marketplace[marketplace_id].name):
                 result[marketplace_id] = id_to_marketplace[marketplace_id].name
         return result
 
     @timeout(1)
-    def get_all_categories(self, marketplace_id: int) -> dict[int, str]:
+    def get_all_categories(self, marketplace_id: int, is_allow_defaults: bool) -> dict[int, str]:
         id_to_category = self.__db_controller.get_all_categories(marketplace_id)
         result = {}
         for category_id in id_to_category:
-            if not self.__is_default_object(id_to_category[category_id].name):
+            if is_allow_defaults or not self.__is_default_object(id_to_category[category_id].name):
                 result[category_id] = id_to_category[category_id].name
         return result
 
     @timeout(1)
-    def get_all_niches(self, category_id: int) -> dict[int, str]:
+    def get_all_niches(self, category_id: int, is_allow_defaults: bool) -> dict[int, str]:
         id_to_niche = self.__db_controller.get_all_niches(category_id)
         result = {}
         for niche_id in id_to_niche:
-            if not self.__is_default_object(id_to_niche[niche_id].name):
+            if is_allow_defaults or not self.__is_default_object(id_to_niche[niche_id].name):
                 result[niche_id] = id_to_niche[niche_id].name
         return result
 

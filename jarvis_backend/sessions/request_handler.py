@@ -1,7 +1,6 @@
 from typing import TypeVar, Type, Callable
 
 from jarvis_calc.database_interactors.db_controller import DBController
-from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.service import UnitEconomyRequest, FrequencyRequest, RequestInfo, \
     Request, Result, UnitEconomyResult, FrequencyResult
 from jorm.support.constants import DEFAULT_CATEGORY_NAME
@@ -158,8 +157,7 @@ class RequestHandler:
         try:
             return save_method(db_controller, save_object, user_id, False)
         except Exception:
-            print("SAVED TO DEFAULT NICHE")
-            save_object.request.warehouse_name = JORMClassesFactory.create_simple_default_warehouse().name
+            print("SAVED TO DEFAULT CATEGORY")
             return save_method(db_controller, save_object, user_id, True)
 
     def get_all_request_results(self, user_id: int, request_type: Type[JBasicSaveObject]) \

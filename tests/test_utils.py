@@ -15,7 +15,6 @@ class UtilsTest(unittest.TestCase):
         context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
         hasher: PasswordHasher = PasswordHasher(context)
         hashed: str = hasher.hash(password)
-        print(hashed)
         self.assertTrue(hasher.verify(password, hashed))
 
     def test_passlib_encoder(self):
@@ -23,7 +22,6 @@ class UtilsTest(unittest.TestCase):
         encoder = PasslibEncoder(context)
         password = "mypAss"
         hash_code = encoder.encode(password)
-        print(hash_code)
         self.assertTrue(encoder.verify(password, hash_code))
 
     def test_timeout_correctness(self):

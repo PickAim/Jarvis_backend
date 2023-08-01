@@ -17,28 +17,32 @@ class InfoAPI(RequestAPI):
 
     @staticmethod
     @router.get('/get-all-marketplaces/', response_model=dict[int, str])
-    def get_all_marketplaces(session_controller: JarvisSessionController = Depends(session_controller_depend)) \
+    def get_all_marketplaces(is_allow_defaults: bool = False,
+                             session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, str]:
-        return session_controller.get_all_marketplaces()
+        return session_controller.get_all_marketplaces(is_allow_defaults)
 
     @staticmethod
     @router.get('/get-all-categories/', response_model=dict[int, str])
     def get_all_categories(marketplace_id: int,
+                           is_allow_defaults: bool = False,
                            session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, str]:
-        return session_controller.get_all_categories(marketplace_id)
+        return session_controller.get_all_categories(marketplace_id, is_allow_defaults)
 
     @staticmethod
     @router.get('/get-all-niches/', response_model=dict[int, str])
     def get_all_niches(category_id: int,
+                       is_allow_defaults: bool = False,
                        session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, str]:
-        return session_controller.get_all_niches(category_id)
+        return session_controller.get_all_niches(category_id, is_allow_defaults)
 
     @staticmethod
-    @router.get('/get-all-user-products/')
+    @router.get('/get-all-user-products/', response_model=dict[int, dict])
     def get_all_user_products(access_token: str = Depends(access_token_correctness_post_depend),
-                              session_controller: JarvisSessionController = Depends(session_controller_depend)):
+                              session_controller: JarvisSessionController = Depends(session_controller_depend)) \
+            -> dict[int, dict]:
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id)
         return {

@@ -13,15 +13,26 @@ class ValidationTest(unittest.TestCase):
         with self.assertRaises(HTTPException):
             InputController.process_phone_number(phone_number)
 
-    def test_invalid_phone_number_validation(self):
+    def test_invalid_phone_number_with_characters_validation(self):
         phone_number = "+a8909286d5488d"
         with self.assertRaises(HTTPException):
             InputController.process_phone_number(phone_number)
 
-    def test_phone_number_validation(self):
+    def test_invalid_phone_number_validation(self):
+        phone_number = "+75072878477"
+        with self.assertRaises(HTTPException) as catcher:
+            InputController.process_phone_number(phone_number)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INVALID_PHONE_NUMBER, catcher.exception)
+
+    def test_valid_phone_number_validation(self):
         phone_number = "+79092865488"
         result_phone_number = InputController.process_phone_number(phone_number)
         self.assertEqual(phone_number, result_phone_number)
+
+    def test_phone_number_validation_with_8_processing(self):
+        phone_number = "89092865488"
+        result_phone_number = InputController.process_phone_number(phone_number)
+        self.assertEqual("+79092865488", result_phone_number)
 
     def test_phone_number_recovery_on_validation(self):
         phone_number = "- 7909 286 548 8  "
@@ -38,6 +49,12 @@ class ValidationTest(unittest.TestCase):
         password = "Apassword123!"
         result_password = InputController.process_password(password)
         self.assertEqual(password, result_password)
+
+    def test_password_less_than_8(self):
+        password = "Ap123!"
+        with self.assertRaises(HTTPException) as catcher:
+            InputController.process_password(password)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.LESS_THAN_8, catcher.exception)
 
     def test_password_without_uppercase_validation(self):
         password = "apassword123!"
