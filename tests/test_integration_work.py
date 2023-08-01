@@ -21,7 +21,8 @@ from jarvis_backend.sessions.dependencies import session_controller_depend, \
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
-    RequestInfo
+    RequestInfo, BasicProductRequestObject, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
+    GetAllMarketplacesObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.dependencies import db_context_depends, _get_session
 
@@ -54,16 +55,6 @@ class IntegrationTest(unittest.TestCase):
     default_auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
     default_auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
 
-    def assertAuthentication(self, auth_item, session_controller,
-                             imprint_token: str | None = None) -> tuple[str, str, str]:
-        response = SessionAPI.authenticate_user(auth_item, imprint_token, session_controller)
-        self.assertIsNotNone(response)
-        response_dict = json.loads(response.body.decode())
-        self.assertTrue(ACCESS_TOKEN_NAME in response_dict)
-        self.assertTrue(UPDATE_TOKEN_NAME in response_dict)
-        self.assertTrue(IMPRINT_TOKEN_NAME in response_dict)
-        return response_dict[ACCESS_TOKEN_NAME], response_dict[UPDATE_TOKEN_NAME], response_dict[IMPRINT_TOKEN_NAME]
-
     def setUp(self) -> None:
         db_context = db_context_depends()
         self.session = _get_session(db_context)
@@ -86,6 +77,56 @@ class IntegrationTest(unittest.TestCase):
         self.session.commit()
         self.session.close()
         self.assertIsNotNone(response)
+
+    def assertAuthentication(self, auth_item, session_controller,
+                             imprint_token: str | None = None) -> tuple[str, str, str]:
+        response = SessionAPI.authenticate_user(auth_item, imprint_token, session_controller)
+        self.assertIsNotNone(response)
+        response_dict = json.loads(response.body.decode())
+        self.assertTrue(ACCESS_TOKEN_NAME in response_dict)
+        self.assertTrue(UPDATE_TOKEN_NAME in response_dict)
+        self.assertTrue(IMPRINT_TOKEN_NAME in response_dict)
+        return response_dict[ACCESS_TOKEN_NAME], response_dict[UPDATE_TOKEN_NAME], response_dict[IMPRINT_TOKEN_NAME]
+
+    @staticmethod
+    def create_basic_product_request_object(product_ids: list[int] = None) -> BasicProductRequestObject:
+        if product_ids is None:
+            product_ids = []
+        request_data = {
+            "product_ids": product_ids
+        }
+        return BasicProductRequestObject.model_validate(request_data)
+
+    @staticmethod
+    def create_delete_request_object(request_id: int) -> BasicDeleteRequestObject:
+        request_data = {
+            "request_id": request_id
+        }
+        return BasicDeleteRequestObject.model_validate(request_data)
+
+    @staticmethod
+    def create_get_all_marketplaces_object(is_allow_defaults: bool = False) -> GetAllMarketplacesObject:
+        request_data = {
+            "is_allow_defaults": is_allow_defaults
+        }
+        return GetAllMarketplacesObject.model_validate(request_data)
+
+    @staticmethod
+    def create_get_all_categories_object(marketplace_id: int,
+                                         is_allow_defaults: bool = False) -> GetAllCategoriesObject:
+        request_data = {
+            "marketplace_id": marketplace_id,
+            "is_allow_defaults": is_allow_defaults
+        }
+        return GetAllCategoriesObject.model_validate(request_data)
+
+    @staticmethod
+    def create_get_all_niches_object(category_id: int, is_allow_defaults: bool = False) -> GetAllNichesObject:
+        request_data = {
+            "category_id": category_id,
+            "is_allow_defaults": is_allow_defaults
+        }
+        return GetAllNichesObject.model_validate(request_data)
 
     def test_existing_registration(self):
         with self.assertRaises(HTTPException):
@@ -176,12 +217,14 @@ class IntegrationTest(unittest.TestCase):
 
     def test_incorrect_token(self):
         with self.assertRaises(HTTPException):
-            ProductTurnoverAPI.calculate([], self.access_token + "wrong", self.session_controller)
+            request_data = self.create_basic_product_request_object()
+            ProductTurnoverAPI.calculate(request_data, self.access_token + "wrong", self.session_controller)
 
     def test_incorrect_encoded_token(self):
         incorrect_access_token = TokenController().create_access_token(456)
         with self.assertRaises(HTTPException):
-            ProductTurnoverAPI.calculate([], incorrect_access_token, self.session_controller)
+            request_data = self.create_basic_product_request_object()
+            ProductTurnoverAPI.calculate(request_data, incorrect_access_token, self.session_controller)
 
     def test_token_correctness_check(self):
         self.assertTrue(self.session_controller.check_token_correctness(self.access_token, self.imprint_token))
@@ -265,7 +308,8 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
         self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
 
-        EconomyAnalyzeAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        delete_request_data = self.create_delete_request_object(1)
+        EconomyAnalyzeAPI.delete(delete_request_data, self.access_token, self.session_controller, self.request_handler)
         result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
@@ -324,7 +368,8 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
         self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
 
-        EconomyAnalyzeAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        delete_request_data = self.create_delete_request_object(1)
+        EconomyAnalyzeAPI.delete(delete_request_data, self.access_token, self.session_controller, self.request_handler)
         result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
@@ -396,7 +441,8 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.x, saved_object.result.x)
         self.assertEqual(jorm_result.y, saved_object.result.y)
 
-        NicheFrequencyAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        delete_request_data = self.create_delete_request_object(1)
+        NicheFrequencyAPI.delete(delete_request_data, self.access_token, self.session_controller, self.request_handler)
         result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
@@ -441,7 +487,8 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(jorm_result.x, saved_object.result.x)
         self.assertEqual(jorm_result.y, saved_object.result.y)
 
-        NicheFrequencyAPI.delete(1, self.access_token, self.session_controller, self.request_handler)
+        delete_request_data = self.create_delete_request_object(1)
+        NicheFrequencyAPI.delete(delete_request_data, self.access_token, self.session_controller, self.request_handler)
         result = NicheFrequencyAPI.get_all(self.access_token, self.session_controller, self.request_handler)
         self.assertEqual(0, len(result))
 
@@ -509,54 +556,60 @@ class IntegrationTest(unittest.TestCase):
 
     def test_product_downturn_request(self):
         # todo waiting JDB user's product save
-        calculation_result = ProductDownturnAPI.calculate([], self.access_token, self.session_controller)
+        request_data = self.create_basic_product_request_object()
+        calculation_result = ProductDownturnAPI.calculate(request_data, self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
     def test_product_turnover_request(self):
         # todo waiting JDB user's product save
-        calculation_result = ProductTurnoverAPI.calculate([], self.access_token, self.session_controller)
+        request_data = self.create_basic_product_request_object()
+        calculation_result = ProductTurnoverAPI.calculate(request_data, self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
     def test_all_product_calculation_request(self):
         # todo waiting JDB user's product save
-        calculation_result = AllProductCalculateAPI.calculate([], self.access_token, self.session_controller)
+        request_data = self.create_basic_product_request_object()
+        calculation_result = AllProductCalculateAPI.calculate(request_data, self.access_token, self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
     def test_info_api_get_marketplaces_without_defaults(self):
-        id_to_marketplace = InfoAPI.get_all_marketplaces(session_controller=self.session_controller)
+        request_data = self.create_get_all_marketplaces_object()
+        id_to_marketplace = InfoAPI.get_all_marketplaces(request_data, session_controller=self.session_controller)
         self.assertEqual({
             2: 'wildberries'
         }, id_to_marketplace)
 
     def test_info_api_get_marketplaces_with_defaults(self):
-        id_to_marketplace = InfoAPI.get_all_marketplaces(is_allow_defaults=True,
-                                                         session_controller=self.session_controller)
+        request_data = self.create_get_all_marketplaces_object(is_allow_defaults=True)
+        id_to_marketplace = InfoAPI.get_all_marketplaces(request_data, session_controller=self.session_controller)
         self.assertEqual({
             1: DEFAULT_MARKETPLACE_NAME.lower(),
             2: 'wildberries'
         }, id_to_marketplace)
 
     def test_info_api_get_categories_without_defaults(self):
-        id_to_category = InfoAPI.get_all_categories(1, session_controller=self.session_controller)
+        request_data = self.create_get_all_categories_object(1)
+        id_to_category = InfoAPI.get_all_categories(request_data, session_controller=self.session_controller)
         self.assertEqual({}, id_to_category)
 
     def test_info_api_get_categories_with_defaults(self):
-        id_to_category = InfoAPI.get_all_categories(1, is_allow_defaults=True,
-                                                    session_controller=self.session_controller)
+        request_data = self.create_get_all_categories_object(1, is_allow_defaults=True)
+        id_to_category = InfoAPI.get_all_categories(request_data, session_controller=self.session_controller)
         self.assertEqual({
             1: DEFAULT_CATEGORY_NAME
         }, id_to_category)
 
     def test_info_api_get_niches_without_defaults(self):
-        id_to_niche = InfoAPI.get_all_niches(1, session_controller=self.session_controller)
+        request_data = self.create_get_all_niches_object(1)
+        id_to_niche = InfoAPI.get_all_niches(request_data, session_controller=self.session_controller)
         self.assertEqual({}, id_to_niche)
 
     def test_info_api_get_niches_with_defaults(self):
-        id_to_niche = InfoAPI.get_all_niches(1, is_allow_defaults=True,
-                                             session_controller=self.session_controller)
+        request_data = self.create_get_all_niches_object(1, is_allow_defaults=True)
+        id_to_niche = InfoAPI.get_all_niches(request_data, session_controller=self.session_controller)
         self.assertEqual({
             1: DEFAULT_NICHE_NAME
         }, id_to_niche)

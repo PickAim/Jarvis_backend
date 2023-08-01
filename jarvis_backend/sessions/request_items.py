@@ -54,6 +54,10 @@ class BasicSaveObject(BaseModel):
     info: RequestInfo = RequestInfo.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
 
 
+class BasicDeleteRequestObject(BaseModel):
+    request_id: int
+
+
 class NicheRequest(BaseModel):
     niche: str
     category_id: int
@@ -101,6 +105,10 @@ class UnitEconomySaveObject(BasicSaveObject):
     result: UnitEconomyResultObject
 
 
+class BasicProductRequestObject(BaseModel):
+    product_ids: list[int] = []
+
+
 class ProductDownturnResultObject(BaseModel):
     result_dict: dict[int, dict[int, dict[str, int]]]
 
@@ -137,3 +145,19 @@ class RegistrationObject(BaseModel):
 class AuthenticationObject(BaseModel):
     login: str = ""
     password: str
+
+
+class InfoGettingObject(BaseModel):
+    is_allow_defaults: bool = False
+
+
+class GetAllMarketplacesObject(InfoGettingObject):
+    pass
+
+
+class GetAllCategoriesObject(InfoGettingObject):
+    marketplace_id: int
+
+
+class GetAllNichesObject(InfoGettingObject):
+    category_id: int

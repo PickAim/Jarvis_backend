@@ -24,17 +24,17 @@ class SessionAPI(RequestAPI):
 
     @staticmethod
     @router.post('/reg/')
-    def registrate_user(reg_item: RegistrationObject,
+    def registrate_user(request_data: RegistrationObject,
                         session_controller: JarvisSessionController = Depends(session_controller_depend)):
-        session_controller.register_user(reg_item.email, reg_item.password, reg_item.phone)
+        session_controller.register_user(request_data.email, request_data.password, request_data.phone)
 
     @staticmethod
     @router.post('/auth/', tags=[AUTH_TAG])
-    def authenticate_user(auth_item: AuthenticationObject,
+    def authenticate_user(request_data: AuthenticationObject,
                           imprint_token: str | None = Depends(imprint_token_correctness_depend),
                           session_controller: JarvisSessionController = Depends(session_controller_depend)):
         new_access_token, new_update_token, new_imprint_token = \
-            session_controller.authenticate_user(auth_item.login, auth_item.password, imprint_token)
+            session_controller.authenticate_user(request_data.login, request_data.password, imprint_token)
         return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
 
     @staticmethod

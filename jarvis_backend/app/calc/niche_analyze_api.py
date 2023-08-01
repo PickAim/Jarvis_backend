@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import Depends, Body
+from fastapi import Depends
 from jorm.market.person import User, UserPrivilege
 
 from jarvis_backend.app.calc.calculation import CalculationController
@@ -11,7 +9,7 @@ from jarvis_backend.sessions.dependencies import session_controller_depend, requ
 from jarvis_backend.sessions.exceptions import JarvisExceptions
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import RequestInfo, FrequencyRequest, FrequencyResult, FrequencySaveObject, \
-    NicheCharacteristicsResultObject, NicheRequest
+    NicheCharacteristicsResultObject, NicheRequest, BasicDeleteRequestObject
 from jarvis_backend.support.types import JFrequencySaveObject
 from jarvis_backend.support.utils import convert_save_objects_to_jorm, convert_save_objects_to_pydantic
 
@@ -27,14 +25,14 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate/', response_model=FrequencyResult)
-    def calculate(frequency_request: FrequencyRequest,
+    def calculate(request_data: FrequencyRequest,
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
         # TODO switch to relaxed niche as soon as implemented
-        niche = session_controller.get_relaxed_niche(frequency_request.niche,
-                                                     frequency_request.category_id,
-                                                     frequency_request.marketplace_id)
+        niche = session_controller.get_relaxed_niche(request_data.niche,
+                                                     request_data.category_id,
+                                                     request_data.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         result = CalculationController.calc_frequencies(niche)
@@ -43,12 +41,12 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
 
     @staticmethod
     @router.post('/save/', response_model=RequestInfo)
-    def save(frequency_save_item: FrequencySaveObject,
+    def save(request_data: FrequencySaveObject,
              access_token: str = Depends(access_token_correctness_post_depend),
              session_controller: JarvisSessionController = Depends(session_controller_depend),
              request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
-        jorm_save_object: JFrequencySaveObject = convert_save_objects_to_jorm(frequency_save_item, JFrequencySaveObject)
+        jorm_save_object: JFrequencySaveObject = convert_save_objects_to_jorm(request_data, JFrequencySaveObject)
         return SavableCalculationRequestAPI.save_and_return_info(request_handler, user.user_id, jorm_save_object)
 
     @staticmethod
@@ -66,11 +64,12 @@ class NicheFrequencyAPI(SavableCalculationRequestAPI):
 
     @staticmethod
     @router.post('/delete/')
-    def delete(request_id: Annotated[int, Body()], access_token: str = Depends(access_token_correctness_post_depend),
+    def delete(request_data: BasicDeleteRequestObject,
+               access_token: str = Depends(access_token_correctness_post_depend),
                session_controller: JarvisSessionController = Depends(session_controller_depend),
                request_handler: RequestHandler = Depends(request_handler_depend)):
         user: User = NicheFrequencyAPI.check_and_get_user(session_controller, access_token)
-        request_handler.delete_request(request_id, user.user_id, JFrequencySaveObject)
+        request_handler.delete_request(request_data.request_id, user.user_id, JFrequencySaveObject)
 
 
 class NicheCharacteristicsAPI(CalculationRequestAPI):
@@ -85,12 +84,12 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate/', response_model=NicheCharacteristicsResultObject)
-    def calculate(niche_request: NicheRequest, access_token: str = Depends(access_token_correctness_post_depend),
+    def calculate(request_data: NicheRequest, access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
         # TODO switch to relaxed niche as soon as implemented
-        niche = session_controller.get_relaxed_niche(niche_request.niche,
-                                                     niche_request.category_id, niche_request.marketplace_id)
+        niche = session_controller.get_relaxed_niche(request_data.niche,
+                                                     request_data.category_id, request_data.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         result = CalculationController.calc_niche_characteristics(niche)
