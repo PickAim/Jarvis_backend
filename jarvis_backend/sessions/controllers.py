@@ -180,7 +180,7 @@ class JarvisSessionController:
 
     @timeout(1)
     def get_products_by_user(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
-        return self.__db_controller.get_products_by_user(user_id)
+        return self.__db_controller.get_products_by_user(user_id, marketplace_id)
 
     @staticmethod
     def __is_default_object(object_name: str) -> bool:
