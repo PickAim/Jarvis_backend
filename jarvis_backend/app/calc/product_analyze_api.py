@@ -1,9 +1,7 @@
 from datetime import datetime
 
 from fastapi import Depends
-from jorm.market.items import Product
 from jorm.market.person import User, UserPrivilege
-from jorm.support.utils import intersection
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAPI
@@ -11,16 +9,7 @@ from jarvis_backend.app.tokens.dependencies import session_controller_depend, ac
 from jarvis_backend.sessions.controllers import JarvisSessionController
 from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject, \
     AllProductCalculateResultObject, BasicProductRequestObject
-
-
-def _extract_filtered_user_products(ids_to_filter: list[int],
-                                    user_id: int, session_controller: JarvisSessionController) -> dict[int, Product]:
-    user_products = session_controller.get_products_by_user(user_id)
-    filtered_ids = intersection(user_products.keys(), ids_to_filter)
-    return {
-        product_id: user_products[product_id]
-        for product_id in filtered_ids
-    }
+from jarvis_backend.support.utils import extract_filtered_user_products
 
 
 class ProductDownturnAPI(CalculationRequestAPI):
@@ -35,12 +24,11 @@ class ProductDownturnAPI(CalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate/', response_model=ProductDownturnResultObject)
-    def calculate(request_data: BasicProductRequestObject,
+    def calculate(request_data: BasicProductRequestObject = None,
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
-        filtered_user_products = _extract_filtered_user_products(request_data.product_ids,
-                                                                 user.user_id, session_controller)
+        filtered_user_products = extract_filtered_user_products(request_data, user.user_id, session_controller)
         return ProductDownturnResultObject.model_validate({"result_dict": {
             product_id: CalculationController.calc_downturn_days(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
@@ -59,12 +47,11 @@ class ProductTurnoverAPI(CalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate/', response_model=ProductTurnoverResultObject)
-    def calculate(request_data: BasicProductRequestObject,
+    def calculate(request_data: BasicProductRequestObject = None,
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user: User = ProductTurnoverAPI.check_and_get_user(session_controller, access_token)
-        filtered_user_products = _extract_filtered_user_products(request_data.product_ids,
-                                                                 user.user_id, session_controller)
+        filtered_user_products = extract_filtered_user_products(request_data, user.user_id, session_controller)
         return ProductTurnoverResultObject.model_validate({"result_dict": {
             product_id: CalculationController.calc_turnover(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
@@ -83,7 +70,7 @@ class AllProductCalculateAPI(CalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate/', response_model=AllProductCalculateResultObject)
-    def calculate(request_data: BasicProductRequestObject,
+    def calculate(request_data: BasicProductRequestObject = None,
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> AllProductCalculateResultObject:

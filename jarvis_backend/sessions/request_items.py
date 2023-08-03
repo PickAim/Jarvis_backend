@@ -107,6 +107,7 @@ class UnitEconomySaveObject(BasicSaveObject):
 
 class BasicProductRequestObject(BaseModel):
     product_ids: list[int] = []
+    marketplace_id: int
 
 
 class ProductDownturnResultObject(BaseModel):
@@ -161,7 +162,3 @@ class GetAllCategoriesObject(InfoGettingObject):
 
 class GetAllNichesObject(InfoGettingObject):
     category_id: int
-
-
-class GetUserProductsObject(BaseModel):
-    marketplace_id: int
