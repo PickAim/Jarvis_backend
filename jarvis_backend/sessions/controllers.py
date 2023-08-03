@@ -142,14 +142,14 @@ class JarvisSessionController:
         self.__db_controller.save_user_and_account(user, account)
         return
 
-    @timeout(2)
+    @timeout(5)
     def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
         result_niche: Niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
         return result_niche
 
-    @timeout(60)
+    @timeout(120)
     def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
@@ -179,8 +179,8 @@ class JarvisSessionController:
                                                                      for warehouse_id in reference_warehouses])
 
     @timeout(1)
-    def get_products_by_user(self, user_id: int) -> dict[int, Product]:
-        return self.__db_controller.get_products_by_user(user_id)
+    def get_products_by_user(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
+        return self.__db_controller.get_products_by_user(user_id, marketplace_id)
 
     @staticmethod
     def __is_default_object(object_name: str) -> bool:

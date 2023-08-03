@@ -109,6 +109,10 @@ class BasicProductRequestObject(BaseModel):
     product_ids: list[int] = []
 
 
+class ProductRequestObjectWithMarketplaceId(BasicProductRequestObject):
+    marketplace_id: int
+
+
 class ProductDownturnResultObject(BaseModel):
     result_dict: dict[int, dict[int, dict[str, int]]]
 
@@ -163,5 +167,5 @@ class GetAllNichesObject(InfoGettingObject):
     category_id: int
 
 
-class GetUserProductsObject(BaseModel):
+class GetAllProductsObject(BaseModel):
     marketplace_id: int
