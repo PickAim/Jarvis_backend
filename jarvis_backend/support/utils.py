@@ -10,7 +10,7 @@ from jorm.support.utils import intersection
 from pydantic import BaseModel
 
 from jarvis_backend.sessions.controllers import JarvisSessionController
-from jarvis_backend.sessions.request_items import BasicSaveObject, RequestInfo, BasicProductRequestObject
+from jarvis_backend.sessions.request_items import BasicSaveObject, RequestInfo, ProductRequestObjectWithMarketplaceId
 from jarvis_backend.support.types import JBasicSaveObject
 
 T = TypeVar("T")
@@ -57,10 +57,10 @@ def convert_save_objects_to_pydantic(type_to_convert: Type[BasicSaveObject], req
     )
 
 
-def extract_filtered_user_products(request_data: BasicProductRequestObject,
+def extract_filtered_user_products(request_data: ProductRequestObjectWithMarketplaceId,
                                    user_id: int, session_controller: JarvisSessionController) -> dict[int, Product]:
     ids_to_filter = request_data.product_ids if request_data is not None else []
-    user_products = session_controller.get_products_by_user(user_id)
+    user_products = session_controller.get_products_by_user(user_id, request_data.marketplace_id)
     filtered_ids = list(user_products.keys())
     if len(ids_to_filter) > 0:
         filtered_ids = intersection(filtered_ids, ids_to_filter)

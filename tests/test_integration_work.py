@@ -21,8 +21,8 @@ from jarvis_backend.sessions.dependencies import session_controller_depend, \
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
-    RequestInfo, BasicProductRequestObject, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
-    GetAllMarketplacesObject
+    RequestInfo, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
+    GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.dependencies import db_context_depends, _get_session
 
@@ -89,15 +89,22 @@ class IntegrationTest(unittest.TestCase):
         return response_dict[ACCESS_TOKEN_NAME], response_dict[UPDATE_TOKEN_NAME], response_dict[IMPRINT_TOKEN_NAME]
 
     @staticmethod
-    def create_basic_product_request_object(marketplace_id: int,
-                                            product_ids: list[int] = None) -> BasicProductRequestObject:
+    def create_product_with_mp_id_request_object(marketplace_id: int, product_ids: list[int] = None) \
+            -> ProductRequestObjectWithMarketplaceId:
         if product_ids is None:
             product_ids = []
         request_data = {
             "product_ids": product_ids,
             "marketplace_id": marketplace_id
         }
-        return BasicProductRequestObject.model_validate(request_data)
+        return ProductRequestObjectWithMarketplaceId.model_validate(request_data)
+
+    @staticmethod
+    def create_get_all_products_request_object(marketplace_id: int) -> GetAllProductsObject:
+        request_data = {
+            "marketplace_id": marketplace_id
+        }
+        return GetAllProductsObject.model_validate(request_data)
 
     @staticmethod
     def create_delete_request_object(request_id: int) -> BasicDeleteRequestObject:
@@ -219,14 +226,16 @@ class IntegrationTest(unittest.TestCase):
 
     def test_incorrect_token(self):
         with self.assertRaises(HTTPException):
-            request_data = self.create_basic_product_request_object(1)
-            ProductTurnoverAPI.calculate(request_data, self.access_token + "wrong", self.session_controller)
+            request_data = self.create_product_with_mp_id_request_object(2)
+            ProductTurnoverAPI.calculate_all_in_marketplace(request_data, self.access_token + "wrong",
+                                                            self.session_controller)
 
     def test_incorrect_encoded_token(self):
         incorrect_access_token = TokenController().create_access_token(456)
         with self.assertRaises(HTTPException):
-            request_data = self.create_basic_product_request_object(1)
-            ProductTurnoverAPI.calculate(request_data, incorrect_access_token, self.session_controller)
+            request_data = self.create_product_with_mp_id_request_object(2)
+            ProductTurnoverAPI.calculate_all_in_marketplace(request_data, incorrect_access_token,
+                                                            self.session_controller)
 
     def test_token_correctness_check(self):
         self.assertTrue(self.session_controller.check_token_correctness(self.access_token, self.imprint_token))
@@ -556,24 +565,28 @@ class IntegrationTest(unittest.TestCase):
                 self.access_token, self.session_controller
             )
 
-    def test_product_downturn_request(self):
+    def test_all_in_marketplace_product_downturn_request(self):
         # todo waiting JDB user's product save
-        request_data = self.create_basic_product_request_object(1)
-        calculation_result = ProductDownturnAPI.calculate(request_data, self.access_token, self.session_controller)
+        request_data = self.create_product_with_mp_id_request_object(2)
+        calculation_result = ProductDownturnAPI.calculate_all_in_marketplace(request_data,
+                                                                             self.access_token,
+                                                                             self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
-    def test_product_downturn_request_with_none_data(self):
+    def test_product_downturn_request(self):
         # todo waiting JDB user's product save
         calculation_result = ProductDownturnAPI.calculate(access_token=self.access_token,
                                                           session_controller=self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
-    def test_product_turnover_request(self):
+    def test_all_in_marketplace_product_turnover_request(self):
         # todo waiting JDB user's product save
-        request_data = self.create_basic_product_request_object(1)
-        calculation_result = ProductTurnoverAPI.calculate(request_data, self.access_token, self.session_controller)
+        request_data = self.create_product_with_mp_id_request_object(2)
+        calculation_result = ProductTurnoverAPI.calculate_all_in_marketplace(request_data,
+                                                                             self.access_token,
+                                                                             self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
@@ -584,14 +597,16 @@ class IntegrationTest(unittest.TestCase):
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
-    def test_all_product_calculation_request(self):
+    def test_all_in_marketplace_product_calculation_request(self):
         # todo waiting JDB user's product save
-        request_data = self.create_basic_product_request_object(1)
-        calculation_result = AllProductCalculateAPI.calculate(request_data, self.access_token, self.session_controller)
+        request_data = self.create_product_with_mp_id_request_object(2)
+        calculation_result = AllProductCalculateAPI.calculate_all_in_marketplace(request_data,
+                                                                                 self.access_token,
+                                                                                 self.session_controller)
         self.assertIsNotNone(calculation_result)
         print(calculation_result)
 
-    def test_all_product_calculation_request_with_none_data(self):
+    def test_all_product_calculation_request(self):
         # todo waiting JDB user's product save
         calculation_result = AllProductCalculateAPI.calculate(access_token=self.access_token,
                                                               session_controller=self.session_controller)
@@ -636,17 +651,17 @@ class IntegrationTest(unittest.TestCase):
             1: DEFAULT_NICHE_NAME
         }, id_to_niche)
 
-    def test_info_api_get_all_user_products(self):
-        request_data = self.create_basic_product_request_object(1)
-        id_to_user_products = InfoAPI.get_all_user_products(request_data,
-                                                            self.access_token,
-                                                            session_controller=self.session_controller)
+    def test_info_api_get_all_in_marketplace_user_products(self):
+        request_data = self.create_get_all_products_request_object(1)
+        id_to_user_products = InfoAPI.get_all_in_marketplace_user_products(request_data,
+                                                                           self.access_token,
+                                                                           session_controller=self.session_controller)
         self.assertEqual({}, id_to_user_products)
 
-    def test_info_api_get_all_user_products_with_none_data(self):
+    def test_info_api_get_all_user_products(self):
         id_to_user_products = InfoAPI.get_all_user_products(access_token=self.access_token,
                                                             session_controller=self.session_controller)
-        self.assertEqual({}, id_to_user_products)
+        self.assertEqual({2: {}}, id_to_user_products)
 
 
 if __name__ == '__main__':

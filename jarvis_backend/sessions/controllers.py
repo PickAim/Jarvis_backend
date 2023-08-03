@@ -179,7 +179,7 @@ class JarvisSessionController:
                                                                      for warehouse_id in reference_warehouses])
 
     @timeout(1)
-    def get_products_by_user(self, user_id: int) -> dict[int, Product]:
+    def get_products_by_user(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
         return self.__db_controller.get_products_by_user(user_id)
 
     @staticmethod
