@@ -16,6 +16,7 @@ from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.auth.tokens.token_control import TokenController
 from jarvis_backend.sessions.exceptions import JarvisExceptions
+from jarvis_backend.sessions.request_items import AddApiKeyObject, BaseApiKeyObject
 from jarvis_backend.support.decorators import timeout
 from jarvis_backend.support.input import InputValidator, InputPreparer
 
@@ -141,6 +142,17 @@ class JarvisSessionController:
         user: User = self.__jorm_classes_factory.create_user()
         self.__db_controller.save_user_and_account(user, account)
         return
+
+    @timeout(1)
+    def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyObject, user_id: int):
+        api_key = add_api_key_request_data.api_key
+        marketplace_id = add_api_key_request_data.marketplace_id
+        self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
+
+    @timeout(1)
+    def delete_marketplace_api_key(self, add_api_key_request_data: BaseApiKeyObject, user_id: int):
+        # TODO implement me
+        pass
 
     @timeout(5)
     def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:

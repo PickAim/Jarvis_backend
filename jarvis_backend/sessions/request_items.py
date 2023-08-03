@@ -169,3 +169,11 @@ class GetAllNichesObject(InfoGettingObject):
 
 class GetAllProductsObject(BaseModel):
     marketplace_id: int
+
+
+class BaseApiKeyObject(BaseModel):
+    marketplace_id: int
+
+
+class AddApiKeyObject(BaseApiKeyObject):
+    api_key: str
