@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from jorm.market.person import UserPrivilege, User
 
 from jarvis_backend.app.tags import OTHER_TAG
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
 
 

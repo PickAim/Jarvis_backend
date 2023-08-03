@@ -5,7 +5,7 @@ from fastapi import Depends, APIRouter
 from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import CALCULATION_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import RequestInfo

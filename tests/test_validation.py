@@ -3,7 +3,7 @@ import unittest
 
 from starlette.exceptions import HTTPException
 
-from jarvis_backend.sessions.controllers import InputController
+from jarvis_backend.controllers.session import InputController
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JarvisExceptionsCode
 
 

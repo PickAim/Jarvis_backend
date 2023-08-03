@@ -1,7 +1,7 @@
 from fastapi import Body
 from pydantic import BaseModel
 
-from jarvis_backend.sessions.controllers import CookieHandler
+from jarvis_backend.controllers.cookie import CookieHandler
 
 
 class ImprintTokenObject(object):

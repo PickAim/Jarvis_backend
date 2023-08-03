@@ -4,7 +4,7 @@ from jarvis_backend.app.constants import UPDATE_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import AUTH_TAG
 from jarvis_backend.app.tokens.dependencies import update_token_correctness_post_depend, session_controller_depend
 from jarvis_backend.app.tokens.util import save_and_return_session_tokens
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.support.request_api import RequestAPI
 
 

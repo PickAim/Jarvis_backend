@@ -15,7 +15,7 @@ from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, I
 from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.token_api import TokenAPI
 from jarvis_backend.auth import TokenController
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, \
     request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler

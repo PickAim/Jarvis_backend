@@ -14,7 +14,7 @@ from starlette.responses import PlainTextResponse
 from jarvis_backend.app.loggers import ERROR_LOGGER
 from jarvis_backend.app.routers import routers
 from jarvis_backend.app.tags import tags_metadata, OTHER_TAG
-from jarvis_backend.sessions.controllers import CookieHandler
+from jarvis_backend.controllers.cookie import CookieHandler
 from jarvis_backend.sessions.dependencies import init_defaults, db_context_depends
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
