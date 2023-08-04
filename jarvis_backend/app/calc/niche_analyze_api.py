@@ -115,7 +115,7 @@ class GreenTradeZoneAPI(CalculationRequestAPI):
     @router.post('/calculate/', response_model=GreenTradeZoneCalculateResultObject)
     def calculate(request_data: NicheRequest, access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
-        NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
+        GreenTradeZoneAPI.check_and_get_user(session_controller, access_token)
         niche = _check_ang_get_niche(request_data, session_controller)
         result = CalculationController.calc_green_zone(niche, datetime.utcnow())
         return result

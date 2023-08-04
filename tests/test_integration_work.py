@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException
 
 from jarvis_backend.app.auth_api import SessionAPI
 from jarvis_backend.app.calc.economy_analyze_api import EconomyAnalyzeAPI
-from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
+from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI, GreenTradeZoneAPI
 from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI, AllProductCalculateAPI
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
 from jarvis_backend.app.info_api import InfoAPI
@@ -24,7 +24,8 @@ from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
     RequestInfo, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
-    GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId, AddApiKeyObject
+    GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId, AddApiKeyObject, \
+    GreenTradeZoneCalculateResultObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
@@ -566,7 +567,7 @@ class IntegrationTest(BasicServerTest):
             "mean_traded_card_cost": 144160,
             "month_mean_niche_profit_per_card": 2096288,
             "monopoly_percent": 0.0,
-            "maximum_profit_idx": 0,
+            "maximum_profit_idx": 2,
         }
         expected_response = NicheCharacteristicsResultObject.model_validate(expected_result)
         self.assertEqual(expected_response, calculation_result)
@@ -587,6 +588,39 @@ class IntegrationTest(BasicServerTest):
                 self.access_token, self.session_controller
             )
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
+
+    def test_green_trade_zone_request(self):
+        niche_name: str = DEFAULT_NICHE_NAME
+        category_id: int = 1
+        marketplace_id = 1
+        niche_request_object = {
+            "niche": niche_name,
+            "category_id": category_id,
+            "marketplace_id": marketplace_id
+        }
+        request_object = NicheRequest.model_validate(niche_request_object)
+        calculation_result = GreenTradeZoneAPI.calculate(
+            request_object,
+            self.access_token, self.session_controller
+        )
+        expected_result = {
+            "segments": [(14859, 273953), (273953, 533047), (533047, 792141), (792141, 1051235), (1051235, 1310329),
+                         (1310329, 1569423), (1569423, 1828517), (1828517, 2087611), (2087611, 2346705),
+                         (2346705, 2605800)],
+            "best_segment_idx": 0,
+            "segment_profits": [1174263837, 19194507, 27340119, 34704500, 0, 0, 0, 4103700, 3945400, 2605800],
+            "best_segment_profit_idx": 0,
+            "mean_segment_profit": [2289013, 325330, 1708757, 3856055, 0, 0, 0, 4103700, 0, 2605800],
+            "best_mean_segment_profit_idx": 7,
+            "mean_product_profit": [2316102, 1371036, 4556686, 4338062, 0, 0, 0, 4103700, 3945400, 2605800],
+            "best_mean_product_profit_idx": 2,
+            "segment_product_count": [513, 59, 16, 9, 4, 1, 0, 1, 0, 1],
+            "best_segment_product_count_idx": 6,
+            "segment_product_with_trades_count": [507, 14, 6, 8, 0, 0, 0, 1, 1, 1],
+            "best_segment_product_with_trades_count_idx": 0
+        }
+        expected_response = GreenTradeZoneCalculateResultObject.model_validate(expected_result)
+        self.assertEqual(expected_response, calculation_result)
 
     def test_all_in_marketplace_product_downturn_request(self):
         # todo waiting JDB user's product save
