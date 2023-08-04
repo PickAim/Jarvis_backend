@@ -14,7 +14,7 @@ from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.auth.tokens.token_control import TokenController
 from jarvis_backend.controllers.input import InputController
 from jarvis_backend.sessions.exceptions import JarvisExceptions
-from jarvis_backend.sessions.request_items import AddApiKeyObject, BaseApiKeyObject
+from jarvis_backend.sessions.request_items import AddApiKeyObject, BasicMarketplaceInfoObject
 from jarvis_backend.support.decorators import timeout
 from jarvis_backend.support.input import InputPreparer
 
@@ -112,10 +112,13 @@ class JarvisSessionController:
     def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyObject, user_id: int):
         api_key = add_api_key_request_data.api_key
         marketplace_id = add_api_key_request_data.marketplace_id
+        id_to_marketplace = self.__db_controller.get_all_marketplaces()
+        if marketplace_id not in id_to_marketplace or self.__is_default_object(id_to_marketplace[marketplace_id].name):
+            raise JarvisExceptions.INCORRECT_MARKETPLACE
         self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
 
     @timeout(1)
-    def delete_marketplace_api_key(self, add_api_key_request_data: BaseApiKeyObject, user_id: int):
+    def delete_marketplace_api_key(self, add_api_key_request_data: BasicMarketplaceInfoObject, user_id: int):
         # TODO implement me
         pass
 

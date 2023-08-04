@@ -37,10 +37,14 @@ class JarvisExceptionsCode:
 
     # incorrect requests
     INCORRECT_NICHE = 4010
+    INCORRECT_CATEGORY = 4020
+    INCORRECT_MARKETPLACE = 4030
 
     # session exceptions
 
     TIMEOUT = 5040
+
+    USER_FUCKS = 9090  # TODO think about naming
 
 
 class JarvisExceptions:
@@ -71,3 +75,9 @@ class JarvisExceptions:
 
     INCORRECT_NICHE: HTTPException = \
         create_exception_with_code(JarvisExceptionsCode.INCORRECT_NICHE, "Incorrect niche requested")
+
+    INCORRECT_CATEGORY: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_CATEGORY, "Incorrect category requested")
+
+    INCORRECT_MARKETPLACE: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_MARKETPLACE, "Incorrect marketplace requested")
