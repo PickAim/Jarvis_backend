@@ -1,7 +1,6 @@
 import logging
 import re
 
-from fastapi import Cookie
 from jarvis_calc.database_interactors.db_controller import DBController
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
@@ -9,50 +8,17 @@ from jorm.market.items import Product
 from jorm.market.person import User, Account
 from jorm.support.constants import DEFAULT_CATEGORY_NAME
 from passlib.context import CryptContext
-from starlette.responses import JSONResponse, Response
 
-from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART, UPDATE_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.auth.tokens.token_control import TokenController
+from jarvis_backend.controllers.input import InputController
 from jarvis_backend.sessions.exceptions import JarvisExceptions
+from jarvis_backend.sessions.request_items import AddApiKeyObject, BasicMarketplaceInfoObject
 from jarvis_backend.support.decorators import timeout
-from jarvis_backend.support.input import InputValidator, InputPreparer
+from jarvis_backend.support.input import InputPreparer
 
 LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
-
-
-class InputController:
-    @staticmethod
-    def process_phone_number(phone_number: str) -> str:
-        if phone_number is None or phone_number == '':
-            return ''
-        input_preparer = InputPreparer()
-        input_validator = InputValidator()
-        phone_number = input_preparer.prepare_phone_number(phone_number)
-        phone_check_status = input_validator.check_phone_number_correctness(phone_number)
-        if phone_check_status != 0:
-            raise JarvisExceptions.create_exception_with_code(phone_check_status, "Phone number check failed")
-        return phone_number
-
-    @staticmethod
-    def process_password(password: str) -> str:
-        input_validator = InputValidator()
-        password_check_status: int = input_validator.check_password_correctness(password)
-        if password_check_status != 0:
-            raise JarvisExceptions.create_exception_with_code(password_check_status, "Password check failed")
-        return password
-
-    @staticmethod
-    def process_email(email: str) -> str:
-        if email is None or email == '':
-            return ''
-        email = email.strip()
-        input_validator = InputValidator()
-        email_check_status = input_validator.check_email_correctness(email)
-        if email_check_status != 0:
-            raise JarvisExceptions.create_exception_with_code(email_check_status, "Email check failed")
-        return email
 
 
 class JarvisSessionController:
@@ -142,6 +108,20 @@ class JarvisSessionController:
         self.__db_controller.save_user_and_account(user, account)
         return
 
+    @timeout(1)
+    def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyObject, user_id: int):
+        api_key = add_api_key_request_data.api_key
+        marketplace_id = add_api_key_request_data.marketplace_id
+        id_to_marketplace = self.__db_controller.get_all_marketplaces()
+        if marketplace_id not in id_to_marketplace or self.__is_default_object(id_to_marketplace[marketplace_id].name):
+            raise JarvisExceptions.INCORRECT_MARKETPLACE
+        self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
+
+    @timeout(1)
+    def delete_marketplace_api_key(self, add_api_key_request_data: BasicMarketplaceInfoObject, user_id: int):
+        # TODO implement me
+        pass
+
     @timeout(5)
     def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
@@ -212,40 +192,3 @@ class JarvisSessionController:
             if is_allow_defaults or not self.__is_default_object(id_to_niche[niche_id].name):
                 result[niche_id] = id_to_niche[niche_id].name
         return result
-
-
-class CookieHandler:
-    @staticmethod
-    def save_access_token(response: Response, access_token: str) -> Response:
-        response.set_cookie(key="cookie_access_token", path=ACCESS_TOKEN_USAGE_URL_PART,
-                            value=access_token, httponly=True, secure=True)
-        return response
-
-    @staticmethod
-    def save_update_token(response: Response, update_token: str) -> Response:
-        response.set_cookie(key="cookie_update_token", value=update_token, httponly=True,
-                            secure=True)
-        return response
-
-    @staticmethod
-    def save_imprint_token(response: Response, imprint_token: str) -> Response:
-        response.set_cookie(key="cookie_imprint_token", value=imprint_token, httponly=True, secure=True)
-        return response
-
-    @staticmethod
-    def load_access_token(cookie_access_token: str = Cookie(default=None)) -> str | None:
-        return cookie_access_token
-
-    @staticmethod
-    def load_update_token(cookie_update_token: str = Cookie(default=None)) -> str | None:
-        return cookie_update_token
-
-    @staticmethod
-    def load_imprint_token(cookie_imprint_token: str = Cookie(default=None)) -> str | None:
-        return cookie_imprint_token
-
-    @staticmethod
-    def delete_all_cookie(response: JSONResponse) -> JSONResponse:
-        response.delete_cookie("cookie_access_token", path=ACCESS_TOKEN_USAGE_URL_PART, httponly=True, secure=True)
-        response.delete_cookie("cookie_update_token", path=UPDATE_TOKEN_USAGE_URL_PART, httponly=True, secure=True)
-        return response

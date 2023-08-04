@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from jarvis_backend.auth import TokenController
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions
 from jarvis_backend.sessions.request_items import AccessTokenObject, UpdateTokenObject, CookieUpdateTokenObject, \

@@ -3,7 +3,7 @@ from jorm.market.person import User
 
 from jarvis_backend.app.tags import INFO_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend
 from jarvis_backend.sessions.request_items import (GetAllMarketplacesObject,
                                                    GetAllNichesObject,

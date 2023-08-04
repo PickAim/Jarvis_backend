@@ -9,7 +9,7 @@ from jorm.market.person import Account, User, UserPrivilege
 from passlib.context import CryptContext
 
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
 from jarvis_backend.sessions.request_handler import RequestHandler, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS
 

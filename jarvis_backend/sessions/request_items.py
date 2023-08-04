@@ -1,7 +1,7 @@
 from fastapi import Body
 from pydantic import BaseModel
 
-from jarvis_backend.sessions.controllers import CookieHandler
+from jarvis_backend.controllers.cookie import CookieHandler
 
 
 class ImprintTokenObject(object):
@@ -58,10 +58,13 @@ class BasicDeleteRequestObject(BaseModel):
     request_id: int
 
 
-class NicheRequest(BaseModel):
+class BasicMarketplaceInfoObject(BaseModel):
+    marketplace_id: int
+
+
+class NicheRequest(BasicMarketplaceInfoObject):
     niche: str
     category_id: int
-    marketplace_id: int
 
 
 class FrequencyRequest(NicheRequest):
@@ -109,8 +112,8 @@ class BasicProductRequestObject(BaseModel):
     product_ids: list[int] = []
 
 
-class ProductRequestObjectWithMarketplaceId(BasicProductRequestObject):
-    marketplace_id: int
+class ProductRequestObjectWithMarketplaceId(BasicProductRequestObject, BasicMarketplaceInfoObject):
+    pass
 
 
 class ProductDownturnResultObject(BaseModel):
@@ -159,13 +162,17 @@ class GetAllMarketplacesObject(InfoGettingObject):
     pass
 
 
-class GetAllCategoriesObject(InfoGettingObject):
-    marketplace_id: int
+class GetAllCategoriesObject(InfoGettingObject, BasicMarketplaceInfoObject):
+    pass
 
 
 class GetAllNichesObject(InfoGettingObject):
     category_id: int
 
 
-class GetAllProductsObject(BaseModel):
-    marketplace_id: int
+class GetAllProductsObject(BasicMarketplaceInfoObject):
+    pass
+
+
+class AddApiKeyObject(BasicMarketplaceInfoObject):
+    api_key: str
