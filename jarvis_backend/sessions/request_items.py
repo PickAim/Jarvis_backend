@@ -108,6 +108,26 @@ class UnitEconomySaveObject(BasicSaveObject):
     result: UnitEconomyResultObject
 
 
+class GreenTradeZoneCalculateResultObject(BaseModel):
+    segments: list[tuple[int, int]]
+    best_segment_idx: int
+
+    segment_profits: list[int]
+    best_segment_profit_idx: int
+    
+    mean_segment_profit: list[int]
+    best_mean_segment_profit_idx: int
+
+    mean_product_profit: list[int]
+    best_mean_product_profit_idx: int
+
+    segment_product_count: list[int]
+    best_segment_product_count_idx: int
+
+    segment_product_with_trades_count: list[int]
+    best_segment_product_with_trades_count_idx: int
+
+
 class BasicProductRequestObject(BaseModel):
     product_ids: list[int] = []
 
