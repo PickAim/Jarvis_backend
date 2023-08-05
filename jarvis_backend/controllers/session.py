@@ -49,7 +49,8 @@ class JarvisSessionController:
 
     @timeout(1)
     def update_tokens(self, update_token: str) -> tuple[str, str]:
-        user_id: int = self.__token_controller.get_user_id(update_token)
+        user: User = self.get_user(update_token)
+        user_id: int = user.user_id
         old_update_token_rnd_token: str = self.__token_controller.get_random_part(update_token)
         new_access_token: str = self.__token_controller.create_access_token(user_id)
         new_access_token_rnd_part: str = self.__token_controller.get_random_part(new_access_token)
@@ -140,11 +141,8 @@ class JarvisSessionController:
         if result_niche is not None:
             LOGGER.debug(f"niche loaded from default category.")
             return result_niche
-        result_niche = self.__db_controller.load_new_niche(niche_name)
+        result_niche = self.__db_controller.load_new_niche(niche_name, marketplace_id)
         if result_niche is not None:
-            if len(result_niche.products) == 0:
-                # todo waiting for JDU#36
-                return None
             LOGGER.debug(f"niche loaded just in time.")
             return result_niche
         return result_niche
