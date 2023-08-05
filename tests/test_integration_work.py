@@ -9,28 +9,32 @@ from starlette.exceptions import HTTPException
 
 from jarvis_backend.app.auth_api import SessionAPI
 from jarvis_backend.app.calc.economy_analyze_api import EconomyAnalyzeAPI
-from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI
+from jarvis_backend.app.calc.niche_analyze_api import NicheFrequencyAPI, NicheCharacteristicsAPI, GreenTradeZoneAPI
 from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI, AllProductCalculateAPI
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
 from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.token_api import TokenAPI
+from jarvis_backend.app.user_api import UserAPI
 from jarvis_backend.auth import TokenController
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, \
     request_handler_depend
+from jarvis_backend.sessions.exceptions import JarvisExceptionsCode
 from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
     RequestInfo, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
-    GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId
+    GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId, AddApiKeyObject, \
+    GreenTradeZoneCalculateResultObject
 from jarvis_backend.support.utils import pydantic_to_jorm
+from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
 
 if os.path.exists('test.db'):
     os.remove('test.db')
 
 
-class IntegrationTest(unittest.TestCase):
+class IntegrationTest(BasicServerTest):
     access_token = ""
     update_token = ""
     imprint_token = ""
@@ -137,9 +141,18 @@ class IntegrationTest(unittest.TestCase):
         }
         return GetAllNichesObject.model_validate(request_data)
 
+    @staticmethod
+    def create_add_api_key_object(marketplace_id: int, api_key: str) -> AddApiKeyObject:
+        request_data = {
+            "marketplace_id": marketplace_id,
+            "api_key": api_key
+        }
+        return AddApiKeyObject.model_validate(request_data)
+
     def test_existing_registration(self):
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             SessionAPI.registrate_user(self.default_reg_item, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.REGISTER_EXISTING_LOGIN, catcher.exception)
 
     def test_registration_and_auth_with_empty_number(self):
         registration_object = {
@@ -165,8 +178,9 @@ class IntegrationTest(unittest.TestCase):
 
         # Authorization by email
         self.assertAuthentication(auth_item_with_email, self.session_controller)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             self.assertAuthentication(auth_item_with_phone, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
 
     def test_registration_and_auth_with_empty_email(self):
         registration_object = {
@@ -192,8 +206,9 @@ class IntegrationTest(unittest.TestCase):
 
         # Authorization by email
         self.assertAuthentication(auth_item_with_phone, self.session_controller)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             self.assertAuthentication(auth_item_with_email, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
 
     def test_registration_with_empty_login_fields(self):
         registration_object = {
@@ -202,8 +217,9 @@ class IntegrationTest(unittest.TestCase):
             "phone": ""
         }
         reg_item = RegistrationObject.model_validate(registration_object)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             SessionAPI.registrate_user(reg_item, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
 
     def test_auth_with_empty_imprint_token(self):
         self.assertAuthentication(self.default_auth_item_with_email,
@@ -225,28 +241,32 @@ class IntegrationTest(unittest.TestCase):
         self.update_token = response_dict[UPDATE_TOKEN_NAME]
 
     def test_incorrect_token(self):
-        with self.assertRaises(HTTPException):
-            request_data = self.create_product_with_mp_id_request_object(2)
+        request_data = self.create_product_with_mp_id_request_object(2)
+        with self.assertRaises(HTTPException) as catcher:
             ProductTurnoverAPI.calculate_all_in_marketplace(request_data, self.access_token + "wrong",
                                                             self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
 
     def test_incorrect_encoded_token(self):
         incorrect_access_token = TokenController().create_access_token(456)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             request_data = self.create_product_with_mp_id_request_object(2)
             ProductTurnoverAPI.calculate_all_in_marketplace(request_data, incorrect_access_token,
                                                             self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
 
     def test_token_correctness_check(self):
         self.assertTrue(self.session_controller.check_token_correctness(self.access_token, self.imprint_token))
         self.assertTrue(self.session_controller.check_token_correctness(self.update_token, self.imprint_token))
         token_controller = TokenController()
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             incorrect_access_token = token_controller.create_access_token(456)
             self.session_controller.check_token_correctness(incorrect_access_token, self.imprint_token)
-        with self.assertRaises(HTTPException):
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
+        with self.assertRaises(HTTPException) as catcher:
             incorrect_update_token = token_controller.create_update_token(456)
             self.session_controller.check_token_correctness(incorrect_update_token, self.imprint_token)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
 
         decoded = token_controller.decode_data(self.access_token)
         decoded.pop("r")
@@ -260,9 +280,10 @@ class IntegrationTest(unittest.TestCase):
         )
 
     def test_token_update_with_incorrect_update_token(self):
-        with self.assertRaises(HTTPException):
-            incorrect_update_token = TokenController().create_update_token(456)
+        incorrect_update_token = TokenController().create_update_token(456)
+        with self.assertRaises(HTTPException) as catcher:
             TokenAPI.update_tokens(incorrect_update_token, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
 
     def test_unit_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
@@ -405,11 +426,12 @@ class IntegrationTest(unittest.TestCase):
             "marketplace_id": marketplace_id
         }
         request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             EconomyAnalyzeAPI.calculate(
                 request_object,
                 self.access_token, self.session_controller
             )
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
 
     def test_frequency_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
@@ -513,11 +535,12 @@ class IntegrationTest(unittest.TestCase):
             "marketplace_id": marketplace_id
         }
         request_object = FrequencyRequest.model_validate(niche_request_object)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             NicheFrequencyAPI.calculate(
                 request_object,
                 self.access_token, self.session_controller
             )
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
 
     def test_niche_characteristics_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
@@ -544,7 +567,7 @@ class IntegrationTest(unittest.TestCase):
             "mean_traded_card_cost": 144160,
             "month_mean_niche_profit_per_card": 2096288,
             "monopoly_percent": 0.0,
-            "maximum_profit_idx": 0,
+            "maximum_profit_idx": 2,
         }
         expected_response = NicheCharacteristicsResultObject.model_validate(expected_result)
         self.assertEqual(expected_response, calculation_result)
@@ -559,11 +582,45 @@ class IntegrationTest(unittest.TestCase):
             "marketplace_id": marketplace_id
         }
         request_object = NicheRequest.model_validate(niche_request_object)
-        with self.assertRaises(HTTPException):
+        with self.assertRaises(HTTPException) as catcher:
             NicheCharacteristicsAPI.calculate(
                 request_object,
                 self.access_token, self.session_controller
             )
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
+
+    def test_green_trade_zone_request(self):
+        niche_name: str = DEFAULT_NICHE_NAME
+        category_id: int = 1
+        marketplace_id = 1
+        niche_request_object = {
+            "niche": niche_name,
+            "category_id": category_id,
+            "marketplace_id": marketplace_id
+        }
+        request_object = NicheRequest.model_validate(niche_request_object)
+        calculation_result = GreenTradeZoneAPI.calculate(
+            request_object,
+            self.access_token, self.session_controller
+        )
+        expected_result = {
+            "segments": [(14859, 273953), (273953, 533047), (533047, 792141), (792141, 1051235), (1051235, 1310329),
+                         (1310329, 1569423), (1569423, 1828517), (1828517, 2087611), (2087611, 2346705),
+                         (2346705, 2605800)],
+            "best_segment_idx": 0,
+            "segment_profits": [1174263837, 19194507, 27340119, 34704500, 0, 0, 0, 4103700, 3945400, 2605800],
+            "best_segment_profit_idx": 0,
+            "mean_segment_profit": [2289013, 325330, 1708757, 3856055, 0, 0, 0, 4103700, 0, 2605800],
+            "best_mean_segment_profit_idx": 7,
+            "mean_product_profit": [2316102, 1371036, 4556686, 4338062, 0, 0, 0, 4103700, 3945400, 2605800],
+            "best_mean_product_profit_idx": 2,
+            "segment_product_count": [513, 59, 16, 9, 4, 1, 0, 1, 0, 1],
+            "best_segment_product_count_idx": 6,
+            "segment_product_with_trades_count": [507, 14, 6, 8, 0, 0, 0, 1, 1, 1],
+            "best_segment_product_with_trades_count_idx": 0
+        }
+        expected_response = GreenTradeZoneCalculateResultObject.model_validate(expected_result)
+        self.assertEqual(expected_response, calculation_result)
 
     def test_all_in_marketplace_product_downturn_request(self):
         # todo waiting JDB user's product save
@@ -662,6 +719,41 @@ class IntegrationTest(unittest.TestCase):
         id_to_user_products = InfoAPI.get_all_user_products(access_token=self.access_token,
                                                             session_controller=self.session_controller)
         self.assertEqual({2: {}}, id_to_user_products)
+
+    def test_user_api_key_working(self):
+        first_key = "myFirstKey"
+        request_data = self.create_add_api_key_object(marketplace_id=2, api_key=first_key)
+        UserAPI.add_marketplace_api_key(request_data=request_data,
+                                        access_token=self.access_token,
+                                        session_controller=self.session_controller)
+        saved_api_keys = UserAPI.get_all_marketplace_api_keys(access_token=self.access_token,
+                                                              session_controller=self.session_controller)
+        self.assertEqual(1, len(saved_api_keys))
+        self.assertEqual(first_key, saved_api_keys[2])
+
+        second_key = "mySecondKey"
+        request_data = self.create_add_api_key_object(marketplace_id=2, api_key=second_key)
+        with self.assertRaises(HTTPException) as catcher:
+            UserAPI.add_marketplace_api_key(request_data=request_data,
+                                            access_token=self.access_token,
+                                            session_controller=self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.USER_FUCKS, catcher.exception)
+
+    def test_user_api_key_addition_into_default_marketplace(self):
+        request_data = self.create_add_api_key_object(marketplace_id=1, api_key="myFirstKey")
+        with self.assertRaises(HTTPException) as catcher:
+            UserAPI.add_marketplace_api_key(request_data=request_data,
+                                            access_token=self.access_token,
+                                            session_controller=self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_MARKETPLACE, catcher.exception)
+
+    def test_user_api_key_addition_into_not_existed_marketplace(self):
+        request_data = self.create_add_api_key_object(marketplace_id=8579, api_key="myFirstKey")
+        with self.assertRaises(HTTPException) as catcher:
+            UserAPI.add_marketplace_api_key(request_data=request_data,
+                                            access_token=self.access_token,
+                                            session_controller=self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_MARKETPLACE, catcher.exception)
 
 
 if __name__ == '__main__':

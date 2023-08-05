@@ -1,7 +1,7 @@
 from starlette.responses import JSONResponse
 
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
-from jarvis_backend.sessions.controllers import CookieHandler
+from jarvis_backend.controllers.cookie import CookieHandler
 
 
 def save_and_return_session_tokens(access_token: str, update_token: str):

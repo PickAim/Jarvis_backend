@@ -1,7 +1,7 @@
 from fastapi import Body
 from pydantic import BaseModel
 
-from jarvis_backend.sessions.controllers import CookieHandler
+from jarvis_backend.controllers.cookie import CookieHandler
 
 
 class ImprintTokenObject(object):
@@ -58,10 +58,13 @@ class BasicDeleteRequestObject(BaseModel):
     request_id: int
 
 
-class NicheRequest(BaseModel):
+class BasicMarketplaceInfoObject(BaseModel):
+    marketplace_id: int
+
+
+class NicheRequest(BasicMarketplaceInfoObject):
     niche: str
     category_id: int
-    marketplace_id: int
 
 
 class FrequencyRequest(NicheRequest):
@@ -105,12 +108,32 @@ class UnitEconomySaveObject(BasicSaveObject):
     result: UnitEconomyResultObject
 
 
+class GreenTradeZoneCalculateResultObject(BaseModel):
+    segments: list[tuple[int, int]]
+    best_segment_idx: int
+
+    segment_profits: list[int]
+    best_segment_profit_idx: int
+    
+    mean_segment_profit: list[int]
+    best_mean_segment_profit_idx: int
+
+    mean_product_profit: list[int]
+    best_mean_product_profit_idx: int
+
+    segment_product_count: list[int]
+    best_segment_product_count_idx: int
+
+    segment_product_with_trades_count: list[int]
+    best_segment_product_with_trades_count_idx: int
+
+
 class BasicProductRequestObject(BaseModel):
     product_ids: list[int] = []
 
 
-class ProductRequestObjectWithMarketplaceId(BasicProductRequestObject):
-    marketplace_id: int
+class ProductRequestObjectWithMarketplaceId(BasicProductRequestObject, BasicMarketplaceInfoObject):
+    pass
 
 
 class ProductDownturnResultObject(BaseModel):
@@ -159,13 +182,17 @@ class GetAllMarketplacesObject(InfoGettingObject):
     pass
 
 
-class GetAllCategoriesObject(InfoGettingObject):
-    marketplace_id: int
+class GetAllCategoriesObject(InfoGettingObject, BasicMarketplaceInfoObject):
+    pass
 
 
 class GetAllNichesObject(InfoGettingObject):
     category_id: int
 
 
-class GetAllProductsObject(BaseModel):
-    marketplace_id: int
+class GetAllProductsObject(BasicMarketplaceInfoObject):
+    pass
+
+
+class AddApiKeyObject(BasicMarketplaceInfoObject):
+    api_key: str

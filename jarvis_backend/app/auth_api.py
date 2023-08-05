@@ -9,7 +9,8 @@ from jarvis_backend.app.tokens.dependencies import (
     session_controller_depend
 )
 from jarvis_backend.app.tokens.util import save_and_return_all_tokens
-from jarvis_backend.sessions.controllers import CookieHandler, JarvisSessionController
+from jarvis_backend.controllers.cookie import CookieHandler
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject
 from jarvis_backend.support.request_api import RequestAPI
 

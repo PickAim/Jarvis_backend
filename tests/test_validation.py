@@ -1,13 +1,13 @@
-import json
 import unittest
 
 from starlette.exceptions import HTTPException
 
-from jarvis_backend.sessions.controllers import InputController
-from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JarvisExceptionsCode
+from jarvis_backend.controllers.session import InputController
+from jarvis_backend.sessions.exceptions import JarvisExceptionsCode
+from tests.basic import BasicServerTest
 
 
-class ValidationTest(unittest.TestCase):
+class ValidationTest(BasicServerTest):
     def test_invalid_country_code_phone_number_validation(self):
         phone_number = "+89092865488"
         with self.assertRaises(HTTPException):
@@ -38,12 +38,6 @@ class ValidationTest(unittest.TestCase):
         phone_number = "- 7909 286 548 8  "
         result_phone_number = InputController.process_phone_number(phone_number)
         self.assertEqual("+79092865488", result_phone_number)
-
-    def assertJarvisExceptionWithCode(self, expected_code: int, exception: HTTPException):
-        self.assertEqual(500, exception.status_code)
-        self.assertTrue(JARVIS_EXCEPTION_KEY in exception.detail)
-        parsed_details = json.loads(exception.detail)
-        self.assertEqual(expected_code, parsed_details[JARVIS_EXCEPTION_KEY])
 
     def test_valid_password_validation(self):
         password = "Apassword123!"

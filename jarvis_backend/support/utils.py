@@ -9,7 +9,7 @@ from jorm.market.service import RequestInfo as JRequestInfo, Request, Result
 from jorm.support.utils import intersection
 from pydantic import BaseModel
 
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.request_items import BasicSaveObject, RequestInfo, ProductRequestObjectWithMarketplaceId
 from jarvis_backend.support.types import JBasicSaveObject
 

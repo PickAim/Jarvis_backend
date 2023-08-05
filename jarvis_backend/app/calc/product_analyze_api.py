@@ -7,7 +7,7 @@ from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAPI
 from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.dependencies import session_controller_depend, access_token_correctness_post_depend
-from jarvis_backend.sessions.controllers import JarvisSessionController
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject, \
     AllProductCalculateResultObject, ProductRequestObjectWithMarketplaceId, \
     GetAllMarketplacesObject
