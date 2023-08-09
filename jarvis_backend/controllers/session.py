@@ -82,7 +82,7 @@ class JarvisSessionController:
         update_token: str = self.__token_controller.create_update_token(user_id)
         update_token_rnd_part: str = self.__token_controller.get_random_part(update_token)
         try:
-            if imprint_token is not None and imprint_token != 'None':
+            if imprint_token is not None and imprint_token != 'None' and imprint_token != 'string':
                 self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
                                                                       imprint_token, user_id)
                 return access_token, update_token, imprint_token
