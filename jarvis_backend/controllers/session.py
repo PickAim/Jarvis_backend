@@ -6,7 +6,6 @@ from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
-from jorm.support.constants import DEFAULT_CATEGORY_NAME
 from passlib.context import CryptContext
 
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
@@ -137,15 +136,24 @@ class JarvisSessionController:
         result_niche = self.get_niche(niche_name, category_id, marketplace_id)
         if result_niche is not None:
             return result_niche
-        result_niche = self.__db_controller.get_niche(niche_name, DEFAULT_CATEGORY_NAME, marketplace_id)
-        if result_niche is not None:
-            LOGGER.debug(f"niche loaded from default category.")
-            return result_niche
+        default_category_id: int = self.__get_default_category_id(marketplace_id)
+        if default_category_id != -1:
+            result_niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
+            if result_niche is not None:
+                LOGGER.debug(f"niche loaded from default category.")
+                return result_niche
         result_niche = self.__db_controller.load_new_niche(niche_name, marketplace_id)
         if result_niche is not None:
             LOGGER.debug(f"niche loaded just in time.")
             return result_niche
         return result_niche
+
+    def __get_default_category_id(self, marketplace_id: int) -> int:
+        id_to_category = self.__db_controller.get_all_categories(marketplace_id)
+        for category_id in id_to_category:
+            if self.__is_default_object(id_to_category[category_id].name):
+                return category_id
+        return -1
 
     @timeout(1)
     def get_warehouse(self, warehouse_name: str, marketplace_id: int) -> Warehouse:
