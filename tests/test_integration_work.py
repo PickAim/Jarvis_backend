@@ -3,6 +3,9 @@ import json
 import os
 import unittest
 
+from jarvis_db.factories.services import create_user_items_service
+from jarvis_factory.support.jdb.services import JDBServiceFactory
+from jorm.market.person import User, Account
 from jorm.market.service import UnitEconomyResult, FrequencyResult
 from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_MARKETPLACE_NAME, DEFAULT_CATEGORY_NAME
 from starlette.exceptions import HTTPException
@@ -25,13 +28,15 @@ from jarvis_backend.sessions.request_items import AuthenticationObject, Registra
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
     RequestInfo, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
     GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId, AddApiKeyObject, \
-    GreenTradeZoneCalculateResultObject
+    GreenTradeZoneCalculateResultObject, BasicMarketplaceInfoObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
 
 if os.path.exists('test.db'):
     os.remove('test.db')
+
+_TEST_USER_PRODUCTS = [1, 10, 77, 85, 102, 145, 204, 345]
 
 
 class IntegrationTest(BasicServerTest):
@@ -58,6 +63,7 @@ class IntegrationTest(BasicServerTest):
     default_reg_item = RegistrationObject.model_validate(registration_object)
     default_auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
     default_auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+    user: User = None
 
     def setUp(self) -> None:
         db_context = db_context_depends()
@@ -69,7 +75,13 @@ class IntegrationTest(BasicServerTest):
             SessionAPI.registrate_user(self.default_reg_item, self.session_controller)
         except HTTPException as e:
             print(e)
-
+        account_service = JDBServiceFactory.create_account_service(self.session)
+        found_info: tuple[Account, int] = account_service.find_by_email_or_phone(self.default_reg_item.email,
+                                                                                 self.default_reg_item.phone)
+        self.user, user_id = JDBServiceFactory.create_user_service(self.session).find_by_account_id(found_info[1])
+        user_items_service = create_user_items_service(self.session)
+        for product_id in _TEST_USER_PRODUCTS:
+            user_items_service.append_product(user_id, product_id)
         # Authorization by email
         self.assertAuthentication(self.default_auth_item_with_email, self.session_controller)
         self.access_token, self.update_token, self.imprint_token = \
@@ -140,6 +152,13 @@ class IntegrationTest(BasicServerTest):
             "is_allow_defaults": is_allow_defaults
         }
         return GetAllNichesObject.model_validate(request_data)
+
+    @staticmethod
+    def create_basic_marketplace_info_object(marketplace_id: int) -> BasicMarketplaceInfoObject:
+        request_data = {
+            "marketplace_id": marketplace_id
+        }
+        return BasicMarketplaceInfoObject.model_validate(request_data)
 
     @staticmethod
     def create_add_api_key_object(marketplace_id: int, api_key: str) -> AddApiKeyObject:
@@ -762,6 +781,14 @@ class IntegrationTest(BasicServerTest):
                                             access_token=self.access_token,
                                             session_controller=self.session_controller)
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.USER_FUCKS, catcher.exception)
+
+        request_data = self.create_basic_marketplace_info_object(marketplace_id=2)
+        UserAPI.delete_marketplace_api_key(request_data=request_data,
+                                           access_token=self.access_token,
+                                           session_controller=self.session_controller)
+        saved_api_keys = UserAPI.get_all_marketplace_api_keys(access_token=self.access_token,
+                                                              session_controller=self.session_controller)
+        self.assertEqual(0, len(saved_api_keys))
 
     def test_user_api_key_addition_into_default_marketplace(self):
         request_data = self.create_add_api_key_object(marketplace_id=1, api_key="myFirstKey")
