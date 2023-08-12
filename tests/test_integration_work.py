@@ -80,8 +80,10 @@ class IntegrationTest(BasicServerTest):
                                                                                  self.default_reg_item.phone)
         self.user, user_id = JDBServiceFactory.create_user_service(self.session).find_by_account_id(found_info[1])
         user_items_service = create_user_items_service(self.session)
+        fetched_products = user_items_service.fetch_user_products(user_id)
         for product_id in _TEST_USER_PRODUCTS:
-            user_items_service.append_product(user_id, product_id)
+            if product_id not in fetched_products:
+                user_items_service.append_product(user_id, product_id)
         # Authorization by email
         self.assertAuthentication(self.default_auth_item_with_email, self.session_controller)
         self.access_token, self.update_token, self.imprint_token = \
