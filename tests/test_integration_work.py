@@ -225,6 +225,30 @@ class IntegrationTest(BasicServerTest):
         self.assertAuthentication(self.default_auth_item_with_email,
                                   self.session_controller, imprint_token=self.imprint_token)
 
+    def test_account_deletion(self):
+        registration_object = {
+            "email": "anyAnotherA@mail.com",
+            "password": "MyPass1234!",
+            "phone": ""
+        }
+        authentication_by_email_object = {
+            "login": "anyAnotherA@mail.com",
+            "password": "MyPass1234!",
+        }
+        reg_item = RegistrationObject.model_validate(registration_object)
+        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+        try:
+            SessionAPI.registrate_user(reg_item, self.session_controller)
+        except HTTPException:
+            pass
+
+        access_token, update_token, imprint_token = self.assertAuthentication(auth_item_with_email,
+                                                                              self.session_controller)
+        UserAPI.delete_account(access_token, self.session_controller)
+        with self.assertRaises(HTTPException) as catcher:
+            SessionAPI.authenticate_user(auth_item_with_email, imprint_token, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
+
     def test_work_with_tokens(self):
         # Auth with token using
         response = SessionAPI.auth_by_token(self.access_token, self.imprint_token)

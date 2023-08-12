@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends
 from jorm.market.person import User
+from starlette.responses import JSONResponse
 
 from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import USER_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
+from jarvis_backend.controllers.cookie import CookieHandler
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
@@ -44,3 +46,12 @@ class UserAPI(RequestAPI):
                                    session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user: User = session_controller.get_user(access_token)
         session_controller.delete_marketplace_api_key(request_data, user.user_id)
+
+    @staticmethod
+    @router.post('/delete-account/')
+    def delete_account(access_token: str = Depends(access_token_correctness_post_depend),
+                       session_controller: JarvisSessionController = Depends(session_controller_depend)):
+        user: User = session_controller.get_user(access_token)
+        session_controller.delete_account(user.user_id)
+        response = JSONResponse(content="deleted")
+        return CookieHandler.delete_all_cookie(response)

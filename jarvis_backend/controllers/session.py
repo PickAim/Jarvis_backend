@@ -118,9 +118,12 @@ class JarvisSessionController:
         self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
 
     @timeout(1)
-    def delete_marketplace_api_key(self, add_api_key_request_data: BasicMarketplaceInfoObject, user_id: int):
-        # TODO implement me
-        pass
+    def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoObject, user_id: int) -> None:
+        self.__db_controller.delete_marketplace_api_key(user_id, api_key_request_data.marketplace_id)
+
+    @timeout(1)
+    def delete_account(self, user_id: int) -> None:
+        self.__db_controller.delete_account(user_id)
 
     @timeout(5)
     def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
