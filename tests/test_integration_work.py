@@ -798,13 +798,13 @@ class IntegrationTest(BasicServerTest):
 
     def test_info_api_get_all_in_marketplace_user_products(self):
         request_data = self.create_get_all_products_request_object(1)
-        id_to_user_products = InfoAPI.get_all_in_marketplace_user_products(request_data,
+        id_to_user_products = UserAPI.get_all_in_marketplace_user_products(request_data,
                                                                            self.access_token,
                                                                            session_controller=self.session_controller)
         self.assertEqual({}, id_to_user_products)
 
     def test_info_api_get_all_user_products(self):
-        id_to_user_products = InfoAPI.get_all_user_products(access_token=self.access_token,
+        id_to_user_products = UserAPI.get_all_user_products(access_token=self.access_token,
                                                             session_controller=self.session_controller)
         self.assertTrue(2 in id_to_user_products)
         self.assertEqual(3, len(id_to_user_products[2]))

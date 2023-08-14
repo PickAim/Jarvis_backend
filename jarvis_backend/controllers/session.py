@@ -176,7 +176,7 @@ class JarvisSessionController:
         return re.search('default', object_name, re.IGNORECASE) is not None
 
     @timeout(3)
-    def get_all_marketplaces(self, is_allow_defaults: bool) -> dict[int, str]:
+    def get_all_marketplaces(self, is_allow_defaults: bool = False) -> dict[int, str]:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
         result = {}
         for marketplace_id in id_to_marketplace:
