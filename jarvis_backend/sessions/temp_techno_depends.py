@@ -63,14 +63,16 @@ def __init_tech_no_prom_niche(session):
     niche, niche_id = __fetch_or_load_niche(session, marketplace_id, category_id)
     products = niche.products
     product_card_service = JDBServiceFactory.create_product_card_service(session)
-    global_ids = [product.global_id for product in products]
-    filtered = set(product_card_service.filter_existing_global_ids(niche_id, global_ids))
     user_id = __init_dummy_user(session)
     user_items_service = create_user_items_service(session)
+    id_to_product = user_items_service.fetch_user_products(user_id, marketplace_id=marketplace_id)
     for product in products:
-        found_info: tuple[Product, int] = product_card_service.find_by_gloabal_id(product.global_id, marketplace_id)
-        user_items_service.append_product(user_id, found_info[1])
-        pass  # TODO find_by_global needed, wait for JDB
+        if product.global_id in __PRODUCTS_GLOBAL_IDS_TO_LINK:
+            found_info: tuple[Product, int] = product_card_service.find_by_gloabal_id(product.global_id, marketplace_id)
+            if found_info is None:
+                continue
+            if found_info[1] not in id_to_product:
+                user_items_service.append_product(user_id, found_info[1])
 
 
 def init_tech_no_prom_defaults(session):

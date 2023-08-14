@@ -1,6 +1,7 @@
 from fastapi import Depends
 from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
+from jarvis_factory.startup import init_supported_marketplaces
 from jarvis_factory.support.constants import SUPPORTED_MARKETPLACES
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 from jorm.market.infrastructure import Warehouse, HandlerType, Address, Marketplace
@@ -41,6 +42,17 @@ def __init_admin_account(session):
     __user_service.create(admin_user, account_id)
 
 
+def __init_defaults_for_marketplace(session: Session, marketplace_id: int):
+    warehouse_service = JDBServiceFactory.create_warehouse_service(session)
+    default_warehouse = JORMClassesFactory.create_simple_default_warehouse()
+    if warehouse_service.find_warehouse_by_name(default_warehouse.name, marketplace_id) is None:
+        warehouse_service.create_warehouse(default_warehouse, marketplace_id)
+    category_service = JDBServiceFactory.create_category_service(session)
+    default_category = JORMClassesFactory.create_default_category()
+    if category_service.find_by_name(default_category.name, marketplace_id) is None:
+        category_service.create(default_category, marketplace_id)
+
+
 def __init_supported_marketplaces(session: Session):
     marketplace_service = JDBServiceFactory.create_marketplace_service(session)
     for marketplace_name in SUPPORTED_MARKETPLACES:
@@ -48,7 +60,7 @@ def __init_supported_marketplaces(session: Session):
             marketplace = Marketplace(marketplace_name)
             marketplace_service.create(marketplace)
         _, marketplace_id = marketplace_service.find_by_name(marketplace_name)
-        __init_marketplace(session, marketplace_id)
+        __init_defaults_for_marketplace(session, marketplace_id)
 
 
 def __init_default_infrastructure(session):
@@ -57,24 +69,14 @@ def __init_default_infrastructure(session):
     if marketplace_service.find_by_name(default_marketplace.name) is None:
         marketplace_service.create(default_marketplace)
     _, default_marketplace_id = marketplace_service.find_by_name(default_marketplace.name)
-    __init_marketplace(session, default_marketplace_id)
-    __init_supported_marketplaces(session)
-
-
-def __init_marketplace(session: Session, marketplace_id: int):
-    warehouse_service = JDBServiceFactory.create_warehouse_service(session)
-    default_warehouse = JORMClassesFactory.create_simple_default_warehouse()
-    if warehouse_service.find_warehouse_by_name(default_warehouse.name, marketplace_id) is None:
-        warehouse_service.create_warehouse(default_warehouse, marketplace_id)
-    category_service = JDBServiceFactory.create_category_service(session)
-    default_category = JORMClassesFactory.create_default_category()
-    if category_service.find_by_name(default_category.name, default_marketplace_id) is None:
-        category_service.create(default_category, default_marketplace_id)
+    __init_defaults_for_marketplace(session, default_marketplace_id)
 
 
 def init_defaults(session):
     __init_default_infrastructure(session)
-    __init_supported_marketplaces(session)
+    supported_marketplaces_ids = init_supported_marketplaces(session)
+    for marketplace_id in supported_marketplaces_ids:
+        __init_defaults_for_marketplace(session, marketplace_id)
     init_tech_no_prom_defaults(session)
     __init_admin_account(session)
 
