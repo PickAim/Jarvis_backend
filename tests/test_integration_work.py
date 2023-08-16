@@ -3,6 +3,9 @@ import json
 import os
 import unittest
 
+from jarvis_db.factories.services import create_user_items_service
+from jarvis_factory.support.jdb.services import JDBServiceFactory
+from jorm.market.person import User, Account
 from jorm.market.service import UnitEconomyResult, FrequencyResult
 from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_MARKETPLACE_NAME, DEFAULT_CATEGORY_NAME
 from starlette.exceptions import HTTPException
@@ -25,13 +28,15 @@ from jarvis_backend.sessions.request_items import AuthenticationObject, Registra
     UnitEconomySaveObject, FrequencyRequest, FrequencySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
     RequestInfo, BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
     GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId, AddApiKeyObject, \
-    GreenTradeZoneCalculateResultObject
+    GreenTradeZoneCalculateResultObject, BasicMarketplaceInfoObject
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
 
 if os.path.exists('test.db'):
     os.remove('test.db')
+
+_TEST_USER_PRODUCTS = [1, 10, 77]
 
 
 class IntegrationTest(BasicServerTest):
@@ -58,6 +63,7 @@ class IntegrationTest(BasicServerTest):
     default_reg_item = RegistrationObject.model_validate(registration_object)
     default_auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
     default_auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+    user: User = None
 
     def setUp(self) -> None:
         db_context = db_context_depends()
@@ -69,7 +75,15 @@ class IntegrationTest(BasicServerTest):
             SessionAPI.registrate_user(self.default_reg_item, self.session_controller)
         except HTTPException as e:
             print(e)
-
+        account_service = JDBServiceFactory.create_account_service(self.session)
+        found_info: tuple[Account, int] = account_service.find_by_email_or_phone(self.default_reg_item.email,
+                                                                                 self.default_reg_item.phone)
+        self.user, user_id = JDBServiceFactory.create_user_service(self.session).find_by_account_id(found_info[1])
+        user_items_service = create_user_items_service(self.session)
+        fetched_products = user_items_service.fetch_user_products(user_id, 2)
+        for product_id in _TEST_USER_PRODUCTS:
+            if product_id + 604 not in fetched_products:
+                user_items_service.append_product(user_id, product_id + 604)  # to get second MP products
         # Authorization by email
         self.assertAuthentication(self.default_auth_item_with_email, self.session_controller)
         self.access_token, self.update_token, self.imprint_token = \
@@ -140,6 +154,13 @@ class IntegrationTest(BasicServerTest):
             "is_allow_defaults": is_allow_defaults
         }
         return GetAllNichesObject.model_validate(request_data)
+
+    @staticmethod
+    def create_basic_marketplace_info_object(marketplace_id: int) -> BasicMarketplaceInfoObject:
+        request_data = {
+            "marketplace_id": marketplace_id
+        }
+        return BasicMarketplaceInfoObject.model_validate(request_data)
 
     @staticmethod
     def create_add_api_key_object(marketplace_id: int, api_key: str) -> AddApiKeyObject:
@@ -224,6 +245,30 @@ class IntegrationTest(BasicServerTest):
     def test_auth_with_empty_imprint_token(self):
         self.assertAuthentication(self.default_auth_item_with_email,
                                   self.session_controller, imprint_token=self.imprint_token)
+
+    def test_account_deletion(self):
+        registration_object = {
+            "email": "anyAnotherA@mail.com",
+            "password": "MyPass1234!",
+            "phone": ""
+        }
+        authentication_by_email_object = {
+            "login": "anyAnotherA@mail.com",
+            "password": "MyPass1234!",
+        }
+        reg_item = RegistrationObject.model_validate(registration_object)
+        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+        try:
+            SessionAPI.registrate_user(reg_item, self.session_controller)
+        except HTTPException:
+            pass
+
+        access_token, update_token, imprint_token = self.assertAuthentication(auth_item_with_email,
+                                                                              self.session_controller)
+        UserAPI.delete_account(access_token, self.session_controller)
+        with self.assertRaises(HTTPException) as catcher:
+            SessionAPI.authenticate_user(auth_item_with_email, imprint_token, self.session_controller)
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
 
     def test_work_with_tokens(self):
         # Auth with token using
@@ -558,14 +603,14 @@ class IntegrationTest(BasicServerTest):
         )
         expected_result = {
             "card_count": 604,
-            "niche_profit": 1266157987,
-            "card_trade_count": 8783,
+            "niche_profit": 408619572,
+            "card_trade_count": 2629,
             "mean_card_rating": 4.0,
             "card_with_trades_count": 538,
-            "daily_mean_niche_profit": 42205266,
-            "daily_mean_trade_count": 292,
-            "mean_traded_card_cost": 144160,
-            "month_mean_niche_profit_per_card": 2096288,
+            "daily_mean_niche_profit": 13620652,
+            "daily_mean_trade_count": 87,
+            "mean_traded_card_cost": 155427,
+            "month_mean_niche_profit_per_card": 676522,
             "monopoly_percent": 0.0,
             "maximum_profit_idx": 2,
         }
@@ -608,12 +653,12 @@ class IntegrationTest(BasicServerTest):
                          (1310329, 1569423), (1569423, 1828517), (1828517, 2087611), (2087611, 2346705),
                          (2346705, 2605800)],
             "best_segment_idx": 0,
-            "segment_profits": [1174263837, 19194507, 27340119, 34704500, 0, 0, 0, 4103700, 3945400, 2605800],
+            "segment_profits": [331072702, 16878704, 21960499, 28052600, 0, 0, 0, 4103700, 3945400, 2605800],
             "best_segment_profit_idx": 0,
-            "mean_segment_profit": [2289013, 325330, 1708757, 3856055, 0, 0, 0, 4103700, 0, 2605800],
+            "mean_segment_profit": [645365, 286079, 1372531, 3116955, 0, 0, 0, 4103700, 0, 2605800],
             "best_mean_segment_profit_idx": 7,
-            "mean_product_profit": [2316102, 1371036, 4556686, 4338062, 0, 0, 0, 4103700, 3945400, 2605800],
-            "best_mean_product_profit_idx": 2,
+            "mean_product_profit": [653003, 1205621, 3660083, 3506575, 0, 0, 0, 4103700, 3945400, 2605800],
+            "best_mean_product_profit_idx": 7,
             "segment_product_count": [513, 59, 16, 9, 4, 1, 0, 1, 0, 1],
             "best_segment_product_count_idx": 6,
             "segment_product_with_trades_count": [507, 14, 6, 8, 0, 0, 0, 1, 1, 1],
@@ -623,52 +668,95 @@ class IntegrationTest(BasicServerTest):
         self.assertEqual(expected_response, calculation_result)
 
     def test_all_in_marketplace_product_downturn_request(self):
-        # todo waiting JDB user's product save
         request_data = self.create_product_with_mp_id_request_object(2)
         calculation_result = ProductDownturnAPI.calculate_all_in_marketplace(request_data,
                                                                              self.access_token,
                                                                              self.session_controller)
         self.assertIsNotNone(calculation_result)
-        print(calculation_result)
+        expected_result = {
+            605: {1: {'second': 2}},
+            614: {1: {'second': 2}},
+            681: {1: {'second': 2}}
+        }
+        self.assertEqual(expected_result, calculation_result.result_dict)
 
     def test_product_downturn_request(self):
-        # todo waiting JDB user's product save
         calculation_result = ProductDownturnAPI.calculate(access_token=self.access_token,
                                                           session_controller=self.session_controller)
         self.assertIsNotNone(calculation_result)
-        print(calculation_result)
+        self.assertTrue(2 in calculation_result)
+        expected_result = {
+            605: {1: {'second': 2}},
+            614: {1: {'second': 2}},
+            681: {1: {'second': 2}}
+        }
+        self.assertEqual(expected_result, calculation_result[2].result_dict)
 
     def test_all_in_marketplace_product_turnover_request(self):
-        # todo waiting JDB user's product save
         request_data = self.create_product_with_mp_id_request_object(2)
         calculation_result = ProductTurnoverAPI.calculate_all_in_marketplace(request_data,
                                                                              self.access_token,
                                                                              self.session_controller)
         self.assertIsNotNone(calculation_result)
-        print(calculation_result)
+        expected_result = {
+            605: {1: {'second': 99.0}},
+            614: {1: {'second': 99.0}},
+            681: {1: {'second': 93.0}}
+        }
+        self.assertEqual(expected_result, calculation_result.result_dict)
 
     def test_product_turnover_request_with_none_data(self):
-        # todo waiting JDB user's product save
         calculation_result = ProductTurnoverAPI.calculate(access_token=self.access_token,
                                                           session_controller=self.session_controller)
         self.assertIsNotNone(calculation_result)
-        print(calculation_result)
+        self.assertTrue(2 in calculation_result)
+        expected_result = {
+            605: {1: {'second': 99.0}},
+            614: {1: {'second': 99.0}},
+            681: {1: {'second': 93.0}}
+        }
+        self.assertEqual(expected_result, calculation_result[2].result_dict)
 
     def test_all_in_marketplace_product_calculation_request(self):
-        # todo waiting JDB user's product save
         request_data = self.create_product_with_mp_id_request_object(2)
         calculation_result = AllProductCalculateAPI.calculate_all_in_marketplace(request_data,
                                                                                  self.access_token,
                                                                                  self.session_controller)
         self.assertIsNotNone(calculation_result)
-        print(calculation_result)
+        downturn_result = calculation_result.downturn
+        expected_downturns = {
+            605: {1: {'second': 2}},
+            614: {1: {'second': 2}},
+            681: {1: {'second': 2}}
+        }
+        self.assertEqual(expected_downturns, downturn_result.result_dict)
+        turnover_result = calculation_result.turnover
+        expected_turnovers = {
+            605: {1: {'second': 99.0}},
+            614: {1: {'second': 99.0}},
+            681: {1: {'second': 93.0}}
+        }
+        self.assertEqual(expected_turnovers, turnover_result.result_dict)
 
     def test_all_product_calculation_request(self):
-        # todo waiting JDB user's product save
         calculation_result = AllProductCalculateAPI.calculate(access_token=self.access_token,
                                                               session_controller=self.session_controller)
         self.assertIsNotNone(calculation_result)
-        print(calculation_result)
+        self.assertTrue(2 in calculation_result)
+        downturn_result = calculation_result[2].downturn
+        expected_downturns = {
+            605: {1: {'second': 2}},
+            614: {1: {'second': 2}},
+            681: {1: {'second': 2}}
+        }
+        self.assertEqual(expected_downturns, downturn_result.result_dict)
+        turnover_result = calculation_result[2].turnover
+        expected_turnovers = {
+            605: {1: {'second': 99.0}},
+            614: {1: {'second': 99.0}},
+            681: {1: {'second': 93.0}}
+        }
+        self.assertEqual(expected_turnovers, turnover_result.result_dict)
 
     def test_info_api_get_marketplaces_without_defaults(self):
         id_to_marketplace = InfoAPI.get_all_marketplaces(session_controller=self.session_controller)
@@ -718,7 +806,8 @@ class IntegrationTest(BasicServerTest):
     def test_info_api_get_all_user_products(self):
         id_to_user_products = InfoAPI.get_all_user_products(access_token=self.access_token,
                                                             session_controller=self.session_controller)
-        self.assertEqual({2: {}}, id_to_user_products)
+        self.assertTrue(2 in id_to_user_products)
+        self.assertEqual(3, len(id_to_user_products[2]))
 
     def test_user_api_key_working(self):
         first_key = "myFirstKey"
@@ -738,6 +827,14 @@ class IntegrationTest(BasicServerTest):
                                             access_token=self.access_token,
                                             session_controller=self.session_controller)
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.USER_FUCKS, catcher.exception)
+
+        request_data = self.create_basic_marketplace_info_object(marketplace_id=2)
+        UserAPI.delete_marketplace_api_key(request_data=request_data,
+                                           access_token=self.access_token,
+                                           session_controller=self.session_controller)
+        saved_api_keys = UserAPI.get_all_marketplace_api_keys(access_token=self.access_token,
+                                                              session_controller=self.session_controller)
+        self.assertEqual(0, len(saved_api_keys))
 
     def test_user_api_key_addition_into_default_marketplace(self):
         request_data = self.create_add_api_key_object(marketplace_id=1, api_key="myFirstKey")
