@@ -2,10 +2,7 @@ from fastapi import Depends
 from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jarvis_factory.startup import init_supported_marketplaces
-from jarvis_factory.support.constants import SUPPORTED_MARKETPLACES
 from jarvis_factory.support.jdb.services import JDBServiceFactory
-from jorm.market.infrastructure import Warehouse, HandlerType, Address, Marketplace
-from jorm.market.items import Product
 from jorm.market.person import Account, User, UserPrivilege
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -51,16 +48,6 @@ def __init_defaults_for_marketplace(session: Session, marketplace_id: int):
     default_category = JORMClassesFactory.create_default_category()
     if category_service.find_by_name(default_category.name, marketplace_id) is None:
         category_service.create(default_category, marketplace_id)
-
-
-def __init_supported_marketplaces(session: Session):
-    marketplace_service = JDBServiceFactory.create_marketplace_service(session)
-    for marketplace_name in SUPPORTED_MARKETPLACES:
-        if marketplace_service.find_by_name(marketplace_name) is None:
-            marketplace = Marketplace(marketplace_name)
-            marketplace_service.create(marketplace)
-        _, marketplace_id = marketplace_service.find_by_name(marketplace_name)
-        __init_defaults_for_marketplace(session, marketplace_id)
 
 
 def __init_default_infrastructure(session):
