@@ -19,9 +19,9 @@ from jarvis_backend.support.utils import convert_save_objects_to_jorm, convert_s
 
 def _check_ang_get_niche(request_data: NicheRequest, session_controller: JarvisSessionController) -> Niche:
     # TODO switch to relaxed niche as soon as implemented
-    niche = session_controller.get_relaxed_niche(request_data.niche,
-                                                 request_data.category_id,
-                                                 request_data.marketplace_id)
+    niche = session_controller.get_niche(request_data.niche,
+                                         request_data.category_id,
+                                         request_data.marketplace_id)
     if niche is None:
         raise JarvisExceptions.INCORRECT_NICHE
     return niche
