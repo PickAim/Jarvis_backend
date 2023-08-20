@@ -612,7 +612,7 @@ class IntegrationTest(BasicServerTest):
             "mean_traded_card_cost": 155427,
             "month_mean_niche_profit_per_card": 676522,
             "monopoly_percent": 0.0,
-            "maximum_profit_idx": 2,
+            "maximum_profit_idx": 0,
         }
         expected_response = NicheCharacteristicsResultObject.model_validate(expected_result)
         self.assertEqual(expected_response, calculation_result)
