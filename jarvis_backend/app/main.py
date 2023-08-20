@@ -7,6 +7,9 @@ from os import path
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from jarvis_factory.factories.jdu import JDUClassesFactory
+from jarvis_factory.support.jdb.services import JDBServiceFactory
+from jorm.jarvis.db_update import JORMChanger
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
@@ -15,9 +18,10 @@ from jarvis_backend.app.loggers import ERROR_LOGGER
 from jarvis_backend.app.routers import routers
 from jarvis_backend.app.tags import tags_metadata, OTHER_TAG
 from jarvis_backend.controllers.cookie import CookieHandler
-from jarvis_backend.sessions.dependencies import init_defaults, db_context_depends
+from jarvis_backend.sessions.dependencies import db_context_depends, init_defaults
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
+from jarvis_backend.support.decorators import timeout
 
 app = FastAPI(openapi_tags=tags_metadata)
 
@@ -81,9 +85,71 @@ async def http_exception_handler(_, exc):
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
 
-if __name__ == '__main__':
+@timeout(120)
+def load_niche(jorm_changer: JORMChanger, niche_name: str, marketplace_id: int):
+    return jorm_changer.load_new_niche(niche_name, marketplace_id)
+
+
+@timeout(120)
+def update_niche(jorm_changer: JORMChanger, niche_id: int, category_id: int, marketplace_id: int):
+    return jorm_changer.update_niche(niche_id, category_id, marketplace_id)
+
+
+def main_load():
+    niche_to_category: dict[str, str] = {}
+    db_context = db_context_depends()
+    with db_context.session() as session, session.begin():
+        init_defaults(session)
+    with open('../commission.csv', "r", encoding='cp1251') as file:
+        lines: list[str] = file.readlines()
+        print()
+        print(f'# | Niche name | status | length')
+        skip = 133
+        step = 10
+        for i in range(skip, len(lines), step):
+            splitted: list[str] = lines[i].split(";")
+            niche_to_category[splitted[1]] = splitted[0]
+            with db_context.session() as session, session.begin():
+                jorm_changer = JDUClassesFactory.create_jorm_changer(session)
+                try:
+                    print(f"loading {splitted[1]}")
+                    niche = load_niche(jorm_changer, splitted[1], 2)
+                    print(f'{i} | {niche.name}| loaded | {len(niche.products)}')
+                except Exception as ex:
+                    print(f'{i} | {splitted[1]}| NOT LOADED | ----- {ex}')
+
+
+def main_update():
+    db_context = db_context_depends()
+    marketplace_id = 2
+    with db_context.session() as session, session.begin():
+        category_service = JDBServiceFactory.create_category_service(session)
+        id_to_category = category_service.find_all_in_marketplace(marketplace_id)
+    category_to_niche = {}
+    with db_context.session() as session, session.begin():
+        niche_service = JDBServiceFactory.create_niche_service(session)
+        for category_id in id_to_category:
+            category_to_niche[category_id] = list(niche_service.find_all_in_category(category_id).keys())
+    start_from = -1
+    for category_id in category_to_niche:
+        for niche_id in category_to_niche[category_id]:
+            if niche_id >= start_from:
+                with db_context.session() as session, session.begin():
+                    try:
+                        jorm_changer = JDUClassesFactory.create_jorm_changer(session)
+                        update_niche(jorm_changer, niche_id, category_id, marketplace_id)
+                        print(f"niche #{niche_id} updated")
+                    except Exception as ex:
+                        print(f"niche #{niche_id} NOT updated, cause: {str(ex)}")
+
+
+def main_start():
     db_context = db_context_depends()
     with db_context.session() as session, session.begin():
         init_defaults(session)
     log_file_path = path.join(path.dirname(path.abspath(__file__)), 'log.ini')
     uvicorn.run(app=app, port=8090, log_config=log_file_path)
+
+
+if __name__ == '__main__':
+    main_start()
