@@ -1,17 +1,25 @@
 from jarvis_db.factories.services import create_user_items_service
 from jarvis_factory.factories.jdu import JDUClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
-from jorm.market.infrastructure import Niche, Category, Marketplace
+from jorm.market.infrastructure import Niche, Marketplace
 from jorm.market.items import Product
 from jorm.market.person import Account, User, UserPrivilege
-from jorm.support.constants import DEFAULT_CATEGORY_NAME
 from passlib.context import CryptContext
 
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 
-__NEEDED_NICHE_NAME = "ножи кухонные набор на подставке"
+__NEEDED_NICHE_NAME = "пижамы"
 
-__PRODUCTS_GLOBAL_IDS_TO_LINK = {146800644, 146423858, 146800701, 28401766, 105341171, 101892545, 161260020}
+__PRODUCTS_GLOBAL_IDS_TO_LINK = {
+    73229206,
+    66151327,
+    39142284,
+    45867955,
+    140010424,
+    47522757,
+    164275200,
+    143565862
+}
 
 
 def __fetch_or_load_niche(session, marketplace_id: int, category_id: int) -> tuple[Niche, int]:
@@ -57,18 +65,17 @@ def __init_tech_no_prom_niche(session):
     marketplace_service = JDBServiceFactory.create_marketplace_service(session)
     found_info: tuple[Marketplace, int] = marketplace_service.find_by_name("wildberries")
     _, marketplace_id = found_info
-    category_service = JDBServiceFactory.create_category_service(session)
-    found_info: tuple[Category, int] = category_service.find_by_name(DEFAULT_CATEGORY_NAME, marketplace_id)
-    _, category_id = found_info
-    niche, niche_id = __fetch_or_load_niche(session, marketplace_id, category_id)
-    products = niche.products
-    product_card_service = JDBServiceFactory.create_product_card_service(session)
     user_id = __init_dummy_user(session)
     user_items_service = create_user_items_service(session)
     id_to_product = user_items_service.fetch_user_products(user_id, marketplace_id=marketplace_id)
+    if len(id_to_product) != 0:
+        return
+    niche, niche_id = __fetch_or_load_niche(session, marketplace_id, 30)
+    products = niche.products
+    product_card_service = JDBServiceFactory.create_product_card_service(session)
     for product in products:
         if product.global_id in __PRODUCTS_GLOBAL_IDS_TO_LINK:
-            found_info: tuple[Product, int] = product_card_service.find_by_gloabal_id(product.global_id, marketplace_id)
+            found_info: tuple[Product, int] = product_card_service.find_by_global_id(product.global_id, niche_id)
             if found_info is None:
                 continue
             if found_info[1] not in id_to_product:
