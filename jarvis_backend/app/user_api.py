@@ -66,10 +66,6 @@ class UserAPI(RequestAPI):
                 "rating": user_products[product_id].rating,
                 "seller": user_products[product_id].seller,
                 "brand": user_products[product_id].brand,
-                "history": {
-                    history_unit.unit_date.timestamp(): history_unit.cost
-                    for history_unit in user_products[product_id].history.get_history()
-                }
             }
             for product_id in user_products
         }

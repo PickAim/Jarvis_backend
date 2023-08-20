@@ -167,9 +167,11 @@ class JarvisSessionController:
         return self.__jorm_classes_factory.create_default_warehouse([reference_warehouses[warehouse_id]
                                                                      for warehouse_id in reference_warehouses])
 
-    @timeout(1)
     def get_products_by_user(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
         return self.__db_controller.get_products_by_user(user_id, marketplace_id)
+
+    def get_products_by_user_atomic(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
+        return self.__db_controller.get_products_by_user_atomic(user_id, marketplace_id)
 
     @staticmethod
     def __is_default_object(object_name: str) -> bool:

@@ -11,7 +11,7 @@ from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject, \
     AllProductCalculateResultObject, ProductRequestObjectWithMarketplaceId, \
     GetAllMarketplacesObject
-from jarvis_backend.support.utils import extract_filtered_user_products
+from jarvis_backend.support.utils import extract_filtered_user_products_with_history
 
 
 class ProductDownturnAPI(CalculationRequestAPI):
@@ -25,13 +25,14 @@ class ProductDownturnAPI(CalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @router.post('/calculate/', response_model=ProductDownturnResultObject)
+    @router.post('/calculate-all-in-marketplace/', response_model=ProductDownturnResultObject)
     def calculate_all_in_marketplace(request_data: ProductRequestObjectWithMarketplaceId,
                                      access_token: str = Depends(access_token_correctness_post_depend),
                                      session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> ProductDownturnResultObject:
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
-        filtered_user_products = extract_filtered_user_products(request_data, user.user_id, session_controller)
+        filtered_user_products = extract_filtered_user_products_with_history(request_data, user.user_id,
+                                                                             session_controller)
         return ProductDownturnResultObject.model_validate({"result_dict": {
             product_id: CalculationController.calc_downturn_days(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
@@ -73,7 +74,8 @@ class ProductTurnoverAPI(CalculationRequestAPI):
                                      session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> ProductTurnoverResultObject:
         user: User = ProductTurnoverAPI.check_and_get_user(session_controller, access_token)
-        filtered_user_products = extract_filtered_user_products(request_data, user.user_id, session_controller)
+        filtered_user_products = extract_filtered_user_products_with_history(request_data, user.user_id,
+                                                                             session_controller)
         return ProductTurnoverResultObject.model_validate({"result_dict": {
             product_id: CalculationController.calc_turnover(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products

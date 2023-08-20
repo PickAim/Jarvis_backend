@@ -57,10 +57,11 @@ def convert_save_objects_to_pydantic(type_to_convert: Type[BasicSaveObject], req
     )
 
 
-def extract_filtered_user_products(request_data: ProductRequestObjectWithMarketplaceId,
-                                   user_id: int, session_controller: JarvisSessionController) -> dict[int, Product]:
+def extract_filtered_user_products_with_history(request_data: ProductRequestObjectWithMarketplaceId,
+                                                user_id: int, session_controller: JarvisSessionController) \
+        -> dict[int, Product]:
     ids_to_filter = request_data.product_ids if request_data is not None else []
-    user_products = session_controller.get_products_by_user(user_id, request_data.marketplace_id)
+    user_products = session_controller.get_products_by_user_atomic(user_id, request_data.marketplace_id)
     filtered_ids = list(user_products.keys())
     if len(ids_to_filter) > 0:
         filtered_ids = intersection(filtered_ids, ids_to_filter)
