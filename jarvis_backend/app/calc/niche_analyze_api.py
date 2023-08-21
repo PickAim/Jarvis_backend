@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import Depends
 from jorm.market.infrastructure import Niche
 from jorm.market.person import User, UserPrivilege
+from pydantic import BaseModel
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import SavableCalculationRequestAPI, CalculationRequestAPI
@@ -101,6 +102,11 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
         return result
 
 
+class TempResult(BaseModel):
+    green: GreenTradeZoneCalculateResultObject
+    freq: dict[str, list[int]]
+
+
 class GreenTradeZoneAPI(CalculationRequestAPI):
     GREEN_TRADE_ZONE_URL_PART = "/green-trade-zone"
 
@@ -112,10 +118,14 @@ class GreenTradeZoneAPI(CalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @router.post('/calculate/', response_model=GreenTradeZoneCalculateResultObject)
+    @router.post('/calculate/', response_model=TempResult)
     def calculate(request_data: NicheRequest, access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         GreenTradeZoneAPI.check_and_get_user(session_controller, access_token)
         niche = _check_ang_get_niche(request_data, session_controller)
+        frequency_graph = CalculationController.calc_frequencies(niche)
         result = CalculationController.calc_green_zone(niche, datetime.utcnow())
-        return result
+        return TempResult.model_validate({
+            "green": result,
+            "freq": frequency_graph
+        })
