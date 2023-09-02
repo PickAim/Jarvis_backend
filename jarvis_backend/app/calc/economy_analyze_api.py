@@ -32,9 +32,9 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                   session_controller: JarvisSessionController = Depends(session_controller_depend)):
         user = EconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
         # TODO get_niche
-        niche: Niche = session_controller.get_relaxed_niche(request_data.niche,
-                                                            request_data.category_id,
-                                                            request_data.marketplace_id)
+        niche: Niche = session_controller.get_niche(request_data.niche,
+                                                    request_data.category_id,
+                                                    request_data.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         warehouse: Warehouse = \

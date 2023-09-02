@@ -1,11 +1,11 @@
 from typing import TypeVar, Type, Callable
 
 from jarvis_calc.database_interactors.db_controller import DBController
-from jorm.market.service import UnitEconomyRequest, FrequencyRequest, RequestInfo, \
-    Request, Result, UnitEconomyResult, FrequencyResult
+from jorm.market.service import UnitEconomyRequest, RequestInfo, \
+    Request, Result, UnitEconomyResult
 from jorm.support.constants import DEFAULT_CATEGORY_NAME
 
-from jarvis_backend.support.types import JBasicSaveObject, JEconomySaveObject, JFrequencySaveObject
+from jarvis_backend.support.types import JBasicSaveObject, JEconomySaveObject
 
 
 def __get_default_category_id(db_controller: DBController, marketplace_id: int) -> int:
@@ -30,30 +30,15 @@ def __save_unit_economy_request(db_controller: DBController,
     return db_controller.save_unit_economy_request(request, result, info, user_id)
 
 
-def __save_frequency_request(db_controller: DBController,
-                             save_object: JFrequencySaveObject,
-                             user_id: int, is_save_to_default: bool = False):
-    request = save_object.request
-    result = save_object.result
-    info = save_object.info
-    if not isinstance(request, FrequencyRequest) or not isinstance(result, FrequencyResult):
-        raise Exception(str(type(RequestHandler)) + " - unexpected request or result type")
-    request.niche = request.niche.lower()
-    if is_save_to_default:
-        request.category_id = __get_default_category_id(db_controller, request.marketplace_id)
-    return db_controller.save_frequency_request(request, result, info, user_id)
-
-
 SAVE_METHODS: dict[Type[JBasicSaveObject],
-                   Callable[
-                       [
-                           DBController,
-                           JBasicSaveObject | JEconomySaveObject | JFrequencySaveObject,
-                           int, bool
-                       ],
-                       int]] = {
+Callable[
+    [
+        DBController,
+        JBasicSaveObject | JEconomySaveObject,
+        int, bool
+    ],
+    int]] = {
     JEconomySaveObject: __save_unit_economy_request,
-    JFrequencySaveObject: __save_frequency_request
 }
 
 
@@ -62,23 +47,17 @@ def __get_all_unit_economy_results(db_controller: DBController, user_id: int) \
     return db_controller.get_all_unit_economy_results(user_id)
 
 
-def __get_all_frequency_results(db_controller: DBController, user_id: int) \
-        -> list[tuple[FrequencyRequest, FrequencyResult, RequestInfo]]:
-    return db_controller.get_all_frequency_results(user_id)
-
-
 GET_ALL_METHODS: dict[Type[JBasicSaveObject],
-                      Callable[
-                          [
-                              DBController,
-                              int
-                          ],
-                          list[
-                              tuple[Request, Result, RequestInfo]
-                          ]
-                      ]] = {
+Callable[
+    [
+        DBController,
+        int
+    ],
+    list[
+        tuple[Request, Result, RequestInfo]
+    ]
+]] = {
     JEconomySaveObject: __get_all_unit_economy_results,
-    JFrequencySaveObject: __get_all_frequency_results
 }
 
 
@@ -86,21 +65,16 @@ def __delete_unit_economy_request(db_controller: DBController, request_id: int, 
     db_controller.delete_unit_economy_request_for_user(request_id, user_id)
 
 
-def __delete_frequency_request(db_controller: DBController, request_id: int, user_id: int):
-    db_controller.delete_frequency_request_for_user(request_id, user_id)
-
-
 DELETE_METHODS: dict[Type[JBasicSaveObject],
-                     Callable[
-                         [
-                             DBController,
-                             int,
-                             int
-                         ],
-                         None
-                     ]] = {
+Callable[
+    [
+        DBController,
+        int,
+        int
+    ],
+    None
+]] = {
     JEconomySaveObject: __delete_unit_economy_request,
-    JFrequencySaveObject: __delete_frequency_request
 }
 
 T = TypeVar('T')
@@ -109,32 +83,32 @@ T = TypeVar('T')
 class RequestHandler:
     def __init__(self, db_controller: DBController,
                  save_methods: dict[Type[JBasicSaveObject],
-                                    Callable[
-                                        [
-                                            DBController,
-                                            JBasicSaveObject | JEconomySaveObject | JFrequencySaveObject,
-                                            int
-                                        ],
-                                        int]],
+                 Callable[
+                     [
+                         DBController,
+                         JBasicSaveObject | JEconomySaveObject,
+                         int
+                     ],
+                     int]],
                  get_all_methods: dict[Type[JBasicSaveObject],
-                                       Callable[
-                                           [
-                                               DBController,
-                                               int
-                                           ],
-                                           list[
-                                               tuple[Request, Result, RequestInfo]
-                                           ]
-                                       ]],
+                 Callable[
+                     [
+                         DBController,
+                         int
+                     ],
+                     list[
+                         tuple[Request, Result, RequestInfo]
+                     ]
+                 ]],
                  delete_methods: dict[Type[JBasicSaveObject],
-                                      Callable[
-                                          [
-                                              DBController,
-                                              int,
-                                              int
-                                          ],
-                                          None
-                                      ]]
+                 Callable[
+                     [
+                         DBController,
+                         int,
+                         int
+                     ],
+                     None
+                 ]]
                  ):
         self.__db_controller = db_controller
         self.__SAVE_METHODS = save_methods

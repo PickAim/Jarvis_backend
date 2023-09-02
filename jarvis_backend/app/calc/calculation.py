@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from jarvis_calc.calculators.economy_analyze import UnitEconomyCalculator, UnitEconomyCalculateData
-from jarvis_calc.calculators.niche_analyze import NicheHistCalculator, NicheCharacteristicsCalculator, \
+from jarvis_calc.calculators.niche_analyze import NicheCharacteristicsCalculator, \
     GreenTradeZoneCalculator
 from jarvis_calc.calculators.product_analyze import DownturnCalculator, TurnoverCalculator
 from jorm.market.infrastructure import Niche, Warehouse
@@ -14,14 +14,6 @@ from jarvis_backend.support.utils import jorm_to_pydantic
 
 
 class CalculationController:
-    @staticmethod
-    def calc_frequencies(niche: Niche) -> dict[str, list[int]]:
-        result = NicheHistCalculator.calculate(niche)
-        return {
-            'x': result[0],
-            'y': result[1]
-        }
-
     @staticmethod
     def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsResultObject:
         result = NicheCharacteristicsCalculator.calculate(niche)
@@ -52,6 +44,6 @@ class CalculationController:
         return TurnoverCalculator.calculate(product, from_date)
 
     @staticmethod
-    def calc_green_zone(niche: Niche, from_date: datetime):
+    def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultObject:
         result = GreenTradeZoneCalculator.calculate(niche, from_date)
         return jorm_to_pydantic(result, GreenTradeZoneCalculateResultObject)

@@ -118,9 +118,12 @@ class JarvisSessionController:
         self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
 
     @timeout(1)
-    def delete_marketplace_api_key(self, add_api_key_request_data: BasicMarketplaceInfoObject, user_id: int):
-        # TODO implement me
-        pass
+    def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoObject, user_id: int) -> None:
+        self.__db_controller.delete_marketplace_api_key(user_id, api_key_request_data.marketplace_id)
+
+    @timeout(1)
+    def delete_account(self, user_id: int) -> None:
+        self.__db_controller.delete_account(user_id)
 
     @timeout(5)
     def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
@@ -164,16 +167,18 @@ class JarvisSessionController:
         return self.__jorm_classes_factory.create_default_warehouse([reference_warehouses[warehouse_id]
                                                                      for warehouse_id in reference_warehouses])
 
-    @timeout(1)
     def get_products_by_user(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
         return self.__db_controller.get_products_by_user(user_id, marketplace_id)
+
+    def get_products_by_user_atomic(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
+        return self.__db_controller.get_products_by_user_atomic(user_id, marketplace_id)
 
     @staticmethod
     def __is_default_object(object_name: str) -> bool:
         return re.search('default', object_name, re.IGNORECASE) is not None
 
     @timeout(3)
-    def get_all_marketplaces(self, is_allow_defaults: bool) -> dict[int, str]:
+    def get_all_marketplaces(self, is_allow_defaults: bool = False) -> dict[int, str]:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
         result = {}
         for marketplace_id in id_to_marketplace:

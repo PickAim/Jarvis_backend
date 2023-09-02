@@ -67,20 +67,6 @@ class NicheRequest(BasicMarketplaceInfoObject):
     category_id: int
 
 
-class FrequencyRequest(NicheRequest):
-    pass
-
-
-class FrequencyResult(BaseModel):
-    x: list[int]
-    y: list[int]
-
-
-class FrequencySaveObject(BasicSaveObject):
-    request: FrequencyRequest
-    result: FrequencyResult
-
-
 class UnitEconomyRequestObject(NicheRequest):
     buy: int
     pack: int
@@ -109,12 +95,13 @@ class UnitEconomySaveObject(BasicSaveObject):
 
 
 class GreenTradeZoneCalculateResultObject(BaseModel):
+    frequencies: list[int]
     segments: list[tuple[int, int]]
     best_segment_idx: int
 
     segment_profits: list[int]
     best_segment_profit_idx: int
-    
+
     mean_segment_profit: list[int]
     best_mean_segment_profit_idx: int
 
