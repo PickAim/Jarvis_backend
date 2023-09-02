@@ -1,5 +1,5 @@
-jarvis_calc@ git+https://github.com/PickAim/jarvis_calc.git@v.0.1.18
-jarvis_factory@ git+https://github.com/PickAim/jarvis_factory.git@v.0.1.20-techno
+jarvis_calc@ git+https://github.com/PickAim/jarvis_calc.git@v.0.1.20
+jarvis_factory@ git+https://github.com/PickAim/jarvis_factory.git@v.0.1.21
 fastapi>=0.100.0
 starlette==0.27.0 # do not use newer cause of fastapi depends
 uvicorn>=0.23.1
