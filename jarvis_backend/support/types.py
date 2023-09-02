@@ -1,5 +1,4 @@
-from jorm.market.service import FrequencyRequest, FrequencyResult, UnitEconomyRequest, UnitEconomyResult, Request, \
-    Result, RequestInfo
+from jorm.market.service import UnitEconomyRequest, UnitEconomyResult, Request, Result, RequestInfo
 
 
 class JBasicSaveObject:
@@ -11,14 +10,6 @@ class JBasicSaveObject:
         self.request = request
         self.result = result
         self.info: RequestInfo = info
-
-
-class JFrequencySaveObject(JBasicSaveObject):
-    request_type = FrequencyRequest
-    result_type = FrequencyResult
-
-    def __init__(self, request: FrequencyRequest, result: FrequencyResult, info: RequestInfo):
-        super().__init__(request, result, info)
 
 
 class JEconomySaveObject(JBasicSaveObject):
