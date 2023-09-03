@@ -8,9 +8,9 @@ from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAP
 from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.dependencies import session_controller_depend, access_token_correctness_post_depend
 from jarvis_backend.controllers.session import JarvisSessionController
-from jarvis_backend.sessions.request_items import ProductDownturnResultObject, ProductTurnoverResultObject, \
-    AllProductCalculateResultObject, ProductRequestObjectWithMarketplaceId, \
-    GetAllMarketplacesObject
+from jarvis_backend.sessions.request_items import ProductDownturnResultModel, ProductTurnoverResultModel, \
+    AllProductCalculateResultObject, ProductRequestModelWithMarketplaceId, \
+    GetAllMarketplacesModel
 from jarvis_backend.support.utils import extract_filtered_user_products_with_history
 
 
@@ -25,29 +25,29 @@ class ProductDownturnAPI(CalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @router.post('/calculate-all-in-marketplace/', response_model=ProductDownturnResultObject)
-    def calculate_all_in_marketplace(request_data: ProductRequestObjectWithMarketplaceId,
+    @router.post('/calculate-all-in-marketplace/', response_model=ProductDownturnResultModel)
+    def calculate_all_in_marketplace(request_data: ProductRequestModelWithMarketplaceId,
                                      access_token: str = Depends(access_token_correctness_post_depend),
                                      session_controller: JarvisSessionController = Depends(session_controller_depend)) \
-            -> ProductDownturnResultObject:
+            -> ProductDownturnResultModel:
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
         filtered_user_products = extract_filtered_user_products_with_history(request_data, user.user_id,
                                                                              session_controller)
-        return ProductDownturnResultObject.model_validate({"result_dict": {
+        return ProductDownturnResultModel.model_validate({"result_dict": {
             product_id: CalculationController.calc_downturn_days(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
         }})
 
     @staticmethod
-    @router.post('/calculate/', response_model=dict[int, ProductDownturnResultObject])
+    @router.post('/calculate/', response_model=dict[int, ProductDownturnResultModel])
     def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)) \
-            -> dict[int, ProductDownturnResultObject]:
-        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesObject.model_validate({}),
+            -> dict[int, ProductDownturnResultModel]:
+        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}),
                                                          session_controller)
         return {
             marketplace_id: ProductDownturnAPI.calculate_all_in_marketplace(
-                ProductRequestObjectWithMarketplaceId.model_validate({
+                ProductRequestModelWithMarketplaceId.model_validate({
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,
@@ -68,29 +68,29 @@ class ProductTurnoverAPI(CalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @router.post('/calculate-all-in-marketplace/', response_model=ProductTurnoverResultObject)
-    def calculate_all_in_marketplace(request_data: ProductRequestObjectWithMarketplaceId,
+    @router.post('/calculate-all-in-marketplace/', response_model=ProductTurnoverResultModel)
+    def calculate_all_in_marketplace(request_data: ProductRequestModelWithMarketplaceId,
                                      access_token: str = Depends(access_token_correctness_post_depend),
                                      session_controller: JarvisSessionController = Depends(session_controller_depend)) \
-            -> ProductTurnoverResultObject:
+            -> ProductTurnoverResultModel:
         user: User = ProductTurnoverAPI.check_and_get_user(session_controller, access_token)
         filtered_user_products = extract_filtered_user_products_with_history(request_data, user.user_id,
                                                                              session_controller)
-        return ProductTurnoverResultObject.model_validate({"result_dict": {
+        return ProductTurnoverResultModel.model_validate({"result_dict": {
             product_id: CalculationController.calc_turnover(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
         }})
 
     @staticmethod
-    @router.post('/calculate/', response_model=dict[int, ProductTurnoverResultObject])
+    @router.post('/calculate/', response_model=dict[int, ProductTurnoverResultModel])
     def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)) \
-            -> dict[int, ProductTurnoverResultObject]:
-        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesObject.model_validate({}),
+            -> dict[int, ProductTurnoverResultModel]:
+        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}),
                                                          session_controller)
         return {
             marketplace_id: ProductTurnoverAPI.calculate_all_in_marketplace(
-                ProductRequestObjectWithMarketplaceId.model_validate({
+                ProductRequestModelWithMarketplaceId.model_validate({
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,
@@ -112,7 +112,7 @@ class AllProductCalculateAPI(CalculationRequestAPI):
 
     @staticmethod
     @router.post('/calculate-all-in-marketplace/', response_model=AllProductCalculateResultObject)
-    def calculate_all_in_marketplace(request_data: ProductRequestObjectWithMarketplaceId,
+    def calculate_all_in_marketplace(request_data: ProductRequestModelWithMarketplaceId,
                                      access_token: str = Depends(access_token_correctness_post_depend),
                                      session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> AllProductCalculateResultObject:
@@ -128,11 +128,11 @@ class AllProductCalculateAPI(CalculationRequestAPI):
     def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session_controller: JarvisSessionController = Depends(session_controller_depend)) \
             -> dict[int, AllProductCalculateResultObject]:
-        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesObject.model_validate({}),
+        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}),
                                                          session_controller)
         return {
             marketplace_id: AllProductCalculateAPI.calculate_all_in_marketplace(
-                ProductRequestObjectWithMarketplaceId.model_validate({
+                ProductRequestModelWithMarketplaceId.model_validate({
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,

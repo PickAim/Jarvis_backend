@@ -11,7 +11,7 @@ from jarvis_backend.app.tokens.dependencies import (
 from jarvis_backend.app.tokens.util import save_and_return_all_tokens
 from jarvis_backend.controllers.cookie import CookieHandler
 from jarvis_backend.controllers.session import JarvisSessionController
-from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject
+from jarvis_backend.sessions.request_items import AuthenticationModel, RegistrationModel
 from jarvis_backend.support.request_api import RequestAPI
 
 
@@ -25,13 +25,13 @@ class SessionAPI(RequestAPI):
 
     @staticmethod
     @router.post('/reg/')
-    def registrate_user(request_data: RegistrationObject,
+    def registrate_user(request_data: RegistrationModel,
                         session_controller: JarvisSessionController = Depends(session_controller_depend)):
         session_controller.register_user(request_data.email, request_data.password, request_data.phone)
 
     @staticmethod
     @router.post('/auth/', tags=[AUTH_TAG])
-    def authenticate_user(request_data: AuthenticationObject,
+    def authenticate_user(request_data: AuthenticationModel,
                           imprint_token: str | None = Depends(imprint_token_correctness_depend),
                           session_controller: JarvisSessionController = Depends(session_controller_depend)):
         new_access_token, new_update_token, new_imprint_token = \

@@ -42,59 +42,73 @@ class CookieUpdateTokenObject(object):
         self.cookie_imprint_token = cookie_imprint_token
 
 
-class RequestInfo(BaseModel):
+class RequestInfoModel(BaseModel):
     name: str
     id: int | None = -1
     timestamp: float = 0.0
 
 
-class BasicSaveObject(BaseModel):
-    request: BaseModel = ""
-    result: BaseModel = ""
-    info: RequestInfo = RequestInfo.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
-
-
-class BasicDeleteRequestObject(BaseModel):
+class BasicDeleteRequestModel(BaseModel):
     request_id: int
 
 
-class BasicMarketplaceInfoObject(BaseModel):
+class BasicMarketplaceInfoModel(BaseModel):
     marketplace_id: int
 
 
-class NicheRequest(BasicMarketplaceInfoObject):
-    niche: str
+class NicheRequest(BasicMarketplaceInfoModel):
+    niche_id: int
     category_id: int
 
 
-class UnitEconomyRequestObject(NicheRequest):
-    buy: int
-    pack: int
-    transit_count: int = -1
-    transit_price: int = -1  # from China to me
-    market_place_transit_price: int = -1  # from me to customer
-    warehouse_name: str = ""
+class SimpleEconomyRequestModel(NicheRequest):
+    product_exist_cost: int  # user defined cost for product
+    cost_price: int  # how much it cost for user
+    length: int
+    width: int
+    height: int
+    mass: int
+    target_warehouse_name: str
 
 
-class UnitEconomyResultObject(BaseModel):
-    product_cost: int  # Закупочная себестоимость
-    pack_cost: int  # Упаковка
-    marketplace_commission: int  # Комиссия маркетплейса
-    logistic_price: int  # Логистика
-    storage_price: int  # Хранение
-    margin: int  # Маржа в копейках
-    recommended_price: int
-    transit_profit: int  # Чистая прибыль с транзита
-    roi: float  # ROI
-    transit_margin: float  # Маржа с транзита (%)
+class TransitEconomyRequestModel(SimpleEconomyRequestModel):
+    transit_price: int
+    transit_count: int
 
 
-class UnitEconomySaveObject(BasicSaveObject):
-    request: UnitEconomyRequestObject
-    result: UnitEconomyResultObject
+class SimpleEconomyResultModel(BaseModel):
+    result_cost: int  # recommended or user defined cost
+    logistic_price: int
+    storage_price: int
+    purchase_cost: int  # cost price OR cost price + transit/count
+    marketplace_expanses: int
+    absolute_margin: int
+    relative_margin: float
+    roi: float
 
 
-class GreenTradeZoneCalculateResultObject(BaseModel):
+class SimpleEconomySaveModel(BaseModel):
+    user_result: tuple[SimpleEconomyRequestModel, SimpleEconomyResultModel]
+    recommended_result: tuple[SimpleEconomyRequestModel, SimpleEconomyResultModel]
+    info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
+
+
+class TransitEconomyResult(SimpleEconomyResultModel):
+    purchase_investments: int
+    commercial_expanses: int
+    tax_expanses: int
+    absolute_transit_margin: int
+    relative_transit_margin: float
+    transit_roi: float
+
+
+class TransitEconomySaveModel(BaseModel):
+    user_result: tuple[TransitEconomyRequestModel, TransitEconomyResult]
+    recommended_result: tuple[TransitEconomyRequestModel, TransitEconomyResult]
+    info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
+
+
+class GreenTradeZoneCalculateResultModel(BaseModel):
     frequencies: list[int]
     segments: list[tuple[int, int]]
     best_segment_idx: int
@@ -115,28 +129,28 @@ class GreenTradeZoneCalculateResultObject(BaseModel):
     best_segment_product_with_trades_count_idx: int
 
 
-class BasicProductRequestObject(BaseModel):
+class BasicProductRequestModel(BaseModel):
     product_ids: list[int] = []
 
 
-class ProductRequestObjectWithMarketplaceId(BasicProductRequestObject, BasicMarketplaceInfoObject):
+class ProductRequestModelWithMarketplaceId(BasicProductRequestModel, BasicMarketplaceInfoModel):
     pass
 
 
-class ProductDownturnResultObject(BaseModel):
+class ProductDownturnResultModel(BaseModel):
     result_dict: dict[int, dict[int, dict[str, int]]]
 
 
-class ProductTurnoverResultObject(BaseModel):
+class ProductTurnoverResultModel(BaseModel):
     result_dict: dict[int, dict[int, dict[str, float]]]
 
 
 class AllProductCalculateResultObject(BaseModel):
-    downturn: ProductDownturnResultObject
-    turnover: ProductTurnoverResultObject
+    downturn: ProductDownturnResultModel
+    turnover: ProductTurnoverResultModel
 
 
-class NicheCharacteristicsResultObject(BaseModel):
+class NicheCharacteristicsResultModel(BaseModel):
     card_count: int
     niche_profit: int
     card_trade_count: int
@@ -150,36 +164,36 @@ class NicheCharacteristicsResultObject(BaseModel):
     maximum_profit_idx: int
 
 
-class RegistrationObject(BaseModel):
+class RegistrationModel(BaseModel):
     email: str = ""
     password: str
     phone: str = ""
 
 
-class AuthenticationObject(BaseModel):
+class AuthenticationModel(BaseModel):
     login: str = ""
     password: str
 
 
-class InfoGettingObject(BaseModel):
+class InfoGettingModel(BaseModel):
     is_allow_defaults: bool = False
 
 
-class GetAllMarketplacesObject(InfoGettingObject):
+class GetAllMarketplacesModel(InfoGettingModel):
     pass
 
 
-class GetAllCategoriesObject(InfoGettingObject, BasicMarketplaceInfoObject):
+class GetAllCategoriesModel(InfoGettingModel, BasicMarketplaceInfoModel):
     pass
 
 
-class GetAllNichesObject(InfoGettingObject):
+class GetAllNichesModel(InfoGettingModel):
     category_id: int
 
 
-class GetAllProductsObject(BasicMarketplaceInfoObject):
+class GetAllProductsModel(BasicMarketplaceInfoModel):
     pass
 
 
-class AddApiKeyObject(BasicMarketplaceInfoObject):
+class AddApiKeyModel(BasicMarketplaceInfoModel):
     api_key: str

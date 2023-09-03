@@ -24,11 +24,11 @@ from jarvis_backend.sessions.dependencies import session_controller_depend, \
     request_handler_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptionsCode
 from jarvis_backend.sessions.request_handler import RequestHandler
-from jarvis_backend.sessions.request_items import AuthenticationObject, RegistrationObject, UnitEconomyRequestObject, \
-    UnitEconomySaveObject, NicheRequest, NicheCharacteristicsResultObject, \
-    BasicDeleteRequestObject, GetAllCategoriesObject, GetAllNichesObject, \
-    GetAllMarketplacesObject, GetAllProductsObject, ProductRequestObjectWithMarketplaceId, AddApiKeyObject, \
-    GreenTradeZoneCalculateResultObject, BasicMarketplaceInfoObject
+from jarvis_backend.sessions.request_items import AuthenticationModel, RegistrationModel, SimpleEconomyRequestModel, \
+    SimpleEconomySaveModel, NicheRequest, NicheCharacteristicsResultModel, \
+    BasicDeleteRequestModel, GetAllCategoriesModel, GetAllNichesModel, \
+    GetAllMarketplacesModel, GetAllProductsModel, ProductRequestModelWithMarketplaceId, AddApiKeyModel, \
+    GreenTradeZoneCalculateResultModel, BasicMarketplaceInfoModel
 from jarvis_backend.support.utils import pydantic_to_jorm
 from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
@@ -60,9 +60,9 @@ class IntegrationTest(BasicServerTest):
         "login": "+16034134121",
         "password": "MyPass1234!",
     }
-    default_reg_item = RegistrationObject.model_validate(registration_object)
-    default_auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
-    default_auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+    default_reg_item = RegistrationModel.model_validate(registration_object)
+    default_auth_item_with_email = AuthenticationModel.model_validate(authentication_by_email_object)
+    default_auth_item_with_phone = AuthenticationModel.model_validate(authentication_by_phone_object)
     user: User = None
 
     def setUp(self) -> None:
@@ -108,67 +108,67 @@ class IntegrationTest(BasicServerTest):
 
     @staticmethod
     def create_product_with_mp_id_request_object(marketplace_id: int, product_ids: list[int] = None) \
-            -> ProductRequestObjectWithMarketplaceId:
+            -> ProductRequestModelWithMarketplaceId:
         if product_ids is None:
             product_ids = []
         request_data = {
             "product_ids": product_ids,
             "marketplace_id": marketplace_id
         }
-        return ProductRequestObjectWithMarketplaceId.model_validate(request_data)
+        return ProductRequestModelWithMarketplaceId.model_validate(request_data)
 
     @staticmethod
-    def create_get_all_products_request_object(marketplace_id: int) -> GetAllProductsObject:
+    def create_get_all_products_request_object(marketplace_id: int) -> GetAllProductsModel:
         request_data = {
             "marketplace_id": marketplace_id
         }
-        return GetAllProductsObject.model_validate(request_data)
+        return GetAllProductsModel.model_validate(request_data)
 
     @staticmethod
-    def create_delete_request_object(request_id: int) -> BasicDeleteRequestObject:
+    def create_delete_request_object(request_id: int) -> BasicDeleteRequestModel:
         request_data = {
             "request_id": request_id
         }
-        return BasicDeleteRequestObject.model_validate(request_data)
+        return BasicDeleteRequestModel.model_validate(request_data)
 
     @staticmethod
-    def create_get_all_marketplaces_object(is_allow_defaults: bool = False) -> GetAllMarketplacesObject:
+    def create_get_all_marketplaces_object(is_allow_defaults: bool = False) -> GetAllMarketplacesModel:
         request_data = {
             "is_allow_defaults": is_allow_defaults
         }
-        return GetAllMarketplacesObject.model_validate(request_data)
+        return GetAllMarketplacesModel.model_validate(request_data)
 
     @staticmethod
     def create_get_all_categories_object(marketplace_id: int,
-                                         is_allow_defaults: bool = False) -> GetAllCategoriesObject:
+                                         is_allow_defaults: bool = False) -> GetAllCategoriesModel:
         request_data = {
             "marketplace_id": marketplace_id,
             "is_allow_defaults": is_allow_defaults
         }
-        return GetAllCategoriesObject.model_validate(request_data)
+        return GetAllCategoriesModel.model_validate(request_data)
 
     @staticmethod
-    def create_get_all_niches_object(category_id: int, is_allow_defaults: bool = False) -> GetAllNichesObject:
+    def create_get_all_niches_object(category_id: int, is_allow_defaults: bool = False) -> GetAllNichesModel:
         request_data = {
             "category_id": category_id,
             "is_allow_defaults": is_allow_defaults
         }
-        return GetAllNichesObject.model_validate(request_data)
+        return GetAllNichesModel.model_validate(request_data)
 
     @staticmethod
-    def create_basic_marketplace_info_object(marketplace_id: int) -> BasicMarketplaceInfoObject:
+    def create_basic_marketplace_info_object(marketplace_id: int) -> BasicMarketplaceInfoModel:
         request_data = {
             "marketplace_id": marketplace_id
         }
-        return BasicMarketplaceInfoObject.model_validate(request_data)
+        return BasicMarketplaceInfoModel.model_validate(request_data)
 
     @staticmethod
-    def create_add_api_key_object(marketplace_id: int, api_key: str) -> AddApiKeyObject:
+    def create_add_api_key_object(marketplace_id: int, api_key: str) -> AddApiKeyModel:
         request_data = {
             "marketplace_id": marketplace_id,
             "api_key": api_key
         }
-        return AddApiKeyObject.model_validate(request_data)
+        return AddApiKeyModel.model_validate(request_data)
 
     def test_existing_registration(self):
         with self.assertRaises(HTTPException) as catcher:
@@ -189,9 +189,9 @@ class IntegrationTest(BasicServerTest):
             "login": "+79138990213",  # incorrect number
             "password": "MyPass1234!",
         }
-        reg_item = RegistrationObject.model_validate(registration_object)
-        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
-        auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+        reg_item = RegistrationModel.model_validate(registration_object)
+        auth_item_with_email = AuthenticationModel.model_validate(authentication_by_email_object)
+        auth_item_with_phone = AuthenticationModel.model_validate(authentication_by_phone_object)
         try:
             SessionAPI.registrate_user(reg_item, self.session_controller)
         except HTTPException:
@@ -217,9 +217,9 @@ class IntegrationTest(BasicServerTest):
             "login": "+79138990214",
             "password": "MyPass1234!",
         }
-        reg_item = RegistrationObject.model_validate(registration_object)
-        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
-        auth_item_with_phone = AuthenticationObject.model_validate(authentication_by_phone_object)
+        reg_item = RegistrationModel.model_validate(registration_object)
+        auth_item_with_email = AuthenticationModel.model_validate(authentication_by_email_object)
+        auth_item_with_phone = AuthenticationModel.model_validate(authentication_by_phone_object)
         try:
             SessionAPI.registrate_user(reg_item, self.session_controller)
         except HTTPException:
@@ -237,7 +237,7 @@ class IntegrationTest(BasicServerTest):
             "password": "MyPass1234!",
             "phone": ""
         }
-        reg_item = RegistrationObject.model_validate(registration_object)
+        reg_item = RegistrationModel.model_validate(registration_object)
         with self.assertRaises(HTTPException) as catcher:
             SessionAPI.registrate_user(reg_item, self.session_controller)
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
@@ -256,8 +256,8 @@ class IntegrationTest(BasicServerTest):
             "login": "anyAnotherA@mail.com",
             "password": "MyPass1234!",
         }
-        reg_item = RegistrationObject.model_validate(registration_object)
-        auth_item_with_email = AuthenticationObject.model_validate(authentication_by_email_object)
+        reg_item = RegistrationModel.model_validate(registration_object)
+        auth_item_with_email = AuthenticationModel.model_validate(authentication_by_email_object)
         try:
             SessionAPI.registrate_user(reg_item, self.session_controller)
         except HTTPException:
@@ -350,7 +350,7 @@ class IntegrationTest(BasicServerTest):
             "warehouse_name": "DEFAULT_WAREHOUSE",
             "marketplace_id": marketplace_id
         }
-        request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
+        request_object = SimpleEconomyRequestModel.model_validate(unit_economy_object)
         calculation_result = EconomyAnalyzeAPI.calculate(
             request_object,
             self.access_token, self.session_controller
@@ -359,7 +359,7 @@ class IntegrationTest(BasicServerTest):
             'request': request_object,
             'result': calculation_result
         }
-        unit_economy_save_item = UnitEconomySaveObject.model_validate(save_dict)
+        unit_economy_save_item = SimpleEconomySaveModel.model_validate(save_dict)
         EconomyAnalyzeAPI.save(unit_economy_save_item, self.access_token, self.session_controller, self.request_handler)
         result = EconomyAnalyzeAPI.get_all(self.access_token, self.session_controller, self.request_handler)
 
@@ -367,7 +367,7 @@ class IntegrationTest(BasicServerTest):
         saved_object = result[0]
         self.assertEqual(buy, saved_object.request.buy)
         self.assertEqual(pack, saved_object.request.pack)
-        self.assertEqual(niche_name, saved_object.request.niche)
+        self.assertEqual(niche_name, saved_object.request.niche_id)
         self.assertEqual(category_id, saved_object.request.category_id)
         self.assertEqual(transit_count, saved_object.request.transit_count)
         self.assertEqual(transit_price, saved_object.request.transit_price)
@@ -410,7 +410,7 @@ class IntegrationTest(BasicServerTest):
             "warehouse_name": "DEFAULT_WAREHOUSE",
             "marketplace_id": marketplace_id
         }
-        request_object = UnitEconomyRequestObject.model_validate(unit_economy_object)
+        request_object = SimpleEconomyRequestModel.model_validate(unit_economy_object)
         with self.assertRaises(HTTPException) as catcher:
             EconomyAnalyzeAPI.calculate(
                 request_object,
@@ -445,7 +445,7 @@ class IntegrationTest(BasicServerTest):
             "monopoly_percent": 0.0,
             "maximum_profit_idx": 0,
         }
-        expected_response = NicheCharacteristicsResultObject.model_validate(expected_result)
+        expected_response = NicheCharacteristicsResultModel.model_validate(expected_result)
         self.assertEqual(expected_response, calculation_result)
 
     def test_niche_characteristics_request_with_invalid_niche(self):
@@ -496,7 +496,7 @@ class IntegrationTest(BasicServerTest):
             "segment_product_with_trades_count": [507, 14, 6, 8, 0, 0, 0, 1, 1, 1],
             "best_segment_product_with_trades_count_idx": 0
         }
-        expected_response = GreenTradeZoneCalculateResultObject.model_validate(expected_result)
+        expected_response = GreenTradeZoneCalculateResultModel.model_validate(expected_result)
         self.assertEqual(expected_response, calculation_result)
 
     def test_all_in_marketplace_product_downturn_request(self):

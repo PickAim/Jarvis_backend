@@ -13,7 +13,7 @@ from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.auth.tokens.token_control import TokenController
 from jarvis_backend.controllers.input import InputController
 from jarvis_backend.sessions.exceptions import JarvisExceptions
-from jarvis_backend.sessions.request_items import AddApiKeyObject, BasicMarketplaceInfoObject
+from jarvis_backend.sessions.request_items import AddApiKeyModel, BasicMarketplaceInfoModel
 from jarvis_backend.support.decorators import timeout
 from jarvis_backend.support.input import InputPreparer
 
@@ -109,7 +109,7 @@ class JarvisSessionController:
         return
 
     @timeout(1)
-    def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyObject, user_id: int):
+    def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyModel, user_id: int):
         api_key = add_api_key_request_data.api_key
         marketplace_id = add_api_key_request_data.marketplace_id
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
@@ -118,7 +118,7 @@ class JarvisSessionController:
         self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
 
     @timeout(1)
-    def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoObject, user_id: int) -> None:
+    def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoModel, user_id: int) -> None:
         self.__db_controller.delete_marketplace_api_key(user_id, api_key_request_data.marketplace_id)
 
     @timeout(1)
@@ -126,10 +126,8 @@ class JarvisSessionController:
         self.__db_controller.delete_account(user_id)
 
     @timeout(5)
-    def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
-        input_preparer = InputPreparer()
-        niche_name = input_preparer.prepare_search_string(niche_name)
-        result_niche: Niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
+    def get_niche(self, niche_id: int, category_id: int, marketplace_id: int) -> Niche | None:
+        result_niche: Niche = self.__db_controller.get_niche_by_id(niche_id, category_id, marketplace_id)
         return result_niche
 
     @timeout(120)

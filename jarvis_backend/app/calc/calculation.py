@@ -1,39 +1,41 @@
 from datetime import datetime
 
-from jarvis_calc.calculators.economy_analyze import UnitEconomyCalculator, UnitEconomyCalculateData
+from jarvis_calc.calculators.economy_analyze import SimpleEconomyCalculateData, SimpleEconomyCalculator
 from jarvis_calc.calculators.niche_analyze import NicheCharacteristicsCalculator, \
     GreenTradeZoneCalculator
 from jarvis_calc.calculators.product_analyze import DownturnCalculator, TurnoverCalculator
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
-from jorm.market.person import User
 
-from jarvis_backend.sessions.request_items import UnitEconomyResultObject, UnitEconomyRequestObject, \
-    NicheCharacteristicsResultObject, GreenTradeZoneCalculateResultObject
+from jarvis_backend.sessions.request_items import SimpleEconomyResultModel, SimpleEconomyRequestModel, \
+    NicheCharacteristicsResultModel, GreenTradeZoneCalculateResultModel
 from jarvis_backend.support.utils import jorm_to_pydantic
 
 
 class CalculationController:
     @staticmethod
-    def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsResultObject:
+    def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsResultModel:
         result = NicheCharacteristicsCalculator.calculate(niche)
-        return jorm_to_pydantic(result, NicheCharacteristicsResultObject)
+        return jorm_to_pydantic(result, NicheCharacteristicsResultModel)
 
     @staticmethod
-    def calc_unit_economy(data: UnitEconomyRequestObject,
+    def calc_unit_economy(data: SimpleEconomyRequestModel,
                           niche: Niche,
-                          warehouse: Warehouse,
-                          user: User) -> UnitEconomyResultObject:
-        result = UnitEconomyCalculator.calculate(
-            UnitEconomyCalculateData(
-                buy_price=data.buy,
-                pack_price=data.pack,
-                transit_price=data.transit_price,
-                transit_count=data.transit_count,
-                market_place_transit_price=data.market_place_transit_price,
-            ), niche, warehouse, user
+                          warehouse: Warehouse) -> tuple[SimpleEconomyResultModel, SimpleEconomyResultModel]:
+        data = SimpleEconomyCalculateData(
+            product_exist_cost=data.product_exist_cost,
+            cost_price=data.cost_price,
+            length=data.length,
+            width=data.width,
+            height=data.height,
+            mass=data.mass
         )
-        return jorm_to_pydantic(result, UnitEconomyResultObject)
+        result = SimpleEconomyCalculator.calculate(
+            data, niche, warehouse
+        )
+        user_result = jorm_to_pydantic(result[0], SimpleEconomyResultModel)
+        recommended_result = jorm_to_pydantic(result[1], SimpleEconomyResultModel)
+        return user_result, recommended_result
 
     @staticmethod
     def calc_downturn_days(product: Product, from_date: datetime) -> dict[int, dict[str, int]]:
@@ -44,6 +46,6 @@ class CalculationController:
         return TurnoverCalculator.calculate(product, from_date)
 
     @staticmethod
-    def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultObject:
+    def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultModel:
         result = GreenTradeZoneCalculator.calculate(niche, from_date)
-        return jorm_to_pydantic(result, GreenTradeZoneCalculateResultObject)
+        return jorm_to_pydantic(result, GreenTradeZoneCalculateResultModel)
