@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
-from jarvis_backend.sessions.request_handler import RequestHandler, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS
+from jarvis_backend.sessions.request_handler import RequestHandler
 from jarvis_backend.sessions.temp_techno_depends import init_tech_no_prom_defaults
 
 __DB_CONTEXT = None
@@ -80,4 +80,4 @@ def session_controller_depend(session=Depends(session_depend)) -> JarvisSessionC
 
 def request_handler_depend(session=Depends(session_depend)) -> RequestHandler:
     db_controller = JCalcClassesFactory.create_db_controller(session)
-    return RequestHandler(db_controller, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS)
+    return RequestHandler(db_controller)

@@ -31,7 +31,7 @@ def _get_object_as_dict(obj: any) -> dict:
         field = object_dict[field_name]
         try:
             json.dumps(field)
-        except:
+        except Exception:
             object_dict[field_name] = _get_object_as_dict(field)
     return object_dict
 

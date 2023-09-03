@@ -8,7 +8,6 @@ from jarvis_backend.app.tokens.dependencies import access_token_correctness_post
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, request_handler_depend
 from jarvis_backend.sessions.request_handler import RequestHandler
-from jarvis_backend.sessions.request_items import RequestInfoModel
 from jarvis_backend.support.request_api import RequestAPIWithCheck
 
 
@@ -16,13 +15,6 @@ class CalculationRequestAPI(RequestAPIWithCheck):
     @staticmethod
     def _router() -> APIRouter:
         return APIRouter(prefix=ACCESS_TOKEN_USAGE_URL_PART, tags=[CALCULATION_TAG])
-
-    @staticmethod
-    def save_and_return_info(request_handler: RequestHandler, user_id: int,
-                             save_object: any) -> RequestInfoModel:
-        request_id = request_handler.save_request(user_id, save_object)
-        save_object.info.id = request_id
-        return save_object.info
 
     @staticmethod
     @abstractmethod
