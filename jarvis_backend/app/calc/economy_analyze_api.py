@@ -35,9 +35,9 @@ class EconomyAnalyzeAPI(SavableCalculationRequestAPI):
                                                     request_data.marketplace_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
-        warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.warehouse_name, request_data.marketplace_id)
-        result = CalculationController.calc_unit_economy(request_data, niche, warehouse)
+        target_warehouse: Warehouse = \
+            session_controller.get_warehouse(request_data.target_warehouse_name, request_data.marketplace_id)
+        result = CalculationController.calc_unit_economy(request_data, niche, target_warehouse)
         return result
 
     @staticmethod
