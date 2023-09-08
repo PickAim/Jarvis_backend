@@ -25,15 +25,18 @@ def jorm_to_pydantic(obj, base_model_class: Type[T]) -> T:
     return base_model_class.model_validate(object_dict)
 
 
-def _get_object_as_dict(obj: any) -> dict:
-    object_dict = obj.__dict__
-    for field_name in object_dict:
-        field = object_dict[field_name]
-        try:
-            json.dumps(field)
-        except Exception:
-            object_dict[field_name] = _get_object_as_dict(field)
-    return object_dict
+def _get_object_as_dict(obj: any) -> dict | str:
+    try:
+        return json.dumps(obj)
+    except Exception:
+        object_dict = obj.__dict__
+        for field_name in object_dict:
+            field = object_dict[field_name]
+            try:
+                json.dumps(field)
+            except Exception:
+                object_dict[field_name] = _get_object_as_dict(field)
+        return object_dict
 
 
 def transform_info(info: RequestInfoModel) -> JRequestInfo:

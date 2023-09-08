@@ -14,11 +14,6 @@ __DB_CONTEXT = None
 
 class TestDbContext:
     def __init__(self, connection_sting: str = 'sqlite://', echo=False) -> None:
-        if echo:
-            import logging
-
-            logging.basicConfig()
-            logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
         if connection_sting.startswith("sqlite://"):
             @event.listens_for(Engine, "connect")
             def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -26,8 +21,9 @@ class TestDbContext:
                 cursor.execute("PRAGMA foreign_keys=ON")
                 cursor.close()
 
-        engine = create_engine(connection_sting)
+        engine = create_engine(connection_sting, echo=echo)
         session = sessionmaker(bind=engine, autoflush=False)
+        Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
         self.session = session
 
@@ -92,7 +88,7 @@ def __check_warehouse_filled(products: list[Product], warehouse_service: Warehou
         for history_unit in product.history.get_history():
             for warehouse_id in history_unit.leftover:
                 warehouse_ids.add(warehouse_id)
-    filtered_warehouse_global_ids = warehouse_service.fileter_existing_global_ids(warehouse_ids)
+    filtered_warehouse_global_ids = warehouse_service.filter_existing_global_ids(warehouse_ids)
     warehouse_to_add_as_unfilled: list[Warehouse] = []
     for global_id in filtered_warehouse_global_ids:
         warehouse_to_add_as_unfilled.append(__create_warehouse_with_global_id(global_id))

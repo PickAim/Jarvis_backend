@@ -6,7 +6,6 @@ from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import USER_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.controllers.cookie import CookieHandler
-from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import session_controller_depend, session_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
 from jarvis_backend.sessions.request_items import AddApiKeyModel, BasicMarketplaceInfoModel, GetAllProductsModel
@@ -50,12 +49,11 @@ class UserAPI(RequestAPI):
         session_controller.delete_marketplace_api_key(request_data, user.user_id)
 
     @staticmethod
-    @router.post('/get-all-in-marketplace-user-products/', response_model=dict[int, dict])
+    @router.post('/get-all-in-marketplace-user-products/')  # TODO add response model
     def get_all_in_marketplace_user_products(request_data: GetAllProductsModel,
                                              access_token: str = Depends(access_token_correctness_post_depend),
-                                             session_controller: JarvisSessionController = Depends(
-                                                 session_controller_depend)
-                                             ) -> dict[int, dict]:
+                                             session=Depends(session_depend)):
+        session_controller = session_controller_depend(session)
         user: User = session_controller.get_user(access_token)
         user_products = session_controller.get_products_by_user(user.user_id, request_data.marketplace_id)
         return {
@@ -84,7 +82,7 @@ class UserAPI(RequestAPI):
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,
-                session_controller=session_controller
+                session=session
             )
             for marketplace_id in id_to_marketplace
         }

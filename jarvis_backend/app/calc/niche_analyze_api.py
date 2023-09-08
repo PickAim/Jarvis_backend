@@ -3,7 +3,6 @@ from datetime import datetime
 from fastapi import Depends
 from jorm.market.infrastructure import Niche
 from jorm.market.person import UserPrivilege
-from pydantic import BaseModel
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAPI
@@ -47,11 +46,6 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
         return result
 
 
-class TempResult(BaseModel):
-    green: GreenTradeZoneCalculateResultModel
-    freq: dict[str, list[int]]
-
-
 class GreenTradeZoneAPI(CalculationRequestAPI):
     GREEN_TRADE_ZONE_URL_PART = "/green-trade-zone"
 
@@ -63,7 +57,7 @@ class GreenTradeZoneAPI(CalculationRequestAPI):
         return UserPrivilege.BASIC
 
     @staticmethod
-    @router.post('/calculate/', response_model=TempResult)
+    @router.post('/calculate/', response_model=GreenTradeZoneCalculateResultModel)
     def calculate(request_data: NicheRequest,
                   access_token: str = Depends(access_token_correctness_post_depend),
                   session=Depends(session_depend)):

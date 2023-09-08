@@ -43,16 +43,14 @@ class ProductDownturnAPI(CalculationRequestAPI):
     def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session=Depends(session_depend)) \
             -> dict[int, ProductDownturnResultModel]:
-        session_controller = session_controller_depend(session)
-        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}),
-                                                         session_controller)
+        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}), session=session)
         return {
             marketplace_id: ProductDownturnAPI.calculate_all_in_marketplace(
                 ProductRequestModelWithMarketplaceId.model_validate({
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,
-                session_controller=session_controller
+                session=session
             )
             for marketplace_id in id_to_marketplace
         }
@@ -86,15 +84,14 @@ class ProductTurnoverAPI(CalculationRequestAPI):
     @router.post('/calculate/', response_model=dict[int, ProductTurnoverResultModel])
     def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session=Depends(session_depend)) -> dict[int, ProductTurnoverResultModel]:
-        session_controller = session_controller_depend(session)
-        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}), session_controller)
+        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}), session=session)
         return {
             marketplace_id: ProductTurnoverAPI.calculate_all_in_marketplace(
                 ProductRequestModelWithMarketplaceId.model_validate({
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,
-                session_controller=session_controller
+                session=session
             )
             for marketplace_id in id_to_marketplace
         }
@@ -118,8 +115,8 @@ class AllProductCalculateAPI(CalculationRequestAPI):
         session_controller = session_controller_depend(session)
         AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
         result_dict = {
-            'downturn': ProductDownturnAPI.calculate_all_in_marketplace(request_data, access_token, session_controller),
-            'turnover': ProductTurnoverAPI.calculate_all_in_marketplace(request_data, access_token, session_controller)
+            'downturn': ProductDownturnAPI.calculate_all_in_marketplace(request_data, access_token, session=session),
+            'turnover': ProductTurnoverAPI.calculate_all_in_marketplace(request_data, access_token, session=session)
         }
         return AllProductCalculateResultObject.model_validate(result_dict)
 
@@ -127,16 +124,14 @@ class AllProductCalculateAPI(CalculationRequestAPI):
     @router.post('/calculate/', response_model=dict[int, AllProductCalculateResultObject])
     def calculate(access_token: str = Depends(access_token_correctness_post_depend),
                   session=Depends(session_depend)) -> dict[int, AllProductCalculateResultObject]:
-        session_controller = session_controller_depend(session)
-        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}),
-                                                         session_controller)
+        id_to_marketplace = InfoAPI.get_all_marketplaces(GetAllMarketplacesModel.model_validate({}), session=session)
         return {
             marketplace_id: AllProductCalculateAPI.calculate_all_in_marketplace(
                 ProductRequestModelWithMarketplaceId.model_validate({
                     "marketplace_id": marketplace_id
                 }),
                 access_token=access_token,
-                session_controller=session_controller
+                session=session
             )
             for marketplace_id in id_to_marketplace
         }
