@@ -10,7 +10,7 @@ from jarvis_backend.app.tokens.dependencies import (
 )
 from jarvis_backend.app.tokens.util import save_and_return_all_tokens
 from jarvis_backend.controllers.cookie import CookieHandler
-from jarvis_backend.controllers.session import JarvisSessionController
+from jarvis_backend.sessions.dependencies import session_depend
 from jarvis_backend.sessions.request_items import AuthenticationModel, RegistrationModel
 from jarvis_backend.support.request_api import RequestAPI
 
@@ -25,15 +25,16 @@ class SessionAPI(RequestAPI):
 
     @staticmethod
     @router.post('/reg/')
-    def registrate_user(request_data: RegistrationModel,
-                        session_controller: JarvisSessionController = Depends(session_controller_depend)):
+    def registrate_user(request_data: RegistrationModel, session=Depends(session_depend)):
+        session_controller = session_controller_depend(session)
         session_controller.register_user(request_data.email, request_data.password, request_data.phone)
 
     @staticmethod
     @router.post('/auth/', tags=[AUTH_TAG])
     def authenticate_user(request_data: AuthenticationModel,
-                          imprint_token: str | None = Depends(imprint_token_correctness_depend),
-                          session_controller: JarvisSessionController = Depends(session_controller_depend)):
+                          session=Depends(session_depend),
+                          imprint_token: str | None = Depends(imprint_token_correctness_depend)):
+        session_controller = session_controller_depend(session)
         new_access_token, new_update_token, new_imprint_token = \
             session_controller.authenticate_user(request_data.login, request_data.password, imprint_token)
         return save_and_return_all_tokens(new_access_token, new_update_token, new_imprint_token)
@@ -48,7 +49,8 @@ class SessionAPI(RequestAPI):
     @router.post(ACCESS_TOKEN_USAGE_URL_PART + '/logout/')
     def log_out(access_token: str = Depends(access_token_correctness_post_depend),
                 imprint_token: str = Depends(imprint_token_correctness_depend),
-                session_controller: JarvisSessionController = Depends(session_controller_depend)):
+                session=Depends(session_depend)):
+        session_controller = session_controller_depend(session)
         session_controller.logout(access_token, imprint_token)
         response = JSONResponse(content="deleted")
         CookieHandler.delete_all_cookie(response)
