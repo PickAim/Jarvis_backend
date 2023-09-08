@@ -73,14 +73,14 @@ def session_depend(db_context: DbContext = Depends(db_context_depends)):
         yield session
 
 
-def session_controller_depend(session, marketplace_id: int = 0, user_id: int = 0) -> JarvisSessionController:
+def session_controller_depend(session: Session, marketplace_id: int = 0, user_id: int = 0) -> JarvisSessionController:
     db_controller = JCalcClassesFactory.create_db_controller(session=session,
                                                              marketplace_id=marketplace_id,
                                                              user_id=user_id)
     return JarvisSessionController(db_controller)
 
 
-def request_handler_depend(session=Depends(session_depend),
+def request_handler_depend(session: Session,
                            marketplace_id: int = 0,
                            user_id: int = 0) -> RequestHandler:
     db_controller = JCalcClassesFactory.create_db_controller(session=session,
