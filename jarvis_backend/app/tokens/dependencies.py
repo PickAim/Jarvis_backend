@@ -2,7 +2,7 @@ from fastapi import Depends
 
 from jarvis_backend.auth import TokenController
 from jarvis_backend.controllers.session import JarvisSessionController
-from jarvis_backend.sessions.dependencies import session_controller_depend
+from jarvis_backend.sessions.dependencies import session_controller_depend, session_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions
 from jarvis_backend.sessions.request_items import AccessTokenObject, UpdateTokenObject, CookieUpdateTokenObject, \
     CookieAccessTokenObject, ImprintTokenObject, CookieImprintTokenObject
@@ -38,8 +38,8 @@ def get_non_empty_token(first_token: str | None, second_token: str | None) -> st
 
 def access_token_correctness_post_depend(access_token_object: AccessTokenObject = Depends(),
                                          cookie_access_token_object: CookieAccessTokenObject = Depends(),
-                                         session_controller: JarvisSessionController = Depends(
-                                             session_controller_depend)) -> str:
+                                         session=Depends(session_depend)) -> str:
+    session_controller = session_controller_depend(session)
     access_token = get_non_empty_token(
         cookie_access_token_object.cookie_access_token,
         access_token_object.access_token
@@ -55,8 +55,8 @@ def access_token_correctness_post_depend(access_token_object: AccessTokenObject 
 
 def update_token_correctness_post_depend(update_token_object: UpdateTokenObject = Depends(),
                                          cookie_update_token_object: CookieUpdateTokenObject = Depends(),
-                                         session_controller: JarvisSessionController = Depends(
-                                             session_controller_depend)) -> str:
+                                         session=Depends(session_depend)) -> str:
+    session_controller = session_controller_depend(session)
     access_token = get_non_empty_token(
         cookie_update_token_object.cookie_update_token,
         update_token_object.update_token
