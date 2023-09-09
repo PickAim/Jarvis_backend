@@ -16,9 +16,7 @@ from jarvis_backend.sessions.request_items import NicheCharacteristicsResultMode
 
 def _check_ang_get_niche(request_data: NicheRequest, session_controller: JarvisSessionController) -> Niche:
     # TODO switch to relaxed niche as soon as implemented
-    niche = session_controller.get_niche(request_data.niche_id,
-                                         request_data.category_id,
-                                         request_data.marketplace_id)
+    niche = session_controller.get_niche(request_data.niche_id)
     if niche is None:
         raise JarvisExceptions.INCORRECT_NICHE
     return niche

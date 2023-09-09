@@ -11,7 +11,6 @@ from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
 from jarvis_backend.sessions.request_handler import RequestHandler
-from jarvis_backend.sessions.temp_techno_depends import init_tech_no_prom_defaults
 
 __DB_CONTEXT = None
 
@@ -64,7 +63,7 @@ def init_defaults(session):
     supported_marketplaces_ids = init_supported_marketplaces(session)
     for marketplace_id in supported_marketplaces_ids:
         __init_defaults_for_marketplace(session, marketplace_id)
-    init_tech_no_prom_defaults(session)
+    # init_tech_no_prom_defaults(session)
     __init_admin_account(session)
 
 
