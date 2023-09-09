@@ -57,6 +57,19 @@ class IntegrationTest(BasicServerTest):
     default_reg_item = RegistrationModel.model_validate(registration_object)
     default_auth_item_with_email = AuthenticationModel.model_validate(authentication_by_email_object)
     default_auth_item_with_phone = AuthenticationModel.model_validate(authentication_by_phone_object)
+
+    second_registration_object = {
+        "email": "anyAn@mail.com",
+        "password": "MyPass12345678!",
+        "phone": "+16034134122"
+    }
+    second_authentication_by_email_object = {
+        "login": "anyAn@mail.com",
+        "password": "MyPass12345678!",
+    }
+    second_reg_item = RegistrationModel.model_validate(second_registration_object)
+    second_auth_item_with_email = AuthenticationModel.model_validate(second_authentication_by_email_object)
+
     user: User = None
 
     def setUp(self) -> None:
@@ -65,6 +78,7 @@ class IntegrationTest(BasicServerTest):
         # Registration
         try:
             SessionAPI.registrate_user(self.default_reg_item, self.session)
+            SessionAPI.registrate_user(self.second_reg_item, self.session)
         except HTTPException as e:
             print(e)
         account_service = JDBServiceFactory.create_account_service(self.session)
@@ -97,6 +111,10 @@ class IntegrationTest(BasicServerTest):
         self.assertTrue(UPDATE_TOKEN_NAME in response_dict)
         self.assertTrue(IMPRINT_TOKEN_NAME in response_dict)
         return response_dict[ACCESS_TOKEN_NAME], response_dict[UPDATE_TOKEN_NAME], response_dict[IMPRINT_TOKEN_NAME]
+
+    def assertTokenCorrectness(self, access_token: str):
+        request_data = self.create_get_all_products_request_object(1)
+        UserAPI.get_all_in_marketplace_user_products(request_data, access_token, session=self.session)
 
     @staticmethod
     def create_product_with_mp_id_request_object(marketplace_id: int, product_ids: list[int] = None) \
@@ -235,8 +253,24 @@ class IntegrationTest(BasicServerTest):
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_LOGIN_OR_PASSWORD, catcher.exception)
 
     def test_auth_with_empty_imprint_token(self):
-        self.assertAuthentication(self.default_auth_item_with_email,
-                                  self.session, imprint_token=self.imprint_token)
+        self.assertAuthentication(self.default_auth_item_with_email, self.session)
+
+    def test_account_switching(self):
+        access_token, update_token, imprint_token = self.assertAuthentication(self.second_auth_item_with_email,
+                                                                              self.session)
+        self.assertTokenCorrectness(access_token)
+        access_token, update_token, imprint_token = self.assertAuthentication(self.default_auth_item_with_email,
+                                                                              self.session)
+        self.assertTokenCorrectness(access_token)
+
+    def test_account_switching_with_same_imprint(self):
+        access_token, update_token, self.imprint_token = self.assertAuthentication(self.second_auth_item_with_email,
+                                                                                   self.session)
+        SessionAPI.auth_by_token(access_token, self.imprint_token)
+        access_token, update_token, self.imprint_token = self.assertAuthentication(self.default_auth_item_with_email,
+                                                                                   self.session,
+                                                                                   imprint_token=self.imprint_token)
+        SessionAPI.auth_by_token(access_token, self.imprint_token)
 
     def test_account_deletion(self):
         registration_object = {

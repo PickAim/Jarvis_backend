@@ -6,6 +6,7 @@ from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
+from jorm.server.token.types import TokenType
 from passlib.context import CryptContext
 
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
@@ -82,8 +83,17 @@ class JarvisSessionController:
         update_token_rnd_part: str = self.__token_controller.get_random_part(update_token)
         try:
             if imprint_token is not None and imprint_token != 'None' and imprint_token != 'string':
-                self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
-                                                                      imprint_token, user_id)
+                is_checked = False
+                try:
+                    is_checked = self.__db_controller.check_token_exist(user_id, imprint_token, TokenType.ACCESS.value)
+                except Exception:
+                    pass
+                if is_checked:
+                    self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
+                                                                          imprint_token, user_id)
+                else:
+                    self.__db_controller.save_all_tokens(access_token_rnd_part,
+                                                         update_token_rnd_part, imprint_token, user_id)
                 return access_token, update_token, imprint_token
             else:
                 imprint_token = self.__token_controller.create_imprint_token()
@@ -126,15 +136,15 @@ class JarvisSessionController:
         self.__db_controller.delete_account(user_id)
 
     @timeout(5)
-    def get_niche(self, niche_id: int, category_id: int, marketplace_id: int) -> Niche | None:
-        result_niche: Niche = self.__db_controller.get_niche_by_id(niche_id, category_id, marketplace_id)
+    def get_niche(self, niche_id: int) -> Niche | None:
+        result_niche: Niche = self.__db_controller.get_niche_by_id(niche_id)
         return result_niche
 
     @timeout(120)
     def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
-        result_niche = self.get_niche(niche_name, category_id, marketplace_id)
+        result_niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
         if result_niche is not None:
             return result_niche
         default_category_id: int = self.__get_default_category_id(marketplace_id)
