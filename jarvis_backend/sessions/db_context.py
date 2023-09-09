@@ -14,6 +14,5 @@ class DbContext:
 
         engine = create_engine(connection_sting, echo=echo)
         session = sessionmaker(bind=engine, autoflush=False)
-        Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
         self.session = session
