@@ -61,7 +61,7 @@ class IntegrationTest(BasicServerTest):
     second_registration_object = {
         "email": "anyAn@mail.com",
         "password": "MyPass12345678!",
-        "phone": "+16034134122"
+        "phone": ""
     }
     second_authentication_by_email_object = {
         "login": "anyAn@mail.com",
