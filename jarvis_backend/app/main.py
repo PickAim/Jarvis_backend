@@ -7,7 +7,7 @@ from os import path
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from jarvis_factory.factories.jdu import JDUClassesFactory
+from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 from jorm.jarvis.db_update import JORMChanger
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -110,7 +110,7 @@ def main_load():
             splitted: list[str] = lines[i].split(";")
             niche_to_category[splitted[1]] = splitted[0]
             with db_context.session() as session, session.begin():
-                jorm_changer = JDUClassesFactory.create_jorm_changer(session)
+                jorm_changer = JDBClassesFactory.create_jorm_changer(session, marketplace_id=2, user_id=0)
                 try:
                     print(f"loading {splitted[1]}")
                     niche = load_niche(jorm_changer, splitted[1], 2)
@@ -136,7 +136,7 @@ def main_update():
             if niche_id >= start_from:
                 with db_context.session() as session, session.begin():
                     try:
-                        jorm_changer = JDUClassesFactory.create_jorm_changer(session)
+                        jorm_changer = JDBClassesFactory.create_jorm_changer(session, marketplace_id, user_id=0)
                         update_niche(jorm_changer, niche_id, category_id, marketplace_id)
                         print(f"niche #{niche_id} updated")
                     except Exception as ex:

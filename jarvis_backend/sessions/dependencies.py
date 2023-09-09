@@ -10,8 +10,7 @@ from sqlalchemy.orm import Session
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
-from jarvis_backend.sessions.request_handler import RequestHandler, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS
-from jarvis_backend.sessions.temp_techno_depends import init_tech_no_prom_defaults
+from jarvis_backend.sessions.request_handler import RequestHandler
 
 __DB_CONTEXT = None
 
@@ -64,7 +63,7 @@ def init_defaults(session):
     supported_marketplaces_ids = init_supported_marketplaces(session)
     for marketplace_id in supported_marketplaces_ids:
         __init_defaults_for_marketplace(session, marketplace_id)
-    init_tech_no_prom_defaults(session)
+    # init_tech_no_prom_defaults(session)
     __init_admin_account(session)
 
 
@@ -73,11 +72,17 @@ def session_depend(db_context: DbContext = Depends(db_context_depends)):
         yield session
 
 
-def session_controller_depend(session=Depends(session_depend)) -> JarvisSessionController:
-    db_controller = JCalcClassesFactory.create_db_controller(session)
+def session_controller_depend(session: Session, marketplace_id: int = 0, user_id: int = 0) -> JarvisSessionController:
+    db_controller = JCalcClassesFactory.create_db_controller(session=session,
+                                                             marketplace_id=marketplace_id,
+                                                             user_id=user_id)
     return JarvisSessionController(db_controller)
 
 
-def request_handler_depend(session=Depends(session_depend)) -> RequestHandler:
-    db_controller = JCalcClassesFactory.create_db_controller(session)
-    return RequestHandler(db_controller, SAVE_METHODS, GET_ALL_METHODS, DELETE_METHODS)
+def request_handler_depend(session: Session,
+                           marketplace_id: int = 0,
+                           user_id: int = 0) -> RequestHandler:
+    db_controller = JCalcClassesFactory.create_db_controller(session=session,
+                                                             marketplace_id=marketplace_id,
+                                                             user_id=user_id)
+    return RequestHandler(db_controller)

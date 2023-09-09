@@ -1,17 +1,16 @@
+import dataclasses
 import json
 from datetime import datetime
 from typing import TypeVar, Type
 
 from dacite import from_dict
 from jorm.market.items import Product
-from jorm.market.service import RequestInfo as JReqeustInfo
-from jorm.market.service import RequestInfo as JRequestInfo, Request, Result
+from jorm.market.service import RequestInfo as JRequestInfo
 from jorm.support.utils import intersection
 from pydantic import BaseModel
 
 from jarvis_backend.controllers.session import JarvisSessionController
-from jarvis_backend.sessions.request_items import BasicSaveObject, RequestInfo, ProductRequestObjectWithMarketplaceId
-from jarvis_backend.support.types import JBasicSaveObject
+from jarvis_backend.sessions.request_items import RequestInfoModel, ProductRequestModelWithMarketplaceId
 
 T = TypeVar("T")
 
@@ -21,10 +20,26 @@ def pydantic_to_jorm(data_class: Type[T], base_model_object: BaseModel) -> T:
 
 
 def jorm_to_pydantic(obj, base_model_class: Type[T]) -> T:
-    return base_model_class.model_validate(obj.__dict__)
+    copy = dataclasses.replace(obj)
+    object_dict = _get_object_as_dict(copy)
+    return base_model_class.model_validate(object_dict)
 
 
-def transform_info(info: RequestInfo) -> JRequestInfo:
+def _get_object_as_dict(obj: any) -> dict | str:
+    try:
+        return json.dumps(obj)
+    except Exception:
+        object_dict = obj.__dict__
+        for field_name in object_dict:
+            field = object_dict[field_name]
+            try:
+                json.dumps(field)
+            except Exception:
+                object_dict[field_name] = _get_object_as_dict(field)
+        return object_dict
+
+
+def transform_info(info: RequestInfoModel) -> JRequestInfo:
     if info.timestamp == 0:
         request_time = datetime.utcnow()
     else:
@@ -32,32 +47,7 @@ def transform_info(info: RequestInfo) -> JRequestInfo:
     return JRequestInfo(info.id, request_time, info.name)
 
 
-def convert_save_objects_to_jorm(save_object: BasicSaveObject, type_to_convert: Type[JBasicSaveObject]):
-    jorm_request: Request = pydantic_to_jorm(type_to_convert.request_type, save_object.request)
-    jorm_result: Result = pydantic_to_jorm(type_to_convert.result_type, save_object.result)
-    info: JRequestInfo = transform_info(save_object.info)
-    return type_to_convert(jorm_request, jorm_result, info)
-
-
-def convert_save_objects_to_pydantic(type_to_convert: Type[BasicSaveObject], request: Request,
-                                     result: Result, info: JReqeustInfo):
-    pydantic_request = jorm_to_pydantic(request, type_to_convert.__annotations__['request'])
-    pydantic_result = jorm_to_pydantic(result, type_to_convert.__annotations__['result'])
-    pydantic_info_dict = {
-        "name": info.name,
-        "id": info.id,
-        "timestamp": info.date.timestamp()
-    }
-    return type_to_convert.model_validate(
-        {
-            'request': pydantic_request,
-            'result': pydantic_result,
-            'info': RequestInfo.model_validate(pydantic_info_dict)
-        }
-    )
-
-
-def extract_filtered_user_products_with_history(request_data: ProductRequestObjectWithMarketplaceId,
+def extract_filtered_user_products_with_history(request_data: ProductRequestModelWithMarketplaceId,
                                                 user_id: int, session_controller: JarvisSessionController) \
         -> dict[int, Product]:
     ids_to_filter = request_data.product_ids if request_data is not None else []
