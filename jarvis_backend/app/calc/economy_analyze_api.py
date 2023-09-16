@@ -1,7 +1,9 @@
 from fastapi import Depends
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, UserPrivilege
-from jorm.market.service import RequestInfo, SimpleEconomySaveObject, TransitEconomySaveObject
+from jorm.market.service import RequestInfo, SimpleEconomySaveObject, TransitEconomySaveObject, SimpleEconomyRequest, \
+    TransitEconomyRequest
+from jorm.support.calculation import SimpleEconomyResult, TransitEconomyResult
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import SavableCalculationRequestAPI
@@ -59,7 +61,12 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
     def convert_save_object(save_model: SimpleEconomySaveModel) \
             -> SimpleEconomySaveObject:
         info: RequestInfo = transform_info(save_model.info)
-        to_save = pydantic_to_jorm(SimpleEconomySaveObject, save_model)
+        economy_request = pydantic_to_jorm(SimpleEconomyRequest, save_model.user_result[0])
+        user_result = pydantic_to_jorm(SimpleEconomyResult, save_model.user_result[1])
+        recommended_result = pydantic_to_jorm(SimpleEconomyResult, save_model.recommended_result[1])
+        to_save = SimpleEconomySaveObject(info=info,
+                                          user_result=(economy_request, user_result),
+                                          recommended_result=(economy_request, recommended_result))
         to_save.info = info
         return to_save
 
@@ -139,7 +146,12 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
     def convert_save_object(save_model: TransitEconomySaveModel) \
             -> TransitEconomySaveObject:
         info: RequestInfo = transform_info(save_model.info)
-        to_save = pydantic_to_jorm(TransitEconomySaveObject, save_model)
+        economy_request = pydantic_to_jorm(TransitEconomyRequest, save_model.user_result[0])
+        user_result = pydantic_to_jorm(TransitEconomyResult, save_model.user_result[1])
+        recommended_result = pydantic_to_jorm(TransitEconomyResult, save_model.recommended_result[1])
+        to_save = TransitEconomySaveObject(info=info,
+                                           user_result=(economy_request, user_result),
+                                           recommended_result=(economy_request, recommended_result))
         to_save.info = info
         return to_save
 
