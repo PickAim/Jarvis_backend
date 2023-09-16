@@ -67,7 +67,6 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         to_save = SimpleEconomySaveObject(info=info,
                                           user_result=(economy_request, user_result),
                                           recommended_result=(economy_request, recommended_result))
-        to_save.info = info
         return to_save
 
     @staticmethod
@@ -152,7 +151,6 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         to_save = TransitEconomySaveObject(info=info,
                                            user_result=(economy_request, user_result),
                                            recommended_result=(economy_request, recommended_result))
-        to_save.info = info
         return to_save
 
     @staticmethod
