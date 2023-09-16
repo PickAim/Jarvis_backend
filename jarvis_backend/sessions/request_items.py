@@ -93,7 +93,7 @@ class SimpleEconomySaveModel(BaseModel):
     info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
 
 
-class TransitEconomyResult(SimpleEconomyResultModel):
+class TransitEconomyResultModel(SimpleEconomyResultModel):
     purchase_investments: int
     commercial_expanses: int
     tax_expanses: int
@@ -103,8 +103,8 @@ class TransitEconomyResult(SimpleEconomyResultModel):
 
 
 class TransitEconomySaveModel(BaseModel):
-    user_result: tuple[TransitEconomyRequestModel, TransitEconomyResult]
-    recommended_result: tuple[TransitEconomyRequestModel, TransitEconomyResult]
+    user_result: tuple[TransitEconomyRequestModel, TransitEconomyResultModel]
+    recommended_result: tuple[TransitEconomyRequestModel, TransitEconomyResultModel]
     info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
 
 
