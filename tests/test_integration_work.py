@@ -10,7 +10,7 @@ from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_MARKETPLACE_NAME,
 from starlette.exceptions import HTTPException
 
 from jarvis_backend.app.auth_api import SessionAPI
-from jarvis_backend.app.calc.economy_analyze_api import SimpleEconomyAnalyzeAPI
+from jarvis_backend.app.calc.economy_analyze_api import SimpleEconomyAnalyzeAPI, TransitEconomyAnalyzeAPI
 from jarvis_backend.app.calc.niche_analyze_api import NicheCharacteristicsAPI, GreenTradeZoneAPI
 from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI, AllProductCalculateAPI
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
@@ -24,7 +24,7 @@ from jarvis_backend.sessions.request_items import AuthenticationModel, Registrat
     SimpleEconomySaveModel, NicheRequest, NicheCharacteristicsResultModel, \
     BasicDeleteRequestModel, GetAllCategoriesModel, GetAllNichesModel, \
     GetAllMarketplacesModel, GetAllProductsModel, ProductRequestModelWithMarketplaceId, AddApiKeyModel, \
-    GreenTradeZoneCalculateResultModel, BasicMarketplaceInfoModel
+    GreenTradeZoneCalculateResultModel, BasicMarketplaceInfoModel, TransitEconomyRequestModel, TransitEconomySaveModel
 from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
 
@@ -357,7 +357,7 @@ class IntegrationTest(BasicServerTest):
             TokenAPI.update_tokens(incorrect_update_token, self.session)
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
 
-    def test_unit_economy_request(self):
+    def test_simple_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
         marketplace_id = 1
@@ -402,7 +402,7 @@ class IntegrationTest(BasicServerTest):
         result = SimpleEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
         self.assertEqual(0, len(result))
 
-    def test_unit_economy_request_with_invalid_niche(self):
+    def test_simple_economy_request_with_invalid_niche(self):
         category_id: int = 1
         marketplace_id = 1
         simple_economy_object = {
@@ -420,6 +420,79 @@ class IntegrationTest(BasicServerTest):
         request_object = SimpleEconomyRequestModel.model_validate(simple_economy_object)
         with self.assertRaises(HTTPException) as catcher:
             SimpleEconomyAnalyzeAPI.calculate(
+                request_data=request_object,
+                access_token=self.access_token,
+                session=self.session
+            )
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
+
+    def _test_transit_economy_request(self):
+        niche_name: str = DEFAULT_NICHE_NAME
+        category_id: int = 1
+        marketplace_id = 1
+        niche_service = JDBServiceFactory.create_niche_service(self.session)
+        found = niche_service.find_by_name(niche_name, category_id=category_id)
+        self.assertIsNotNone(found)
+        transit_economy_object = {
+            "marketplace_id": marketplace_id,
+            "niche_id": found[1],
+            "category_id": category_id,
+            "product_exist_cost": 200_00,
+            "cost_price": 75_00,
+            "length": 10,
+            "width": 5,
+            "height": 2,
+            "mass": 1,
+            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME,
+            "transit_price": 2000_00,
+            "transit_count": 100
+        }
+        request_object = TransitEconomyRequestModel.model_validate(transit_economy_object)
+        calculation_result = TransitEconomyAnalyzeAPI.calculate(
+            request_data=request_object,
+            access_token=self.access_token,
+            session=self.session
+        )
+        save_object = {
+            "user_result": [request_object, calculation_result[0]],
+            "recommended_result": [request_object, calculation_result[1]]
+        }
+        transit_economy_save_item = TransitEconomySaveModel.model_validate(save_object)
+        TransitEconomyAnalyzeAPI.save(request_data=transit_economy_save_item, access_token=self.access_token,
+                                      session=self.session)
+        result = TransitEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
+
+        self.assertEqual(1, len(result))
+        saved_object = result[0]
+        self.assertEqual(transit_economy_save_item.user_result, saved_object.user_result)
+        self.assertEqual(transit_economy_save_item.recommended_result, saved_object.recommended_result)
+
+        delete_request_data = self.create_delete_request_object(1)
+        TransitEconomyAnalyzeAPI.delete(request_data=delete_request_data, access_token=self.access_token,
+                                        session=self.session)
+        result = TransitEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
+        self.assertEqual(0, len(result))
+
+    def test_transit_economy_request_with_invalid_niche(self):
+        category_id: int = 1
+        marketplace_id = 1
+        simple_economy_object = {
+            "marketplace_id": marketplace_id,
+            "niche_id": 123456789,
+            "category_id": category_id,
+            "product_exist_cost": 200_00,
+            "cost_price": 75_00,
+            "length": 10,
+            "width": 5,
+            "height": 2,
+            "mass": 1,
+            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME,
+            "transit_price": 2000_00,
+            "transit_count": 100
+        }
+        request_object = TransitEconomyRequestModel.model_validate(simple_economy_object)
+        with self.assertRaises(HTTPException) as catcher:
+            TransitEconomyAnalyzeAPI.calculate(
                 request_data=request_object,
                 access_token=self.access_token,
                 session=self.session
