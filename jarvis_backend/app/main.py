@@ -28,7 +28,7 @@ app = FastAPI(openapi_tags=tags_metadata)
 REQUEST_TIMEOUT_ERROR = 300
 
 origins = [
-    # "http://localhost",  # temp
+    "http://localhost:8300"
     "*"
 ]
 
