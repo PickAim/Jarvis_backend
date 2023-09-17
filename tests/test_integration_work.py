@@ -426,7 +426,7 @@ class IntegrationTest(BasicServerTest):
             )
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
 
-    def _test_transit_economy_request(self):
+    def test_transit_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
         marketplace_id = 1
