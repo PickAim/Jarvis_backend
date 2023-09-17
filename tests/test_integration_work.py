@@ -5,12 +5,12 @@ import unittest
 from jarvis_db.factories.services import create_user_items_service
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 from jorm.market.person import User, Account
-from jorm.support.calculation import SimpleEconomyResult
-from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_MARKETPLACE_NAME, DEFAULT_CATEGORY_NAME
+from jorm.support.constants import DEFAULT_NICHE_NAME, DEFAULT_MARKETPLACE_NAME, DEFAULT_CATEGORY_NAME, \
+    DEFAULT_WAREHOUSE_NAME
 from starlette.exceptions import HTTPException
 
 from jarvis_backend.app.auth_api import SessionAPI
-from jarvis_backend.app.calc.economy_analyze_api import EconomyAnalyzeAPI
+from jarvis_backend.app.calc.economy_analyze_api import SimpleEconomyAnalyzeAPI, TransitEconomyAnalyzeAPI
 from jarvis_backend.app.calc.niche_analyze_api import NicheCharacteristicsAPI, GreenTradeZoneAPI
 from jarvis_backend.app.calc.product_analyze_api import ProductDownturnAPI, ProductTurnoverAPI, AllProductCalculateAPI
 from jarvis_backend.app.constants import ACCESS_TOKEN_NAME, UPDATE_TOKEN_NAME, IMPRINT_TOKEN_NAME
@@ -24,8 +24,7 @@ from jarvis_backend.sessions.request_items import AuthenticationModel, Registrat
     SimpleEconomySaveModel, NicheRequest, NicheCharacteristicsResultModel, \
     BasicDeleteRequestModel, GetAllCategoriesModel, GetAllNichesModel, \
     GetAllMarketplacesModel, GetAllProductsModel, ProductRequestModelWithMarketplaceId, AddApiKeyModel, \
-    GreenTradeZoneCalculateResultModel, BasicMarketplaceInfoModel
-from jarvis_backend.support.utils import pydantic_to_jorm
+    GreenTradeZoneCalculateResultModel, BasicMarketplaceInfoModel, TransitEconomyRequestModel, TransitEconomySaveModel
 from tests.basic import BasicServerTest
 from tests.dependencies import db_context_depends, _get_session
 
@@ -358,91 +357,145 @@ class IntegrationTest(BasicServerTest):
             TokenAPI.update_tokens(incorrect_update_token, self.session)
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_TOKEN, catcher.exception)
 
-    def _test_unit_economy_request(self):
+    def test_simple_economy_request(self):
         niche_name: str = DEFAULT_NICHE_NAME
         category_id: int = 1
-        buy: int = 50_00
-        pack: int = 50_00
-        transit_price: int = 1000_00
-        transit_count: int = 1000
-        marketplace_transit_price: int = 1500_00
         marketplace_id = 1
-        unit_economy_object = {
-            "buy": buy,
-            "pack": pack,
-            "niche": niche_name,
+        niche_service = JDBServiceFactory.create_niche_service(self.session)
+        found = niche_service.find_by_name(niche_name, category_id=category_id)
+        self.assertIsNotNone(found)
+        simple_economy_object = {
+            "marketplace_id": marketplace_id,
+            "niche_id": found[1],
             "category_id": category_id,
-            "transit_count": transit_count,
-            "transit_price": transit_price,
-            "market_place_transit_price": marketplace_transit_price,
-            "warehouse_name": "DEFAULT_WAREHOUSE",
-            "marketplace_id": marketplace_id
+            "product_exist_cost": 200_00,
+            "cost_price": 75_00,
+            "length": 10,
+            "width": 5,
+            "height": 2,
+            "mass": 1,
+            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME
         }
-        request_object = SimpleEconomyRequestModel.model_validate(unit_economy_object)
-        calculation_result = EconomyAnalyzeAPI.calculate(
-            request_object,
-            self.access_token, self.session
+        request_object = SimpleEconomyRequestModel.model_validate(simple_economy_object)
+        calculation_result = SimpleEconomyAnalyzeAPI.calculate(
+            request_data=request_object,
+            access_token=self.access_token,
+            session=self.session
         )
-        save_dict = {
-            'request': request_object,
-            'result': calculation_result
+        save_object = {
+            "user_result": [request_object, calculation_result[0]],
+            "recommended_result": [request_object, calculation_result[1]]
         }
-        unit_economy_save_item = SimpleEconomySaveModel.model_validate(save_dict)
-        EconomyAnalyzeAPI.save(unit_economy_save_item, self.access_token, self.session, self.request_handler)
-        result = EconomyAnalyzeAPI.get_all(self.access_token, self.session, self.request_handler)
+        simple_economy_save_item = SimpleEconomySaveModel.model_validate(save_object)
+        SimpleEconomyAnalyzeAPI.save(request_data=simple_economy_save_item, access_token=self.access_token,
+                                     session=self.session)
+        result = SimpleEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
 
         self.assertEqual(1, len(result))
         saved_object = result[0]
-        self.assertEqual(buy, saved_object.request.buy)
-        self.assertEqual(pack, saved_object.request.pack)
-        self.assertEqual(niche_name, saved_object.request.niche_id)
-        self.assertEqual(category_id, saved_object.request.category_id)
-        self.assertEqual(transit_count, saved_object.request.transit_count)
-        self.assertEqual(transit_price, saved_object.request.transit_price)
-        self.assertEqual(marketplace_id, saved_object.request.marketplace_id)
-
-        jorm_result = pydantic_to_jorm(SimpleEconomyResult, calculation_result)
-        self.assertEqual(jorm_result.product_cost, saved_object.result.product_cost)
-        self.assertEqual(jorm_result.pack_cost, saved_object.result.product_cost)
-        self.assertEqual(jorm_result.marketplace_commission, saved_object.result.marketplace_commission)
-        self.assertTrue(abs(jorm_result.roi - saved_object.result.roi) <= 0.01)
-        self.assertEqual(jorm_result.logistic_price, saved_object.result.logistic_price)
-        self.assertEqual(jorm_result.storage_price, saved_object.result.storage_price)
-        self.assertEqual(jorm_result.margin, saved_object.result.margin)
-        self.assertTrue(abs(jorm_result.transit_margin - saved_object.result.transit_margin) <= 0.01)
-        self.assertEqual(jorm_result.recommended_price, saved_object.result.recommended_price)
-        self.assertEqual(jorm_result.transit_profit, saved_object.result.transit_profit)
+        self.assertEqual(simple_economy_save_item.user_result, saved_object.user_result)
+        self.assertEqual(simple_economy_save_item.recommended_result, saved_object.recommended_result)
 
         delete_request_data = self.create_delete_request_object(1)
-        EconomyAnalyzeAPI.delete(delete_request_data, self.access_token, self.session, self.request_handler)
-        result = EconomyAnalyzeAPI.get_all(self.access_token, self.session, self.request_handler)
+        SimpleEconomyAnalyzeAPI.delete(request_data=delete_request_data, access_token=self.access_token,
+                                       session=self.session)
+        result = SimpleEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
         self.assertEqual(0, len(result))
 
-    def _test_unit_economy_request_with_invalid_niche(self):
-        niche_name: str = "invalid_name3"
+    def test_simple_economy_request_with_invalid_niche(self):
         category_id: int = 1
-        buy: int = 50_00
-        pack: int = 50_00
-        transit_price: int = 1000_00
-        transit_count: int = 1000
-        marketplace_transit_price: int = 1500_00
         marketplace_id = 1
-        unit_economy_object = {
-            "buy": buy,
-            "pack": pack,
-            "niche": niche_name,
+        simple_economy_object = {
+            "marketplace_id": marketplace_id,
+            "niche_id": 123456789,
             "category_id": category_id,
-            "transit_count": transit_count,
-            "transit_price": transit_price,
-            "market_place_transit_price": marketplace_transit_price,
-            "warehouse_name": "DEFAULT_WAREHOUSE",
-            "marketplace_id": marketplace_id
+            "product_exist_cost": 200_00,
+            "cost_price": 75_00,
+            "length": 10,
+            "width": 5,
+            "height": 2,
+            "mass": 1,
+            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME
         }
-        request_object = SimpleEconomyRequestModel.model_validate(unit_economy_object)
+        request_object = SimpleEconomyRequestModel.model_validate(simple_economy_object)
         with self.assertRaises(HTTPException) as catcher:
-            EconomyAnalyzeAPI.calculate(
-                request_object,
-                self.access_token, self.session
+            SimpleEconomyAnalyzeAPI.calculate(
+                request_data=request_object,
+                access_token=self.access_token,
+                session=self.session
+            )
+            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
+
+    def test_transit_economy_request(self):
+        niche_name: str = DEFAULT_NICHE_NAME
+        category_id: int = 1
+        marketplace_id = 1
+        niche_service = JDBServiceFactory.create_niche_service(self.session)
+        found = niche_service.find_by_name(niche_name, category_id=category_id)
+        self.assertIsNotNone(found)
+        transit_economy_object = {
+            "marketplace_id": marketplace_id,
+            "niche_id": found[1],
+            "category_id": category_id,
+            "product_exist_cost": 200_00,
+            "cost_price": 75_00,
+            "length": 10,
+            "width": 5,
+            "height": 2,
+            "mass": 1,
+            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME,
+            "transit_price": 2000_00,
+            "transit_count": 100
+        }
+        request_object = TransitEconomyRequestModel.model_validate(transit_economy_object)
+        calculation_result = TransitEconomyAnalyzeAPI.calculate(
+            request_data=request_object,
+            access_token=self.access_token,
+            session=self.session
+        )
+        save_object = {
+            "user_result": [request_object, calculation_result[0]],
+            "recommended_result": [request_object, calculation_result[1]]
+        }
+        transit_economy_save_item = TransitEconomySaveModel.model_validate(save_object)
+        TransitEconomyAnalyzeAPI.save(request_data=transit_economy_save_item, access_token=self.access_token,
+                                      session=self.session)
+        result = TransitEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
+
+        self.assertEqual(1, len(result))
+        saved_object = result[0]
+        self.assertEqual(transit_economy_save_item.user_result, saved_object.user_result)
+        self.assertEqual(transit_economy_save_item.recommended_result, saved_object.recommended_result)
+
+        delete_request_data = self.create_delete_request_object(1)
+        TransitEconomyAnalyzeAPI.delete(request_data=delete_request_data, access_token=self.access_token,
+                                        session=self.session)
+        result = TransitEconomyAnalyzeAPI.get_all(access_token=self.access_token, session=self.session)
+        self.assertEqual(0, len(result))
+
+    def test_transit_economy_request_with_invalid_niche(self):
+        category_id: int = 1
+        marketplace_id = 1
+        simple_economy_object = {
+            "marketplace_id": marketplace_id,
+            "niche_id": 123456789,
+            "category_id": category_id,
+            "product_exist_cost": 200_00,
+            "cost_price": 75_00,
+            "length": 10,
+            "width": 5,
+            "height": 2,
+            "mass": 1,
+            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME,
+            "transit_price": 2000_00,
+            "transit_count": 100
+        }
+        request_object = TransitEconomyRequestModel.model_validate(simple_economy_object)
+        with self.assertRaises(HTTPException) as catcher:
+            TransitEconomyAnalyzeAPI.calculate(
+                request_data=request_object,
+                access_token=self.access_token,
+                session=self.session
             )
             self.assertJarvisExceptionWithCode(JarvisExceptionsCode.INCORRECT_NICHE, catcher.exception)
 

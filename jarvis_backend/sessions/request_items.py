@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import Body
 from pydantic import BaseModel
 
@@ -47,6 +49,15 @@ class RequestInfoModel(BaseModel):
     id: int | None = -1
     timestamp: float = 0.0
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, RequestInfoModel):
+            return False
+        return (
+                self.name == other.name
+                and self.id == other.id
+                and self.timestamp == other.timestamp
+        )
+
 
 class BasicDeleteRequestModel(BaseModel):
     request_id: int
@@ -55,10 +66,25 @@ class BasicDeleteRequestModel(BaseModel):
 class BasicMarketplaceInfoModel(BaseModel):
     marketplace_id: int
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, BasicMarketplaceInfoModel):
+            return False
+        return self.marketplace_id == other.marketplace_id
+
 
 class NicheRequest(BasicMarketplaceInfoModel):
     niche_id: int
     category_id: int
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, NicheRequest):
+            return False
+        if not super().__eq__(other):
+            return False
+        return (
+                self.category_id == other.category_id
+                and self.niche_id == other.niche_id
+        )
 
 
 class SimpleEconomyRequestModel(NicheRequest):
@@ -70,10 +96,35 @@ class SimpleEconomyRequestModel(NicheRequest):
     mass: int
     target_warehouse_name: str
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, SimpleEconomyRequestModel):
+            return False
+        if not super().__eq__(other):
+            return False
+        return (
+                self.product_exist_cost == other.product_exist_cost
+                and self.cost_price == other.cost_price
+                and self.length == other.length
+                and self.width == other.width
+                and self.height == other.height
+                and self.mass == other.mass
+                and self.target_warehouse_name == other.target_warehouse_name
+        )
+
 
 class TransitEconomyRequestModel(SimpleEconomyRequestModel):
     transit_price: int
     transit_count: int
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, TransitEconomyRequestModel):
+            return False
+        if not super().__eq__(other):
+            return False
+        return (
+                self.transit_price == other.transit_price
+                and self.transit_count == other.transit_count
+        )
 
 
 class SimpleEconomyResultModel(BaseModel):
@@ -86,14 +137,39 @@ class SimpleEconomyResultModel(BaseModel):
     relative_margin: float
     roi: float
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, SimpleEconomyResultModel):
+            return False
+        return (
+                self.result_cost == other.result_cost
+                and self.logistic_price == other.logistic_price
+                and self.storage_price == other.storage_price
+                and self.purchase_cost == other.purchase_cost
+                and self.marketplace_expanses == other.marketplace_expanses
+                and self.absolute_margin == other.absolute_margin
+                and (abs(self.relative_margin - other.relative_margin) < 0.01)
+                and (abs(self.roi - other.roi) < 0.01)
+        )
+
 
 class SimpleEconomySaveModel(BaseModel):
     user_result: tuple[SimpleEconomyRequestModel, SimpleEconomyResultModel]
     recommended_result: tuple[SimpleEconomyRequestModel, SimpleEconomyResultModel]
-    info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
+    info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': -1, 'timestamp': 0.0})
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, SimpleEconomySaveModel):
+            return False
+        for self_item, other_item in zip(self.user_result, other.user_result):
+            if self_item != other_item:
+                return False
+        for self_item, other_item in zip(self.recommended_result, other.recommended_result):
+            if self_item != other_item:
+                return False
+        return self.info == other.info
 
 
-class TransitEconomyResult(SimpleEconomyResultModel):
+class TransitEconomyResultModel(SimpleEconomyResultModel):
     purchase_investments: int
     commercial_expanses: int
     tax_expanses: int
@@ -101,11 +177,36 @@ class TransitEconomyResult(SimpleEconomyResultModel):
     relative_transit_margin: float
     transit_roi: float
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, TransitEconomyResultModel):
+            return False
+        if not super().__eq__(other):
+            return False
+        return (
+                self.purchase_investments == other.purchase_investments
+                and self.commercial_expanses == other.commercial_expanses
+                and self.tax_expanses == other.tax_expanses
+                and self.absolute_transit_margin == other.absolute_transit_margin
+                and (abs(self.relative_transit_margin - other.relative_transit_margin) < 0.01)
+                and (abs(self.transit_roi - other.transit_roi) < 0.01)
+        )
+
 
 class TransitEconomySaveModel(BaseModel):
-    user_result: tuple[TransitEconomyRequestModel, TransitEconomyResult]
-    recommended_result: tuple[TransitEconomyRequestModel, TransitEconomyResult]
+    user_result: tuple[TransitEconomyRequestModel, TransitEconomyResultModel]
+    recommended_result: tuple[TransitEconomyRequestModel, TransitEconomyResultModel]
     info: RequestInfoModel = RequestInfoModel.model_validate({'name': "", 'id': None, 'timestamp': 0.0})
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, SimpleEconomySaveModel):
+            return False
+        for self_item, other_item in zip(self.user_result, other.user_result):
+            if self_item != other_item:
+                return False
+        for self_item, other_item in zip(self.recommended_result, other.recommended_result):
+            if self_item != other_item:
+                return False
+        return self.info == other.info
 
 
 class GreenTradeZoneCalculateResultModel(BaseModel):

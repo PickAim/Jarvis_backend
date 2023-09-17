@@ -1,7 +1,7 @@
 import dataclasses
 import json
 from datetime import datetime
-from typing import TypeVar, Type
+from typing import TypeVar, Type, Callable
 
 from dacite import from_dict
 from jorm.market.items import Product
@@ -29,14 +29,39 @@ def _get_object_as_dict(obj: any) -> dict | str:
     try:
         return json.dumps(obj)
     except Exception:
-        object_dict = obj.__dict__
-        for field_name in object_dict:
-            field = object_dict[field_name]
-            try:
-                json.dumps(field)
-            except Exception:
-                object_dict[field_name] = _get_object_as_dict(field)
-        return object_dict
+        return _dump_as_complex_object(obj)
+
+
+def _tuple_dumps(tuple_obj: tuple) -> tuple:
+    return tuple((_get_object_as_dict(item)) for item in tuple_obj)
+
+
+def _list_dumps(tuple_obj: list) -> list:
+    return [(_get_object_as_dict(item)) for item in tuple_obj]
+
+
+def _datetime_dumps(date: datetime) -> str:
+    return json.dumps(date.timestamp())
+
+
+SPECIAL_DUMPS: dict[Type[T], Callable[[T], any]] = {
+    tuple: _tuple_dumps,
+    list: _list_dumps,
+    datetime: _datetime_dumps
+}
+
+
+def _dump_as_complex_object(obj: any) -> dict | str:
+    if type(obj) in SPECIAL_DUMPS:
+        return SPECIAL_DUMPS[type(obj)](obj)
+    object_dict = obj.__dict__
+    for field_name in object_dict:
+        field = object_dict[field_name]
+        try:
+            json.dumps(field)
+        except Exception:
+            object_dict[field_name] = _get_object_as_dict(field)
+    return object_dict
 
 
 def transform_info(info: RequestInfoModel) -> JRequestInfo:
