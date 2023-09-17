@@ -4,7 +4,7 @@ from jarvis_backend.app.constants import UPDATE_TOKEN_USAGE_URL_PART
 from jarvis_backend.app.tags import AUTH_TAG
 from jarvis_backend.app.tokens.dependencies import update_token_correctness_post_depend, session_controller_depend
 from jarvis_backend.app.tokens.util import save_and_return_session_tokens
-from jarvis_backend.controllers.session import JarvisSessionController
+from jarvis_backend.sessions.dependencies import session_depend
 from jarvis_backend.support.request_api import RequestAPI
 
 
@@ -19,6 +19,7 @@ class TokenAPI(RequestAPI):
     @staticmethod
     @router.post('/update-all-tokens')
     def update_tokens(update_token: str = Depends(update_token_correctness_post_depend),
-                      session_controller: JarvisSessionController = Depends(session_controller_depend)):
+                      session=Depends(session_depend)):
+        session_controller = session_controller_depend(session)
         new_access_token, new_update_token = session_controller.update_tokens(update_token)
         return save_and_return_session_tokens(new_access_token, new_update_token)

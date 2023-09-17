@@ -6,6 +6,7 @@ from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
+from jorm.server.token.types import TokenType
 from passlib.context import CryptContext
 
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
@@ -13,7 +14,7 @@ from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.auth.tokens.token_control import TokenController
 from jarvis_backend.controllers.input import InputController
 from jarvis_backend.sessions.exceptions import JarvisExceptions
-from jarvis_backend.sessions.request_items import AddApiKeyObject, BasicMarketplaceInfoObject
+from jarvis_backend.sessions.request_items import AddApiKeyModel, BasicMarketplaceInfoModel
 from jarvis_backend.support.decorators import timeout
 from jarvis_backend.support.input import InputPreparer
 
@@ -76,21 +77,42 @@ class JarvisSessionController:
         raise JarvisExceptions.INCORRECT_LOGIN_OR_PASSWORD
 
     def __create_tokens_for_user(self, user_id: int, imprint_token: str) -> tuple[str, str, str]:
+        if self.__is_empty_imprint_token(imprint_token):
+            return self.__handle_empty_imprint(user_id=user_id)
+        return self.__handle_non_empty_imprint(user_id=user_id, imprint_token=imprint_token)
+
+    def __handle_empty_imprint(self, user_id: int) -> tuple[str, str, str]:
         access_token: str = self.__token_controller.create_access_token(user_id)
         access_token_rnd_part: str = self.__token_controller.get_random_part(access_token)
         update_token: str = self.__token_controller.create_update_token(user_id)
         update_token_rnd_part: str = self.__token_controller.get_random_part(update_token)
-        try:
-            if imprint_token is not None and imprint_token != 'None' and imprint_token != 'string':
-                self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
-                                                                      imprint_token, user_id)
-                return access_token, update_token, imprint_token
-            else:
-                imprint_token = self.__token_controller.create_imprint_token()
-        except Exception:
-            imprint_token = self.__token_controller.create_imprint_token()
+        imprint_token = self.__token_controller.create_imprint_token()
         self.__db_controller.save_all_tokens(access_token_rnd_part, update_token_rnd_part, imprint_token, user_id)
         return access_token, update_token, imprint_token
+
+    def __handle_non_empty_imprint(self, user_id: int, imprint_token: str) -> tuple[str, str, str]:
+        access_token: str = self.__token_controller.create_access_token(user_id)
+        access_token_rnd_part: str = self.__token_controller.get_random_part(access_token)
+        update_token: str = self.__token_controller.create_update_token(user_id)
+        update_token_rnd_part: str = self.__token_controller.get_random_part(update_token)
+        is_checked = self.__check_token_exist(user_id=user_id, imprint_token=imprint_token)
+        if is_checked:
+            self.__db_controller.update_session_tokens_by_imprint(access_token_rnd_part, update_token_rnd_part,
+                                                                  imprint_token, user_id)
+        else:
+            self.__db_controller.save_all_tokens(access_token_rnd_part,
+                                                 update_token_rnd_part, imprint_token, user_id)
+        return access_token, update_token, imprint_token
+
+    @staticmethod
+    def __is_empty_imprint_token(imprint_token: str) -> bool:
+        return imprint_token is None or imprint_token == 'None' or imprint_token == 'string'
+
+    def __check_token_exist(self, user_id: int, imprint_token: str) -> bool:
+        try:
+            return self.__db_controller.check_token_exist(user_id, imprint_token, TokenType.ACCESS.value)
+        except Exception:
+            return False
 
     @timeout(1)
     def register_user(self, email: str, password: str, phone_number: str):
@@ -109,7 +131,7 @@ class JarvisSessionController:
         return
 
     @timeout(1)
-    def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyObject, user_id: int):
+    def add_marketplace_api_key(self, add_api_key_request_data: AddApiKeyModel, user_id: int):
         api_key = add_api_key_request_data.api_key
         marketplace_id = add_api_key_request_data.marketplace_id
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
@@ -118,7 +140,7 @@ class JarvisSessionController:
         self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
 
     @timeout(1)
-    def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoObject, user_id: int) -> None:
+    def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoModel, user_id: int) -> None:
         self.__db_controller.delete_marketplace_api_key(user_id, api_key_request_data.marketplace_id)
 
     @timeout(1)
@@ -126,17 +148,15 @@ class JarvisSessionController:
         self.__db_controller.delete_account(user_id)
 
     @timeout(5)
-    def get_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
-        input_preparer = InputPreparer()
-        niche_name = input_preparer.prepare_search_string(niche_name)
-        result_niche: Niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
+    def get_niche(self, niche_id: int) -> Niche | None:
+        result_niche: Niche = self.__db_controller.get_niche_by_id(niche_id)
         return result_niche
 
     @timeout(120)
     def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:
         input_preparer = InputPreparer()
         niche_name = input_preparer.prepare_search_string(niche_name)
-        result_niche = self.get_niche(niche_name, category_id, marketplace_id)
+        result_niche = self.__db_controller.get_niche(niche_name, category_id, marketplace_id)
         if result_niche is not None:
             return result_niche
         default_category_id: int = self.__get_default_category_id(marketplace_id)
