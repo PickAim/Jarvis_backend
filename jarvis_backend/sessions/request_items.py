@@ -90,10 +90,10 @@ class NicheRequest(BasicMarketplaceInfoModel):
 class SimpleEconomyRequestModel(NicheRequest):
     product_exist_cost: int  # user defined cost for product
     cost_price: int  # how much it cost for user
-    length: int
-    width: int
-    height: int
-    mass: int
+    length: float
+    width: float
+    height: float
+    mass: float
     target_warehouse_id: int
 
     def __eq__(self, other: Any) -> bool:
