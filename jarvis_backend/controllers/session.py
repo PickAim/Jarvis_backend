@@ -7,6 +7,7 @@ from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
 from jorm.server.token.types import TokenType
+from jorm.support.types import EconomyConstants
 from passlib.context import CryptContext
 
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
@@ -177,6 +178,9 @@ class JarvisSessionController:
             if self.__is_default_object(id_to_category[category_id].name):
                 return category_id
         return -1
+
+    def get_economy_constants(self, marketplace_id: int) -> EconomyConstants:
+        return self.__db_controller.get_economy_constants(marketplace_id)
 
     def get_warehouse(self, warehouse_id: int, marketplace_id: int) -> Warehouse:
         warehouse = self.__db_controller.get_warehouse(warehouse_id)

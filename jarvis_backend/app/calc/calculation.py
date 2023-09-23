@@ -81,5 +81,9 @@ class CalculationController:
 
     @staticmethod
     def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultModel:
-        result = GreenTradeZoneCalculator().calculate(niche, from_date)
+        result = CalculationController.calc_jorm_green_zone(niche, from_date)
         return jorm_to_pydantic(result, GreenTradeZoneCalculateResultModel)
+
+    @staticmethod
+    def calc_jorm_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResult:
+        return GreenTradeZoneCalculator().calculate(niche, from_date)
