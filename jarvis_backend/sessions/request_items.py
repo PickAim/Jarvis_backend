@@ -94,7 +94,7 @@ class SimpleEconomyRequestModel(NicheRequest):
     width: int
     height: int
     mass: int
-    target_warehouse_name: str
+    target_warehouse_id: int
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, SimpleEconomyRequestModel):
@@ -108,13 +108,14 @@ class SimpleEconomyRequestModel(NicheRequest):
                 and self.width == other.width
                 and self.height == other.height
                 and self.mass == other.mass
-                and self.target_warehouse_name == other.target_warehouse_name
+                and self.target_warehouse_id == other.target_warehouse_id
         )
 
 
 class TransitEconomyRequestModel(SimpleEconomyRequestModel):
-    transit_price: int
-    transit_count: int
+    logistic_price: int
+    logistic_count: int
+    transit_cost_for_cubic_meter: float
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, TransitEconomyRequestModel):
@@ -122,8 +123,9 @@ class TransitEconomyRequestModel(SimpleEconomyRequestModel):
         if not super().__eq__(other):
             return False
         return (
-                self.transit_price == other.transit_price
-                and self.transit_count == other.transit_count
+                self.logistic_price == other.logistic_price
+                and self.logistic_count == other.logistic_count
+                and self.transit_cost_for_cubic_meter == other.transit_cost_for_cubic_meter
         )
 
 

@@ -37,7 +37,7 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.target_warehouse_name, request_data.marketplace_id)
+            session_controller.get_warehouse(request_data.target_warehouse_id, request_data.marketplace_id)
         result = CalculationController.calc_simple_economy(request_data, niche, target_warehouse)
         return result
 
@@ -121,7 +121,7 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.target_warehouse_name, request_data.marketplace_id)
+            session_controller.get_warehouse(request_data.target_warehouse_id, request_data.marketplace_id)
         result = CalculationController.calc_transit_economy(request_data, user, niche, target_warehouse)
         return result
 
