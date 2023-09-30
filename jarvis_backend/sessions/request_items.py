@@ -295,5 +295,9 @@ class GetAllProductsModel(BasicMarketplaceInfoModel):
     pass
 
 
+class GetAllWarehouseModel(InfoGettingModel, BasicMarketplaceInfoModel):
+    pass
+
+
 class AddApiKeyModel(BasicMarketplaceInfoModel):
     api_key: str
