@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import Depends
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, UserPrivilege
@@ -37,8 +39,12 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.target_warehouse_name, request_data.marketplace_id)
-        result = CalculationController.calc_simple_economy(request_data, niche, target_warehouse)
+            session_controller.get_warehouse(request_data.target_warehouse_id)
+        economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
+        # TODO remove me after caching
+        green_zone_result = CalculationController.calc_jorm_green_zone(niche, datetime.utcnow())
+        result = CalculationController.calc_simple_economy(request_data, niche,
+                                                           target_warehouse, economy_constants, green_zone_result)
         return result
 
     @staticmethod
@@ -121,8 +127,12 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.target_warehouse_name, request_data.marketplace_id)
-        result = CalculationController.calc_transit_economy(request_data, user, niche, target_warehouse)
+            session_controller.get_warehouse(request_data.target_warehouse_id)
+        economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
+        # TODO remove me after caching
+        green_zone_result = CalculationController.calc_jorm_green_zone(niche, datetime.utcnow())
+        result = CalculationController.calc_transit_economy(request_data, user, niche,
+                                                            target_warehouse, economy_constants, green_zone_result)
         return result
 
     @staticmethod

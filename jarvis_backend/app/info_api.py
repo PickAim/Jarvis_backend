@@ -4,7 +4,7 @@ from jarvis_backend.app.tags import INFO_TAG
 from jarvis_backend.sessions.dependencies import session_controller_depend, session_depend
 from jarvis_backend.sessions.request_items import (GetAllMarketplacesModel,
                                                    GetAllNichesModel,
-                                                   GetAllCategoriesModel)
+                                                   GetAllCategoriesModel, BasicMarketplaceInfoModel)
 from jarvis_backend.support.request_api import RequestAPI
 
 
@@ -36,3 +36,10 @@ class InfoAPI(RequestAPI):
                        session=Depends(session_depend)) -> dict[int, str]:
         session_controller = session_controller_depend(session)
         return session_controller.get_all_niches(request_data.category_id, request_data.is_allow_defaults)
+
+    @staticmethod
+    @router.post('/get-all-warehouses/', response_model=dict[int, str])
+    def get_all_warehouses(request_data: BasicMarketplaceInfoModel,
+                           session=Depends(session_depend)) -> dict[int, str]:
+        session_controller = session_controller_depend(session)
+        return session_controller.get_all_warehouses(request_data.marketplace_id)

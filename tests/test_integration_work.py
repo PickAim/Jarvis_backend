@@ -364,17 +364,23 @@ class IntegrationTest(BasicServerTest):
         niche_service = JDBServiceFactory.create_niche_service(self.session)
         found = niche_service.find_by_name(niche_name, category_id=category_id)
         self.assertIsNotNone(found)
+        niche_id = found[1]
+
+        warehouse_service = JDBServiceFactory.create_warehouse_service(self.session)
+        found = warehouse_service.find_warehouse_by_name(DEFAULT_WAREHOUSE_NAME, marketplace_id)
+        self.assertIsNotNone(found)
+        warehouse_id = found[1]
+
         simple_economy_object = {
             "marketplace_id": marketplace_id,
-            "niche_id": found[1],
-            "category_id": category_id,
+            "niche_id": niche_id,
             "product_exist_cost": 200_00,
             "cost_price": 75_00,
             "length": 10,
             "width": 5,
             "height": 2,
             "mass": 1,
-            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME
+            "target_warehouse_id": warehouse_id
         }
         request_object = SimpleEconomyRequestModel.model_validate(simple_economy_object)
         calculation_result = SimpleEconomyAnalyzeAPI.calculate(
@@ -403,19 +409,17 @@ class IntegrationTest(BasicServerTest):
         self.assertEqual(0, len(result))
 
     def test_simple_economy_request_with_invalid_niche(self):
-        category_id: int = 1
         marketplace_id = 1
         simple_economy_object = {
             "marketplace_id": marketplace_id,
             "niche_id": 123456789,
-            "category_id": category_id,
             "product_exist_cost": 200_00,
             "cost_price": 75_00,
             "length": 10,
             "width": 5,
             "height": 2,
             "mass": 1,
-            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME
+            "target_warehouse_id": 1
         }
         request_object = SimpleEconomyRequestModel.model_validate(simple_economy_object)
         with self.assertRaises(HTTPException) as catcher:
@@ -432,10 +436,15 @@ class IntegrationTest(BasicServerTest):
         marketplace_id = 1
         niche_service = JDBServiceFactory.create_niche_service(self.session)
         found = niche_service.find_by_name(niche_name, category_id=category_id)
+        niche_id = found[1]
+
+        warehouse_service = JDBServiceFactory.create_warehouse_service(self.session)
+        found = warehouse_service.find_warehouse_by_name(DEFAULT_WAREHOUSE_NAME, marketplace_id)
         self.assertIsNotNone(found)
+        warehouse_id = found[1]
         transit_economy_object = {
             "marketplace_id": marketplace_id,
-            "niche_id": found[1],
+            "niche_id": niche_id,
             "category_id": category_id,
             "product_exist_cost": 200_00,
             "cost_price": 75_00,
@@ -443,9 +452,10 @@ class IntegrationTest(BasicServerTest):
             "width": 5,
             "height": 2,
             "mass": 1,
-            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME,
-            "transit_price": 2000_00,
-            "transit_count": 100
+            "target_warehouse_id": warehouse_id,
+            "logistic_price": 2000_00,
+            "logistic_count": 100,
+            "transit_cost_for_cubic_meter": 20_00
         }
         request_object = TransitEconomyRequestModel.model_validate(transit_economy_object)
         calculation_result = TransitEconomyAnalyzeAPI.calculate(
@@ -486,9 +496,10 @@ class IntegrationTest(BasicServerTest):
             "width": 5,
             "height": 2,
             "mass": 1,
-            "target_warehouse_name": DEFAULT_WAREHOUSE_NAME,
-            "transit_price": 2000_00,
-            "transit_count": 100
+            "target_warehouse_id": 1,
+            "logistic_price": 2000_00,
+            "logistic_count": 100,
+            "transit_cost_for_cubic_meter": 20_00
         }
         request_object = TransitEconomyRequestModel.model_validate(simple_economy_object)
         with self.assertRaises(HTTPException) as catcher:

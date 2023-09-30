@@ -43,7 +43,7 @@ def __init_admin_account(session):
 
 def __init_defaults_for_marketplace(session: Session, marketplace_id: int):
     warehouse_service = JDBServiceFactory.create_warehouse_service(session)
-    default_warehouse = JORMClassesFactory.create_simple_default_warehouse()
+    default_warehouse = JORMClassesFactory.create_default_warehouse()
     if warehouse_service.find_warehouse_by_name(default_warehouse.name, marketplace_id) is None:
         warehouse_service.create_warehouse(default_warehouse, marketplace_id)
     category_service = JDBServiceFactory.create_category_service(session)
@@ -91,13 +91,7 @@ def __create_warehouse_with_global_id(global_id: int) -> Warehouse:
         f"unfilled{global_id}",
         global_id,
         HandlerType.MARKETPLACE,
-        Address(),
-        basic_logistic_to_customer_commission=0,
-        additional_logistic_to_customer_commission=0,
-        logistic_from_customer_commission=0,
-        basic_storage_commission=0,
-        additional_storage_commission=0,
-        mono_palette_storage_commission=0
+        Address()
     )
 
 

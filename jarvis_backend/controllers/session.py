@@ -7,6 +7,7 @@ from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
 from jorm.server.token.types import TokenType
+from jorm.support.types import EconomyConstants
 from passlib.context import CryptContext
 
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
@@ -178,14 +179,14 @@ class JarvisSessionController:
                 return category_id
         return -1
 
-    @timeout(1)
-    def get_warehouse(self, warehouse_name: str, marketplace_id: int) -> Warehouse:
-        warehouse = self.__db_controller.get_warehouse(warehouse_name, marketplace_id)
+    def get_economy_constants(self, marketplace_id: int) -> EconomyConstants:
+        return self.__db_controller.get_economy_constants(marketplace_id)
+
+    def get_warehouse(self, warehouse_id: int) -> Warehouse:
+        warehouse = self.__db_controller.get_warehouse(warehouse_id)
         if warehouse is not None:
             return warehouse
-        reference_warehouses = self.__db_controller.get_all_warehouses(marketplace_id)
-        return self.__jorm_classes_factory.create_default_warehouse([reference_warehouses[warehouse_id]
-                                                                     for warehouse_id in reference_warehouses])
+        return self.__jorm_classes_factory.create_default_warehouse()
 
     def get_products_by_user(self, user_id: int, marketplace_id: int) -> dict[int, Product]:
         return self.__db_controller.get_products_by_user(user_id, marketplace_id)
@@ -222,4 +223,11 @@ class JarvisSessionController:
         for niche_id in id_to_niche:
             if is_allow_defaults or not self.__is_default_object(id_to_niche[niche_id].name):
                 result[niche_id] = id_to_niche[niche_id].name
+        return result
+
+    def get_all_warehouses(self, marketplace_id: int) -> dict[int, str]:
+        id_to_warehouse = self.__db_controller.get_all_warehouses(marketplace_id)
+        result = {}
+        for warehouse_id in id_to_warehouse:
+            result[warehouse_id] = id_to_warehouse[warehouse_id].name
         return result
