@@ -21,7 +21,6 @@ from jarvis_backend.controllers.cookie import CookieHandler
 from jarvis_backend.sessions.dependencies import db_context_depends, init_defaults
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
-from jarvis_backend.support.decorators import timeout
 
 app = FastAPI(openapi_tags=tags_metadata)
 
@@ -85,12 +84,10 @@ async def http_exception_handler(_, exc):
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
 
-@timeout(120)
 def load_niche(jorm_changer: JORMChanger, niche_name: str, marketplace_id: int):
     return jorm_changer.load_new_niche(niche_name, marketplace_id)
 
 
-@timeout(120)
 def update_niche(jorm_changer: JORMChanger, niche_id: int, category_id: int, marketplace_id: int):
     return jorm_changer.update_niche(niche_id, category_id, marketplace_id)
 
