@@ -74,7 +74,6 @@ class BasicMarketplaceInfoModel(BaseModel):
 
 class NicheRequest(BasicMarketplaceInfoModel):
     niche_id: int
-    category_id: int
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, NicheRequest):
@@ -82,8 +81,7 @@ class NicheRequest(BasicMarketplaceInfoModel):
         if not super().__eq__(other):
             return False
         return (
-                self.category_id == other.category_id
-                and self.niche_id == other.niche_id
+                self.niche_id == other.niche_id
         )
 
 

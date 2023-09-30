@@ -39,7 +39,7 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.target_warehouse_id, request_data.marketplace_id)
+            session_controller.get_warehouse(request_data.target_warehouse_id)
         economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
         # TODO remove me after caching
         green_zone_result = CalculationController.calc_jorm_green_zone(niche, datetime.utcnow())
@@ -127,7 +127,7 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
-            session_controller.get_warehouse(request_data.target_warehouse_id, request_data.marketplace_id)
+            session_controller.get_warehouse(request_data.target_warehouse_id)
         economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
         # TODO remove me after caching
         green_zone_result = CalculationController.calc_jorm_green_zone(niche, datetime.utcnow())
