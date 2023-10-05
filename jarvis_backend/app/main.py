@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from uvicorn import Config
 
 from fastapi_main import fastapi_app
-from jarvis_backend.app.schedule.scheduler import create_scheduler, configur_scheduler
+from jarvis_backend.app.schedule.scheduler import create_scheduler
 from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
 
 
@@ -32,7 +32,6 @@ async def main():
         init_defaults(session)
     log_file_path = path.join(path.dirname(path.abspath(__file__)), 'log.ini')
     scheduler = create_scheduler()
-    configur_scheduler(scheduler)
     server = Server(scheduler,
                     config=uvicorn.Config(app=fastapi_app, port=8090, log_config=log_file_path, loop="asyncio"))
     api = asyncio.create_task(server.serve())

@@ -1,10 +1,11 @@
 from apscheduler.executors.pool import ProcessPoolExecutor
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import utc
 
+from jarvis_backend.app.schedule.tasks import SIMPLE_TASKS
+
 job_stores = {
-    'default': SQLAlchemyJobStore(url='sqlite:///jobs.db')
+    # 'default': SQLAlchemyJobStore(url='sqlite:///jobs.db')
 }
 executors = {
     'default': {'type': 'threadpool', 'max_workers': 20},
@@ -18,10 +19,11 @@ job_defaults = {
 
 def create_scheduler() -> BackgroundScheduler:
     scheduler = BackgroundScheduler()
-    scheduler.configure(jobstores=job_stores, executors=executors, job_defaults=job_defaults, timezone=utc)
+    __configure_scheduler(scheduler)
     return scheduler
 
 
-def configur_scheduler(scheduler: BackgroundScheduler) -> None:
-    # scheduler.add_job(task, IntervalTrigger(seconds=5), id='halo_task')
-    pass
+def __configure_scheduler(scheduler: BackgroundScheduler) -> None:
+    scheduler.configure(jobstores=job_stores, executors=executors, job_defaults=job_defaults, timezone=utc)
+    for task in SIMPLE_TASKS:
+        scheduler.add_job(task.function, task.trigger_interval, id=task.identifier)
