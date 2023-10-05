@@ -2,9 +2,7 @@ import asyncio
 import json
 import logging
 import time
-from os import path
 
-import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from jarvis_factory.factories.jdb import JDBClassesFactory
@@ -18,7 +16,7 @@ from jarvis_backend.app.loggers import ERROR_LOGGER
 from jarvis_backend.app.routers import routers
 from jarvis_backend.app.tags import tags_metadata, OTHER_TAG
 from jarvis_backend.controllers.cookie import CookieHandler
-from jarvis_backend.sessions.dependencies import db_context_depends, init_defaults
+from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
 
@@ -94,7 +92,7 @@ def update_niche(jorm_changer: JORMChanger, niche_id: int, category_id: int, mar
 
 def main_load():
     niche_to_category: dict[str, str] = {}
-    db_context = db_context_depends()
+    db_context = db_context_depend()
     with db_context.session() as session, session.begin():
         init_defaults(session)
     with open('../commission.csv', "r", encoding='cp1251') as file:
@@ -117,7 +115,7 @@ def main_load():
 
 
 def main_update():
-    db_context = db_context_depends()
+    db_context = db_context_depend()
     marketplace_id = 2
     with db_context.session() as session, session.begin():
         category_service = JDBServiceFactory.create_category_service(session)
@@ -138,15 +136,3 @@ def main_update():
                         print(f"niche #{niche_id} updated")
                     except Exception as ex:
                         print(f"niche #{niche_id} NOT updated, cause: {str(ex)}")
-
-
-def old_main_start():
-    db_context = db_context_depends()
-    with db_context.session() as session, session.begin():
-        init_defaults(session)
-    log_file_path = path.join(path.dirname(path.abspath(__file__)), 'log.ini')
-    uvicorn.run(app=fastapi_app, port=8090, log_config=log_file_path)
-
-
-if __name__ == '__main__':
-    old_main_start()

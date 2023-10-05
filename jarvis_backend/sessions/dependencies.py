@@ -18,7 +18,7 @@ from jarvis_backend.sessions.request_handler import RequestHandler
 __DB_CONTEXT = None
 
 
-def db_context_depends() -> DbContext:
+def db_context_depend() -> DbContext:
     global __DB_CONTEXT
     if __DB_CONTEXT is None:
         __DB_CONTEXT = DbContext("sqlite:///test.db")
@@ -118,7 +118,7 @@ def init_defaults(session):
     __init_admin_account(session)
 
 
-def session_depend(db_context: DbContext = Depends(db_context_depends)):
+def session_depend(db_context: DbContext = Depends(db_context_depend)):
     with db_context.session() as session, session.begin():
         yield session
 
