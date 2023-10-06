@@ -12,5 +12,5 @@ def __cache_update():
 
 
 SIMPLE_TASKS = [
-    SimpleTask(__cache_update, IntervalTrigger(seconds=80), identifier='calc_cache')
+    SimpleTask(__cache_update, IntervalTrigger(days=1), identifier='calc_cache')
 ]

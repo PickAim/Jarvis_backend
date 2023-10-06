@@ -8,7 +8,7 @@ from jarvis_calc.calculators.product_analyze import DownturnCalculator, Turnover
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User
-from jorm.support.calculation import GreenTradeZoneCalculateResult
+from jorm.support.calculation import GreenTradeZoneCalculateResult, NicheCharacteristicsCalculateResult
 from jorm.support.types import EconomyConstants
 
 from jarvis_backend.sessions.request_items import SimpleEconomyResultModel, SimpleEconomyRequestModel, \
@@ -19,9 +19,13 @@ from jarvis_backend.support.utils import jorm_to_pydantic
 
 class CalculationController:
     @staticmethod
-    def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsResultModel:
-        result = NicheCharacteristicsCalculator().calculate(niche)
+    def calc_niche_characteristics_model(niche: Niche) -> NicheCharacteristicsResultModel:
+        result = CalculationController.calc_niche_characteristics(niche)
         return jorm_to_pydantic(result, NicheCharacteristicsResultModel)
+
+    @staticmethod
+    def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsCalculateResult:
+        return NicheCharacteristicsCalculator().calculate(niche)
 
     @staticmethod
     def calc_simple_economy(data: SimpleEconomyRequestModel,
@@ -80,10 +84,10 @@ class CalculationController:
         return TurnoverCalculator().calculate(product, from_date)
 
     @staticmethod
-    def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultModel:
-        result = CalculationController.calc_jorm_green_zone(niche, from_date)
+    def calc_green_zone_model(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultModel:
+        result = CalculationController.calc_green_zone(niche, from_date)
         return jorm_to_pydantic(result, GreenTradeZoneCalculateResultModel)
 
     @staticmethod
-    def calc_jorm_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResult:
+    def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResult:
         return GreenTradeZoneCalculator().calculate(niche, from_date)

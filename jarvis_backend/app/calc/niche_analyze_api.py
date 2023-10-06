@@ -40,7 +40,7 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
         session_controller = session_controller_depend(session)
         NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
         niche = _check_ang_get_niche(request_data, session_controller)
-        result = CalculationController.calc_niche_characteristics(niche)
+        result = CalculationController.calc_niche_characteristics_model(niche)
         return result
 
 
@@ -62,5 +62,5 @@ class GreenTradeZoneAPI(CalculationRequestAPI):
         session_controller = session_controller_depend(session)
         GreenTradeZoneAPI.check_and_get_user(session_controller, access_token)
         niche = _check_ang_get_niche(request_data, session_controller)
-        result = CalculationController.calc_green_zone(niche, datetime.utcnow())
+        result = CalculationController.calc_green_zone_model(niche, datetime.utcnow())
         return result

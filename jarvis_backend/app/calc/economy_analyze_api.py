@@ -42,7 +42,7 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
             session_controller.get_warehouse(request_data.target_warehouse_id)
         economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
         # TODO remove me after caching
-        green_zone_result = CalculationController.calc_jorm_green_zone(niche, datetime.utcnow())
+        green_zone_result = CalculationController.calc_green_zone(niche, datetime.utcnow())
         result = CalculationController.calc_simple_economy(request_data, niche,
                                                            target_warehouse, economy_constants, green_zone_result)
         return result
@@ -130,7 +130,7 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
             session_controller.get_warehouse(request_data.target_warehouse_id)
         economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
         # TODO remove me after caching
-        green_zone_result = CalculationController.calc_jorm_green_zone(niche, datetime.utcnow())
+        green_zone_result = CalculationController.calc_green_zone(niche, datetime.utcnow())
         result = CalculationController.calc_transit_economy(request_data, user, niche,
                                                             target_warehouse, economy_constants, green_zone_result)
         return result
