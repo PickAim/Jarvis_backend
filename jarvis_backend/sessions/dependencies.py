@@ -10,6 +10,8 @@ from jorm.market.person import Account, User, UserPrivilege
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
+from jarvis_backend.app.config_holder import LaunchConfigHolder
+from jarvis_backend.app.constants import LAUNCH_CONFIGS
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
@@ -100,6 +102,41 @@ def __fill_warehouses(warehouses: list[Warehouse], warehouse_service: WarehouseS
         warehouse_service.create_warehouse(warehouse, marketplace_id)
 
 
+__DUMMY_USER_EMAIL = "dummy"
+__DUMMY_USER_PHONE = ""
+__DUMMY_USER_PASSWORD = "dummy"
+
+
+def __init_dummy_user(session) -> int:
+    __account_service = JDBServiceFactory.create_account_service(session)
+    __user_service = JDBServiceFactory.create_user_service(session)
+    found_info: tuple[Account, int] = __account_service.find_by_email_or_phone(__DUMMY_USER_EMAIL, __DUMMY_USER_PHONE)
+    if found_info is not None:
+        found_info: tuple[User, int] = __user_service.find_by_account_id(found_info[1])
+        return found_info[1]
+
+    hashed_password = PasswordHasher(
+        CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+    ).hash(__DUMMY_USER_PASSWORD)
+
+    user_account = Account(__DUMMY_USER_EMAIL, hashed_password, __DUMMY_USER_PHONE, is_verified_email=True)
+    __account_service.create(user_account)
+    _, account_id = __account_service.find_by_email(user_account.email)
+    user = User(555, name="DUMMY_USER", privilege=UserPrivilege.BASIC)
+    __user_service.create(user, account_id)
+    found_info: tuple[User, int] = __user_service.find_by_account_id(account_id)
+    return found_info[1]
+
+
+def __init_product_for_dummy_user(session: Session, user_id: int, marketplace_id: int):
+    user_items_service = JDBServiceFactory.create_user_items_service(session)
+    id_to_product = user_items_service.fetch_user_products(user_id, marketplace_id=marketplace_id)
+    if len(id_to_product) != 0:
+        return
+    for product_id in range(605, 615):
+        user_items_service.append_product(user_id, product_id)
+
+
 def __init_default_infrastructure(session):
     marketplace_service = JDBServiceFactory.create_marketplace_service(session)
     default_marketplace = JORMClassesFactory.create_default_marketplace()
@@ -107,14 +144,41 @@ def __init_default_infrastructure(session):
         marketplace_service.create(default_marketplace)
     _, default_marketplace_id = marketplace_service.find_by_name(default_marketplace.name)
     __init_defaults_for_marketplace(session, default_marketplace_id)
-
-
-def init_defaults(session):
-    __init_default_infrastructure(session)
     supported_marketplaces_ids = init_supported_marketplaces(session)
     for marketplace_id in supported_marketplaces_ids:
         __init_defaults_for_marketplace(session, marketplace_id)
-    # init_tech_no_prom_defaults(session)
+    dummy_user_id: int = __init_dummy_user(session)
+    __init_product_for_dummy_user(session, dummy_user_id, default_marketplace_id)
+
+
+def __delete_defaults(session):
+    # marketplace_service = JDBServiceFactory.create_marketplace_service(session)
+    # default_marketplace = JORMClassesFactory.create_default_marketplace()
+    # found = marketplace_service.find_by_name(default_marketplace.name)
+    # if found is not None:
+    #     _, marketplace_id = found
+    #     marketplace_service.
+
+    account_service = JDBServiceFactory.create_account_service(session)
+    found = account_service.find_by_email_or_phone(__DUMMY_USER_EMAIL, __DUMMY_USER_PHONE)
+    if found is None:
+        return
+    _, account_id = found
+    user_service = JDBServiceFactory.create_user_service(session)
+    found = user_service.find_by_account_id(account_id)
+    if found is None:
+        return
+    _, user_id = found
+    user_service.delete(user_id)
+
+
+def init_defaults(session):
+    config_holder = LaunchConfigHolder(LAUNCH_CONFIGS)
+    if config_holder.enabled_dummies:
+        __init_default_infrastructure(session)
+    else:
+        __delete_defaults(session)
+        init_supported_marketplaces(session)
     __init_admin_account(session)
 
 

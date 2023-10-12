@@ -7,4 +7,9 @@ class LaunchConfigHolder:
         config_parser.read(config_path)
         self.port: int = int(config_parser['server']['Port'])
 
-        self.enabled_background: bool = config_parser['background']['enabled'].lower() == 'true'
+        self.enabled_background: bool = self.__is_true(config_parser['background']['enabled'])
+        self.enabled_dummies: bool = self.__is_true(config_parser['dummies']['enabled'])
+
+    @staticmethod
+    def __is_true(str_to_check: str) -> bool:
+        return str_to_check.lower() == 'true'
