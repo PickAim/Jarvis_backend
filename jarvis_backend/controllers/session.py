@@ -2,13 +2,16 @@ import logging
 import re
 
 from jarvis_calc.database_interactors.db_controller import DBController
+from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
 from jorm.server.token.types import TokenType
+from jorm.support.calculation import NicheCharacteristicsCalculateResult, GreenTradeZoneCalculateResult
 from jorm.support.types import EconomyConstants
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
 from jarvis_backend.app.loggers import CONTROLLERS_LOGGER
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
@@ -28,6 +31,28 @@ class JarvisSessionController:
         self.__password_hasher: PasswordHasher = PasswordHasher(
             CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto"))
         self.__jorm_classes_factory: JORMClassesFactory = JORMClassesFactory(self.__db_controller)
+
+    @staticmethod
+    def get_cached_niche_characteristics(niche_id: int, session: Session) -> NicheCharacteristicsCalculateResult | None:
+        return JDBClassesFactory.create_jorm_collector(session).get_niche_characteristics_cache(niche_id)
+
+    @staticmethod
+    def cache_niche_characteristics(niche_id: int,
+                                    niche_characteristics: NicheCharacteristicsCalculateResult,
+                                    session: Session) -> None:
+        changer = JDBClassesFactory.create_jorm_changer(session, 0, 0)
+        changer.update_niche_characteristics_cache(niche_id, niche_characteristics)
+
+    @staticmethod
+    def get_cached_green_trade_zone_result(niche_id: int, session: Session) -> GreenTradeZoneCalculateResult | None:
+        return JDBClassesFactory.create_jorm_collector(session).get_green_zone_cache(niche_id)
+
+    @staticmethod
+    def cache_green_trade_zone(niche_id: int,
+                               green_trade_zone_result: GreenTradeZoneCalculateResult,
+                               session: Session) -> None:
+        changer = JDBClassesFactory.create_jorm_changer(session, 0, 0)
+        changer.update_green_zone_cache(niche_id, green_trade_zone_result)
 
     def get_user(self, any_session_token: str) -> User:
         user = self.__db_controller.get_user_by_id(
@@ -141,6 +166,10 @@ class JarvisSessionController:
 
     def get_niche(self, niche_id: int) -> Niche | None:
         result_niche: Niche = self.__db_controller.get_niche_by_id(niche_id)
+        return result_niche
+
+    def get_niche_without_history(self, niche_id: int) -> Niche | None:
+        result_niche: Niche = self.__db_controller.get_niche_without_history(niche_id)
         return result_niche
 
     def get_relaxed_niche(self, niche_name: str, category_id: int, marketplace_id: int) -> Niche | None:

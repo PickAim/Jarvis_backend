@@ -5,11 +5,13 @@ from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.person import User, UserPrivilege
 from jorm.market.service import RequestInfo, SimpleEconomySaveObject, TransitEconomySaveObject, SimpleEconomyRequest, \
     TransitEconomyRequest
-from jorm.support.calculation import SimpleEconomyResult, TransitEconomyResult
+from jorm.support.calculation import SimpleEconomyResult, TransitEconomyResult, GreenTradeZoneCalculateResult
+from sqlalchemy.orm import Session
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import SavableCalculationRequestAPI
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
+from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.dependencies import request_handler_depend, session_depend, session_controller_depend
 from jarvis_backend.sessions.exceptions import JarvisExceptions
 from jarvis_backend.sessions.request_handler import RequestHandler
@@ -17,6 +19,11 @@ from jarvis_backend.sessions.request_items import SimpleEconomyRequestModel, Sim
     SimpleEconomySaveModel, RequestInfoModel, BasicDeleteRequestModel, TransitEconomyRequestModel, \
     TransitEconomyResultModel, TransitEconomySaveModel
 from jarvis_backend.support.utils import pydantic_to_jorm, transform_info, jorm_to_pydantic
+
+
+def _get_green_trade_zone_caches(niche_id: int, session: Session,
+                                 session_controller: JarvisSessionController) -> GreenTradeZoneCalculateResult | None:
+    return session_controller.get_cached_green_trade_zone_result(niche_id=niche_id, session=session)
 
 
 class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
@@ -35,14 +42,20 @@ class SimpleEconomyAnalyzeAPI(SavableCalculationRequestAPI):
                   session=Depends(session_depend)):
         session_controller = session_controller_depend(session)
         SimpleEconomyAnalyzeAPI.check_and_get_user(session_controller, access_token)
-        niche: Niche = session_controller.get_niche(request_data.niche_id)
+        niche: Niche = session_controller.get_niche_without_history(request_data.niche_id)
         if niche is None:
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
             session_controller.get_warehouse(request_data.target_warehouse_id)
+        if target_warehouse is None:
+            raise JarvisExceptions.INCORRECT_WAREHOUSE
+
+        green_zone_result = _get_green_trade_zone_caches(request_data.niche_id, session, session_controller)
         economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
-        # TODO remove me after caching
-        green_zone_result = CalculationController.calc_green_zone(niche, datetime.utcnow())
+        if green_zone_result is None:
+            niche: Niche = session_controller.get_niche(request_data.niche_id)
+            green_zone_result = CalculationController.calc_green_zone(niche, datetime.utcnow())
+            session_controller.cache_green_trade_zone(request_data.niche_id, green_zone_result, session)
         result = CalculationController.calc_simple_economy(request_data, niche,
                                                            target_warehouse, economy_constants, green_zone_result)
         return result
@@ -128,9 +141,12 @@ class TransitEconomyAnalyzeAPI(SavableCalculationRequestAPI):
             raise JarvisExceptions.INCORRECT_NICHE
         target_warehouse: Warehouse = \
             session_controller.get_warehouse(request_data.target_warehouse_id)
+        green_zone_result = _get_green_trade_zone_caches(request_data.niche_id, session, session_controller)
         economy_constants = session_controller.get_economy_constants(request_data.marketplace_id)
-        # TODO remove me after caching
-        green_zone_result = CalculationController.calc_green_zone(niche, datetime.utcnow())
+        if green_zone_result is None:
+            niche: Niche = session_controller.get_niche(request_data.niche_id)
+            green_zone_result = CalculationController.calc_green_zone(niche, datetime.utcnow())
+            session_controller.cache_green_trade_zone(request_data.niche_id, green_zone_result, session)
         result = CalculationController.calc_transit_economy(request_data, user, niche,
                                                             target_warehouse, economy_constants, green_zone_result)
         return result

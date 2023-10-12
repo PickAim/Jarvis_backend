@@ -11,18 +11,14 @@ from jorm.market.person import User
 from jorm.support.calculation import GreenTradeZoneCalculateResult, NicheCharacteristicsCalculateResult
 from jorm.support.types import EconomyConstants
 
-from jarvis_backend.sessions.request_items import SimpleEconomyResultModel, SimpleEconomyRequestModel, \
-    NicheCharacteristicsResultModel, GreenTradeZoneCalculateResultModel, TransitEconomyRequestModel, \
-    TransitEconomyResultModel
+from jarvis_backend.sessions.request_items import (SimpleEconomyResultModel,
+                                                   SimpleEconomyRequestModel,
+                                                   TransitEconomyRequestModel,
+                                                   TransitEconomyResultModel)
 from jarvis_backend.support.utils import jorm_to_pydantic
 
 
 class CalculationController:
-    @staticmethod
-    def calc_niche_characteristics_model(niche: Niche) -> NicheCharacteristicsResultModel:
-        result = CalculationController.calc_niche_characteristics(niche)
-        return jorm_to_pydantic(result, NicheCharacteristicsResultModel)
-
     @staticmethod
     def calc_niche_characteristics(niche: Niche) -> NicheCharacteristicsCalculateResult:
         return NicheCharacteristicsCalculator().calculate(niche)
@@ -82,11 +78,6 @@ class CalculationController:
     @staticmethod
     def calc_turnover(product: Product, from_date: datetime) -> dict[int, dict[str, float]]:
         return TurnoverCalculator().calculate(product, from_date)
-
-    @staticmethod
-    def calc_green_zone_model(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResultModel:
-        result = CalculationController.calc_green_zone(niche, from_date)
-        return jorm_to_pydantic(result, GreenTradeZoneCalculateResultModel)
 
     @staticmethod
     def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResult:

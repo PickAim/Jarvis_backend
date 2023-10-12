@@ -12,6 +12,7 @@ from jarvis_backend.sessions.dependencies import session_controller_depend, sess
 from jarvis_backend.sessions.exceptions import JarvisExceptions
 from jarvis_backend.sessions.request_items import NicheCharacteristicsResultModel, NicheRequest, \
     GreenTradeZoneCalculateResultModel
+from jarvis_backend.support.utils import jorm_to_pydantic
 
 
 def _check_ang_get_niche(request_data: NicheRequest, session_controller: JarvisSessionController) -> Niche:
@@ -39,9 +40,14 @@ class NicheCharacteristicsAPI(CalculationRequestAPI):
                   session=Depends(session_depend)) -> NicheCharacteristicsResultModel:
         session_controller = session_controller_depend(session)
         NicheCharacteristicsAPI.check_and_get_user(session_controller, access_token)
+        cached_result = session_controller.get_cached_niche_characteristics(niche_id=request_data.niche_id,
+                                                                            session=session)
+        if cached_result is not None:
+            return jorm_to_pydantic(cached_result, NicheCharacteristicsResultModel)
         niche = _check_ang_get_niche(request_data, session_controller)
-        result = CalculationController.calc_niche_characteristics_model(niche)
-        return result
+        result = CalculationController.calc_niche_characteristics(niche)
+        session_controller.cache_niche_characteristics(request_data.niche_id, result, session)
+        return jorm_to_pydantic(result, NicheCharacteristicsResultModel)
 
 
 class GreenTradeZoneAPI(CalculationRequestAPI):
@@ -58,9 +64,14 @@ class GreenTradeZoneAPI(CalculationRequestAPI):
     @router.post('/calculate/', response_model=GreenTradeZoneCalculateResultModel)
     def calculate(request_data: NicheRequest,
                   access_token: str = Depends(access_token_correctness_post_depend),
-                  session=Depends(session_depend)):
+                  session=Depends(session_depend)) -> GreenTradeZoneCalculateResultModel:
         session_controller = session_controller_depend(session)
         GreenTradeZoneAPI.check_and_get_user(session_controller, access_token)
+        cached_result = session_controller.get_cached_green_trade_zone_result(niche_id=request_data.niche_id,
+                                                                              session=session)
+        if cached_result is not None:
+            return jorm_to_pydantic(cached_result, GreenTradeZoneCalculateResultModel)
         niche = _check_ang_get_niche(request_data, session_controller)
-        result = CalculationController.calc_green_zone_model(niche, datetime.utcnow())
-        return result
+        result = CalculationController.calc_green_zone(niche, datetime.utcnow())
+        session_controller.cache_green_trade_zone(request_data.niche_id, result, session)
+        return jorm_to_pydantic(result, GreenTradeZoneCalculateResultModel)
