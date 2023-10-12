@@ -52,12 +52,14 @@ class CacheWorker:
         for niche_id in niche_ids:
             with self.__db_context.session() as session, session.begin():
                 niche_service = JDBServiceFactory.create_niche_service(session)
+                niche_characteristics_service = JDBServiceFactory.create_niche_characteristics_service(session)
+                green_trade_zone_service = JDBServiceFactory.create_green_trade_zone_service(session)
                 start = time()
                 niche = niche_service.fetch_by_id_atomic(niche_id)
                 _LOGGER.info(f'Niche#{niche_id} {niche.name} loaded - {time() - start}s')
-                niche_characteristics_service = JDBServiceFactory.create_niche_characteristics_service(session)
                 start = time()
-                characteristics = CalculationController.calc_niche_characteristics(niche)
-                niche_characteristics_service.upsert(niche_id, characteristics)
-                CalculationController.calc_green_zone(niche, datetime.utcnow())
+                niche_characteristics = CalculationController.calc_niche_characteristics(niche)
+                niche_characteristics_service.upsert(niche_id, niche_characteristics)
+                niche_green_trade_zone = CalculationController.calc_green_zone(niche, datetime.utcnow())
+                green_trade_zone_service.upsert(niche_id, niche_green_trade_zone)
                 _LOGGER.info(f'Niche#{niche_id} {niche.name} cached - {time() - start}s')
