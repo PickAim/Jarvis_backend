@@ -128,9 +128,9 @@ def __init_dummy_user(session) -> int:
     return found_info[1]
 
 
-def __init_product_for_dummy_user(session: Session, user_id: int, marketplace_id: int):
+def __init_product_for_dummy_user(session: Session, user_id: int):
     user_items_service = JDBServiceFactory.create_user_items_service(session)
-    id_to_product = user_items_service.fetch_user_products(user_id, marketplace_id=marketplace_id)
+    id_to_product = user_items_service.fetch_user_products(user_id, marketplace_id=2)  # hardcoded second mp
     if len(id_to_product) != 0:
         return
     for product_id in range(605, 615):
@@ -148,7 +148,7 @@ def __init_default_infrastructure(session):
     for marketplace_id in supported_marketplaces_ids:
         __init_defaults_for_marketplace(session, marketplace_id)
     dummy_user_id: int = __init_dummy_user(session)
-    __init_product_for_dummy_user(session, dummy_user_id, default_marketplace_id)
+    __init_product_for_dummy_user(session, dummy_user_id)
 
 
 def __delete_defaults(session):
