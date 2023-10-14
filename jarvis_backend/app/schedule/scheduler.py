@@ -34,4 +34,4 @@ def __configure_scheduler(scheduler: BackgroundScheduler) -> None:
     scheduler.configure(jobstores=job_stores, executors=executors, job_defaults=job_defaults, timezone=utc)
     for task in SIMPLE_TASKS:
         scheduler.add_job(task.function, task.trigger_interval,
-                          id=task.identifier, next_run_time=datetime.utcnow())
+                          id=task.identifier, next_run_time=datetime.utcnow(), args=task.args)

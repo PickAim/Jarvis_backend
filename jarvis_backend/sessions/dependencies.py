@@ -10,7 +10,7 @@ from jorm.market.person import Account, User, UserPrivilege
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from jarvis_backend.app.config_holder import LaunchConfigHolder
+from jarvis_backend.app.config.launch import LaunchConfigHolder
 from jarvis_backend.app.constants import LAUNCH_CONFIGS
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
@@ -174,7 +174,7 @@ def __delete_defaults(session):
 
 def init_defaults(session):
     config_holder = LaunchConfigHolder(LAUNCH_CONFIGS)
-    if config_holder.enabled_dummies:
+    if config_holder.dummies_enabled:
         __init_default_infrastructure(session)
     else:
         __delete_defaults(session)

@@ -6,7 +6,7 @@ import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from fastapi_main import fastapi_app
-from jarvis_backend.app.config_holder import LaunchConfigHolder
+from jarvis_backend.app.config.launch import LaunchConfigHolder
 from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS
 from jarvis_backend.app.schedule.scheduler import create_scheduler
 from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
@@ -21,12 +21,12 @@ class Server(uvicorn.Server):
         self.scheduler = scheduler
 
     async def serve(self, sockets: Optional[List[socket.socket]] = None) -> None:
-        if self.config_holder.enabled_background:
+        if self.config_holder.background_enabled:
             self.scheduler.start()
         await super().serve()
 
     def handle_exit(self, sig: int, frame) -> None:
-        if self.config_holder.enabled_background:
+        if self.config_holder.background_enabled:
             self.scheduler.shutdown(wait=False)
         return super().handle_exit(sig, frame)
 
