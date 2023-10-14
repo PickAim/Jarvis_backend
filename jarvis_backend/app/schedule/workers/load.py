@@ -5,7 +5,7 @@ from jarvis_db.access.fill.support.constatns import WILDBERRIES_NAME
 from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 
-from jarvis_backend.app.constants import COMMISSIONS_FILE
+from jarvis_backend.app.constants import COMMISSIONS_FILE, WORKER_TO_STATUS
 from jarvis_backend.app.loggers import BACKGROUND_LOGGER, ERROR_LOGGER
 from jarvis_backend.app.schedule.workers.base import DBWorker
 from jarvis_backend.sessions.db_context import DbContext
@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(BACKGROUND_LOGGER + ".load")
 
 
 class LoadWorker(DBWorker):
+    identifier: str = 'load_niche'
+
     def __init__(self, db_context: DbContext, load_skip: int):
         super().__init__(db_context)
         self.__load_skip = load_skip
@@ -24,6 +26,8 @@ class LoadWorker(DBWorker):
         if wb_id == -1:
             return
         for i in range(0, len(lines), self.__load_skip):
+            if not WORKER_TO_STATUS[self.identifier]:
+                return
             splitted: list[str] = lines[i].split(";")
             niche_name = splitted[1]
             self.__try_to_load_niche(niche_name, wb_id)  # todo for now it only WB

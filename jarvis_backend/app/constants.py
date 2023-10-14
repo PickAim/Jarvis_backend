@@ -32,3 +32,5 @@ COMMISSIONS_FILE = get_path(file_dir, 'commission.csv')
 LOG_CONFIGS = get_path(file_dir, 'log.ini')
 LAUNCH_CONFIGS = get_path(file_dir, 'launch.ini')
 BACKGROUND_CONFIGS = get_path(file_dir, 'background.ini')
+
+WORKER_TO_STATUS: dict[str, bool] = {}

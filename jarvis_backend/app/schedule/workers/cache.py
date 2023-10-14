@@ -5,6 +5,7 @@ from time import time
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 
 from jarvis_backend.app.calc.calculation import CalculationController
+from jarvis_backend.app.constants import WORKER_TO_STATUS
 from jarvis_backend.app.loggers import BACKGROUND_LOGGER
 from jarvis_backend.app.schedule.workers.base import DBWorker
 from jarvis_backend.sessions.db_context import DbContext
@@ -13,6 +14,8 @@ _LOGGER = logging.getLogger(BACKGROUND_LOGGER + ".cache")
 
 
 class CacheWorker(DBWorker):
+    identifier: str = 'calc_cache'
+
     def __init__(self, db_context: DbContext):
         super().__init__(db_context)
 
@@ -22,6 +25,8 @@ class CacheWorker(DBWorker):
 
     def __update_niche_calculation_cache(self, niche_ids: list[int]):
         for niche_id in niche_ids:
+            if not WORKER_TO_STATUS[self.identifier]:
+                return
             with self._db_context.session() as session, session.begin():
                 niche_service = JDBServiceFactory.create_niche_service(session)
                 niche_characteristics_service = JDBServiceFactory.create_niche_characteristics_service(session)

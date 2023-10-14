@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from fastapi_main import fastapi_app
 from jarvis_backend.app.config.launch import LaunchConfigHolder
-from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS
+from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS, WORKER_TO_STATUS
 from jarvis_backend.app.schedule.scheduler import create_scheduler
 from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
 
@@ -25,8 +25,14 @@ class Server(uvicorn.Server):
             self.scheduler.start()
         await super().serve()
 
+    @staticmethod
+    def kill_all_workers():
+        for identifier in WORKER_TO_STATUS:
+            WORKER_TO_STATUS[identifier] = False
+
     def handle_exit(self, sig: int, frame) -> None:
         if self.config_holder.background_enabled:
+            self.kill_all_workers()
             self.scheduler.shutdown(wait=False)
         return super().handle_exit(sig, frame)
 
