@@ -91,7 +91,6 @@ def update_niche(jorm_changer: JORMChanger, niche_id: int, category_id: int, mar
 
 
 def main_load():
-    niche_to_category: dict[str, str] = {}
     db_context = db_context_depend()
     with db_context.session() as session, session.begin():
         init_defaults(session)
@@ -103,7 +102,6 @@ def main_load():
         step = 10
         for i in range(skip, len(lines), step):
             splitted: list[str] = lines[i].split(";")
-            niche_to_category[splitted[1]] = splitted[0]
             with db_context.session() as session, session.begin():
                 jorm_changer = JDBClassesFactory.create_jorm_changer(session, marketplace_id=2, user_id=0)
                 try:

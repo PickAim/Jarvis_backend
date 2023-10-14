@@ -27,6 +27,8 @@ def get_path(dir_to_search: str, file_to_search: str):
         return os.path.join(dir_to_search, file_to_search)
 
 
+COMMISSIONS_FILE = get_path(file_dir, 'commission.csv')
+
 LOG_CONFIGS = get_path(file_dir, 'log.ini')
 LAUNCH_CONFIGS = get_path(file_dir, 'launch.ini')
 BACKGROUND_CONFIGS = get_path(file_dir, 'background.ini')
