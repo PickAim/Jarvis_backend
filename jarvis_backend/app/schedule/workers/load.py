@@ -1,7 +1,7 @@
 import logging
 from time import time
 
-from jarvis_db.access.fill.support.constatns import WILDBERRIES_NAME
+from jarvis_db.access.fill.support.constatns import WILDBERRIES_NAME, NICHE_TO_CATEGORY
 from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 
@@ -30,6 +30,9 @@ class LoadWorker(DBWorker):
                 return
             splitted: list[str] = lines[i].split(";")
             niche_name = splitted[1]
+            if self.__should_skip_niche(niche_name, wb_id, NICHE_TO_CATEGORY):
+                _LOGGER.info(f"Niche \"{niche_name}\" skipped.")
+                continue
             self.__try_to_load_niche(niche_name, wb_id)  # todo for now it only WB
 
     def _get_wb_id(self) -> int:
@@ -55,3 +58,17 @@ class LoadWorker(DBWorker):
             except Exception as ex:
                 error_logger = logging.getLogger(ERROR_LOGGER)
                 error_logger.error(f"Niche \"{niche_name}\"not loaded, cause:\n{str(ex)}")
+
+    def __should_skip_niche(self, niche_name: str, marketplace_id: int, niche_to_category: dict[str, str]):
+        if niche_name not in niche_to_category:
+            return False
+        category_name = niche_to_category[niche_name]
+        with self._db_context.session() as session, session.begin():
+            category_service = JDBServiceFactory.create_category_service(session)
+            found = category_service.find_by_name(category_name, marketplace_id=marketplace_id)
+            if found is None:
+                return False
+            _, category_id = found
+            niche_service = JDBServiceFactory.create_niche_service(session)
+            found = niche_service.find_by_name(niche_name, category_id)
+            return found is not None

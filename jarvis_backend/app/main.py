@@ -3,7 +3,7 @@ import socket
 from typing import List, Optional
 
 import uvicorn
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from fastapi_main import fastapi_app
 from jarvis_backend.app.config.launch import LaunchConfigHolder
@@ -13,7 +13,7 @@ from jarvis_backend.sessions.dependencies import db_context_depend, init_default
 
 
 class Server(uvicorn.Server):
-    def __init__(self, scheduler: BackgroundScheduler, launch_config_path: str):
+    def __init__(self, scheduler: AsyncIOScheduler, launch_config_path: str):
         self.config_holder = LaunchConfigHolder(launch_config_path)
         config = uvicorn.Config(app=fastapi_app, port=self.config_holder.port,
                                 log_config=LOG_CONFIGS, loop="asyncio")
