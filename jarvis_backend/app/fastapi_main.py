@@ -5,8 +5,6 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from jarvis_factory.factories.jdb import JDBClassesFactory
-from jarvis_factory.support.jdb.services import JDBServiceFactory
 from jorm.jarvis.db_update import JORMChanger
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -16,7 +14,6 @@ from jarvis_backend.app.loggers import ERROR_LOGGER
 from jarvis_backend.app.routers import routers
 from jarvis_backend.app.tags import tags_metadata, OTHER_TAG
 from jarvis_backend.controllers.cookie import CookieHandler
-from jarvis_backend.sessions.dependencies import db_context_depend
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
 
@@ -88,27 +85,3 @@ def load_niche(jorm_changer: JORMChanger, niche_name: str, marketplace_id: int):
 
 def update_niche(jorm_changer: JORMChanger, niche_id: int, category_id: int, marketplace_id: int):
     return jorm_changer.update_niche(niche_id, category_id, marketplace_id)
-
-
-def main_update():
-    db_context = db_context_depend()
-    marketplace_id = 2
-    with db_context.session() as session, session.begin():
-        category_service = JDBServiceFactory.create_category_service(session)
-        id_to_category = category_service.find_all_in_marketplace(marketplace_id)
-    category_to_niche = {}
-    with db_context.session() as session, session.begin():
-        niche_service = JDBServiceFactory.create_niche_service(session)
-        for category_id in id_to_category:
-            category_to_niche[category_id] = list(niche_service.find_all_in_category(category_id).keys())
-    start_from = -1
-    for category_id in category_to_niche:
-        for niche_id in category_to_niche[category_id]:
-            if niche_id >= start_from:
-                with db_context.session() as session, session.begin():
-                    try:
-                        jorm_changer = JDBClassesFactory.create_jorm_changer(session, marketplace_id, user_id=0)
-                        update_niche(jorm_changer, niche_id, category_id, marketplace_id)
-                        print(f"niche #{niche_id} updated")
-                    except Exception as ex:
-                        print(f"niche #{niche_id} NOT updated, cause: {str(ex)}")
