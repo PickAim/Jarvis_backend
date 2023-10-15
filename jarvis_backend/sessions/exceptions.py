@@ -39,6 +39,7 @@ class JarvisExceptionsCode:
     INCORRECT_NICHE = 4010
     INCORRECT_CATEGORY = 4020
     INCORRECT_MARKETPLACE = 4030
+    INCORRECT_WAREHOUSE = 4040
 
     # session exceptions
 
@@ -81,3 +82,6 @@ class JarvisExceptions:
 
     INCORRECT_MARKETPLACE: HTTPException = \
         create_exception_with_code(JarvisExceptionsCode.INCORRECT_MARKETPLACE, "Incorrect marketplace requested")
+
+    INCORRECT_WAREHOUSE: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_WAREHOUSE, "Incorrect warehouse requested")

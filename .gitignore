@@ -6,7 +6,7 @@
 !requirements.txt
 *.json
 *.db
-*.log
+*.log*
 *.dot
 *.png
 *.coverage
