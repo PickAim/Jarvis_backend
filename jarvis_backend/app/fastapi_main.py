@@ -16,7 +16,7 @@ from jarvis_backend.app.loggers import ERROR_LOGGER
 from jarvis_backend.app.routers import routers
 from jarvis_backend.app.tags import tags_metadata, OTHER_TAG
 from jarvis_backend.controllers.cookie import CookieHandler
-from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
+from jarvis_backend.sessions.dependencies import db_context_depend
 from jarvis_backend.sessions.exceptions import JARVIS_EXCEPTION_KEY, JARVIS_DESCRIPTION_KEY, JarvisExceptionsCode, \
     JarvisExceptions
 
@@ -88,28 +88,6 @@ def load_niche(jorm_changer: JORMChanger, niche_name: str, marketplace_id: int):
 
 def update_niche(jorm_changer: JORMChanger, niche_id: int, category_id: int, marketplace_id: int):
     return jorm_changer.update_niche(niche_id, category_id, marketplace_id)
-
-
-def main_load():
-    db_context = db_context_depend()
-    with db_context.session() as session, session.begin():
-        init_defaults(session)
-    with open('../commission.csv', "r", encoding='cp1251') as file:
-        lines: list[str] = file.readlines()
-        print()
-        print(f'# | Niche name | status | length')
-        skip = 133
-        step = 10
-        for i in range(skip, len(lines), step):
-            splitted: list[str] = lines[i].split(";")
-            with db_context.session() as session, session.begin():
-                jorm_changer = JDBClassesFactory.create_jorm_changer(session, marketplace_id=2, user_id=0)
-                try:
-                    print(f"loading {splitted[1]}")
-                    niche = load_niche(jorm_changer, splitted[1], 2)
-                    print(f'{i} | {niche.name}| loaded | {len(niche.products)}')
-                except Exception as ex:
-                    print(f'{i} | {splitted[1]}| NOT LOADED | ----- {ex}')
 
 
 def main_update():

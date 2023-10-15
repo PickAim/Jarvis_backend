@@ -5,7 +5,7 @@ from jarvis_db.access.fill.support.constatns import WILDBERRIES_NAME, NICHE_TO_C
 from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 
-from jarvis_backend.app.constants import COMMISSIONS_FILE, WORKER_TO_STATUS
+from jarvis_backend.app.constants import COMMISSIONS_FILE
 from jarvis_backend.app.loggers import BACKGROUND_LOGGER, ERROR_LOGGER
 from jarvis_backend.app.schedule.workers.base import DBWorker
 from jarvis_backend.sessions.db_context import DbContext
@@ -14,11 +14,13 @@ _LOGGER = logging.getLogger(BACKGROUND_LOGGER + ".load")
 
 
 class LoadWorker(DBWorker):
-    identifier: str = 'load_niche'
-
     def __init__(self, db_context: DbContext, load_skip: int):
         super().__init__(db_context)
         self.__load_skip = load_skip
+
+    @classmethod
+    def get_identifier(cls) -> str:
+        return 'load_niche'
 
     def load_niches(self):
         lines = self.__get_file_lines()
@@ -26,7 +28,7 @@ class LoadWorker(DBWorker):
         if wb_id == -1:
             return
         for i in range(0, len(lines), self.__load_skip):
-            if not WORKER_TO_STATUS[self.identifier]:
+            if not self.is_alive():
                 return
             splitted: list[str] = lines[i].split(";")
             niche_name = splitted[1]
@@ -54,10 +56,12 @@ class LoadWorker(DBWorker):
             try:
                 start = time()
                 niche = jorm_changer.load_new_niche(niche_name, marketplace_id)
+                if niche is None:
+                    raise Exception("niche is None")
                 _LOGGER.info(f"Niche \"{niche_name}\" loaded with {len(niche.products)} products - {time() - start}s.")
-            except Exception as ex:
+            except Exception:
                 error_logger = logging.getLogger(ERROR_LOGGER)
-                error_logger.error(f"Niche \"{niche_name}\"not loaded, cause:\n{str(ex)}")
+                error_logger.exception(f"Niche \"{niche_name}\"not loaded, cause:\n", stacklevel=5, exc_info=True)
 
     def __should_skip_niche(self, niche_name: str, marketplace_id: int, niche_to_category: dict[str, str]):
         if niche_name not in niche_to_category:

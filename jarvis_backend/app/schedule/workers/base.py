@@ -1,16 +1,31 @@
 import re
+from abc import ABC, abstractmethod
 
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 
+from jarvis_backend.app.constants import WORKER_TO_STATUS
 from jarvis_backend.sessions.db_context import DbContext
 
 
-class DBWorker:
+class Worker(ABC):
+    def is_alive(self) -> bool:
+        identifier = self.get_identifier()
+        if identifier not in WORKER_TO_STATUS:
+            return False
+        return WORKER_TO_STATUS[identifier]
+
+    @classmethod
+    @abstractmethod
+    def get_identifier(cls) -> str:
+        pass
+
+
+class DBWorker(Worker, ABC):
     def __init__(self, db_context: DbContext):
         self._db_context = db_context
 
     @staticmethod
-    def __is_default_object(object_name: str) -> bool:
+    def _is_default_object(object_name: str) -> bool:
         return re.search('default', object_name, re.IGNORECASE) is not None
 
     def _get_all_niche_ids(self):
@@ -28,7 +43,7 @@ class DBWorker:
             all_marketplaces = marketplace_service.find_all()
             return [marketplace_id
                     for marketplace_id in all_marketplaces
-                    if not self.__is_default_object(all_marketplaces[marketplace_id].name)]
+                    if not self._is_default_object(all_marketplaces[marketplace_id].name)]
 
     def _get_category_ids(self, marketplace_id: int) -> list[int]:
         with self._db_context.session() as session, session.begin():
