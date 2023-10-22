@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Body
 from starlette.responses import JSONResponse
 
 from jarvis_backend.app.constants import ACCESS_TOKEN_USAGE_URL_PART
@@ -25,7 +27,7 @@ class SessionAPI(RequestAPI):
 
     @staticmethod
     @router.post('/reg/')
-    def registrate_user(request_data: RegistrationModel, session=Depends(session_depend)):
+    def registrate_user(request_data: Annotated[RegistrationModel, Body(embed=True)], session=Depends(session_depend)):
         session_controller = session_controller_depend(session)
         session_controller.register_user(request_data.email, request_data.password, request_data.phone)
 
