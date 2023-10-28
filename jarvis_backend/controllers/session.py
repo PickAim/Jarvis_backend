@@ -91,6 +91,8 @@ class JarvisSessionController:
         self.__db_controller.delete_tokens_for_user(user_id, imprint_token)
 
     def authenticate_user(self, login: str, password: str, imprint_token: str) -> tuple[str, str, str]:
+        if "@" not in login:
+            login = InputPreparer().prepare_phone_number(login)
         account: Account = self.__db_controller.get_account(login, login)
         if account is not None and self.__password_hasher.verify(password, account.hashed_password):
             user: User = self.__db_controller.get_user_by_account(account)
