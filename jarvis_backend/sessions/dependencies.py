@@ -122,7 +122,7 @@ def __init_dummy_user(session) -> int:
     user_account = Account(__DUMMY_USER_EMAIL, hashed_password, __DUMMY_USER_PHONE, is_verified_email=True)
     __account_service.create(user_account)
     _, account_id = __account_service.find_by_email(user_account.email)
-    user = User(555, name="DUMMY_USER", privilege=UserPrivilege.BASIC)
+    user = User(555, name="DUMMY_USER", privilege=UserPrivilege.BASIC, profit_tax=0.06)
     __user_service.create(user, account_id)
     found_info: tuple[User, int] = __user_service.find_by_account_id(account_id)
     return found_info[1]
