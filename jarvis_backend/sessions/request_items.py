@@ -237,8 +237,17 @@ class ProductRequestModelWithMarketplaceId(BasicProductRequestModel, BasicMarket
     pass
 
 
+class DownturnInfoModel(BaseModel):
+    leftover: int
+    days: int
+
+
+class SingleDownturnResult(BaseModel):
+    downturn_info: dict[int, dict[str, DownturnInfoModel]]
+
+
 class ProductDownturnResultModel(BaseModel):
-    result_dict: dict[int, dict[int, dict[str, int]]]
+    result_dict: dict[int, SingleDownturnResult]
 
 
 class ProductTurnoverResultModel(BaseModel):
