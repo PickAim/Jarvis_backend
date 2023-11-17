@@ -586,24 +586,22 @@ class IntegrationTest(BasicServerTest):
                                                                              self.access_token,
                                                                              self.session)
         self.assertIsNotNone(calculation_result)
-        expected_result = {
-            605: {1: {'second': 2}},
-            614: {1: {'second': 2}},
-            681: {1: {'second': 2}}
-        }
-        self.assertEqual(expected_result, calculation_result.result_dict)
+        expected_result = ("{605: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel(leftover=14, "
+                           "days=2)}}), 614: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel("
+                           "leftover=14, days=2)}}), 681: SingleDownturnResult(downturn_info={1: {'second': "
+                           "DownturnInfoModel(leftover=13, days=2)}})}")  # TODO make it normal...
+        self.assertEqual(expected_result, str(calculation_result.result_dict))
 
     def test_product_downturn_request(self):
         calculation_result = ProductDownturnAPI.calculate(access_token=self.access_token,
                                                           session=self.session)
         self.assertIsNotNone(calculation_result)
         self.assertTrue(2 in calculation_result)
-        expected_result = {
-            605: {1: {'second': 2}},
-            614: {1: {'second': 2}},
-            681: {1: {'second': 2}}
-        }
-        self.assertEqual(expected_result, calculation_result[2].result_dict)
+        expected_result = ("{605: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel(leftover=14, "
+                           "days=2)}}), 614: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel("
+                           "leftover=14, days=2)}}), 681: SingleDownturnResult(downturn_info={1: {'second': "
+                           "DownturnInfoModel(leftover=13, days=2)}})}")
+        self.assertEqual(expected_result, str(calculation_result[2].result_dict))
 
     def test_all_in_marketplace_product_turnover_request(self):
         request_data = self.create_product_with_mp_id_request_object(2)
@@ -637,12 +635,11 @@ class IntegrationTest(BasicServerTest):
                                                                                  self.session)
         self.assertIsNotNone(calculation_result)
         downturn_result = calculation_result.downturn
-        expected_downturns = {
-            605: {1: {'second': 2}},
-            614: {1: {'second': 2}},
-            681: {1: {'second': 2}}
-        }
-        self.assertEqual(expected_downturns, downturn_result.result_dict)
+        expected_downturns = ("result_dict={605: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel("
+                              "leftover=14, days=2)}}), 614: SingleDownturnResult(downturn_info={1: {'second': "
+                              "DownturnInfoModel(leftover=14, days=2)}}), 681: SingleDownturnResult(downturn_info={1: "
+                              "{'second': DownturnInfoModel(leftover=13, days=2)}})}")  # TODO make it normal...
+        self.assertEqual(expected_downturns, str(downturn_result))
         turnover_result = calculation_result.turnover
         expected_turnovers = {
             605: {1: {'second': 99.0}},
@@ -657,12 +654,11 @@ class IntegrationTest(BasicServerTest):
         self.assertIsNotNone(calculation_result)
         self.assertTrue(2 in calculation_result)
         downturn_result = calculation_result[2].downturn
-        expected_downturns = {
-            605: {1: {'second': 2}},
-            614: {1: {'second': 2}},
-            681: {1: {'second': 2}}
-        }
-        self.assertEqual(expected_downturns, downturn_result.result_dict)
+        expected_downturns = ("{605: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel(leftover=14, "
+                              "days=2)}}), 614: SingleDownturnResult(downturn_info={1: {'second': DownturnInfoModel("
+                              "leftover=14, days=2)}}), 681: SingleDownturnResult(downturn_info={1: {'second': "
+                              "DownturnInfoModel(leftover=13, days=2)}})}")
+        self.assertEqual(expected_downturns, str(downturn_result.result_dict))
         turnover_result = calculation_result[2].turnover
         expected_turnovers = {
             605: {1: {'second': 99.0}},

@@ -14,7 +14,7 @@ from jorm.support.types import EconomyConstants
 from jarvis_backend.sessions.request_items import (SimpleEconomyResultModel,
                                                    SimpleEconomyRequestModel,
                                                    TransitEconomyRequestModel,
-                                                   TransitEconomyResultModel)
+                                                   TransitEconomyResultModel, SingleDownturnResult)
 from jarvis_backend.support.utils import jorm_to_pydantic
 
 
@@ -72,8 +72,9 @@ class CalculationController:
         return user_result, recommended_result
 
     @staticmethod
-    def calc_downturn_days(product: Product, from_date: datetime) -> dict[int, dict[str, int]]:
-        return DownturnCalculator().calculate(product, from_date)
+    def calc_downturn_days(product: Product, from_date: datetime) -> SingleDownturnResult:
+        downturn_result = DownturnCalculator().calculate(product, from_date)
+        return jorm_to_pydantic({"downturn_info": downturn_result}, SingleDownturnResult)
 
     @staticmethod
     def calc_turnover(product: Product, from_date: datetime) -> dict[int, dict[str, float]]:

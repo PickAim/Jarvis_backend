@@ -1,7 +1,7 @@
 import logging
 from time import time
 
-from jarvis_db.access.fill.support.constatns import WILDBERRIES_NAME, NICHE_TO_CATEGORY
+from jarvis_db.access.fill.support.constants import NICHE_TO_CATEGORY, WILDBERRIES_NAME
 from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.support.jdb.services import JDBServiceFactory
 

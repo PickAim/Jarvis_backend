@@ -1,5 +1,5 @@
 from fastapi import Depends
-from jarvis_db.services.market.infrastructure.warehouse_service import WarehouseService
+from jarvis_db.market.infrastructure.warehouse.warehouse_service import WarehouseService
 from jarvis_factory.factories.jcalc import JCalcClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
 from jarvis_factory.startup import init_supported_marketplaces
@@ -72,7 +72,7 @@ def __init_defaults_for_marketplace(session: Session, marketplace_id: int):
         _, default_niche_id = niche_service.find_by_name(default_niche.name, category_id)
         for product in default_niche.products:
             if product.global_id in filtered_product_ids:
-                product_service.create_product(product, default_niche_id)
+                product_service.create_product(product, [default_niche_id])
 
 
 def __check_warehouse_filled(products: list[Product], warehouse_service: WarehouseService, marketplace_id: int):
@@ -93,7 +93,7 @@ def __create_warehouse_with_global_id(global_id: int) -> Warehouse:
         f"unfilled{global_id}",
         global_id,
         HandlerType.MARKETPLACE,
-        Address()
+        Address("", "")
     )
 
 

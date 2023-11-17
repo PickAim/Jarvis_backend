@@ -20,8 +20,10 @@ def pydantic_to_jorm(data_class: Type[T], base_model_object: BaseModel) -> T:
 
 
 def jorm_to_pydantic(obj, base_model_class: Type[T]) -> T:
-    copy = dataclasses.replace(obj)
-    object_dict = _get_object_as_dict(copy)
+    to_convert = obj
+    if dataclasses.is_dataclass(obj):
+        to_convert = dataclasses.replace(obj)
+    object_dict = _get_object_as_dict(to_convert)
     return base_model_class.model_validate(object_dict)
 
 
@@ -36,8 +38,12 @@ def _tuple_dumps(tuple_obj: tuple) -> tuple:
     return tuple((_get_object_as_dict(item)) for item in tuple_obj)
 
 
-def _list_dumps(tuple_obj: list) -> list:
-    return [(_get_object_as_dict(item)) for item in tuple_obj]
+def _list_dumps(list_obj: list) -> list:
+    return [(_get_object_as_dict(item)) for item in list_obj]
+
+
+def _dict_dumps(dict_obj: dict) -> dict:
+    return {key: _get_object_as_dict(dict_obj[key]) for key in dict_obj}
 
 
 def _datetime_dumps(date: datetime) -> str:
@@ -47,6 +53,7 @@ def _datetime_dumps(date: datetime) -> str:
 SPECIAL_DUMPS: dict[Type[T], Callable[[T], any]] = {
     tuple: _tuple_dumps,
     list: _list_dumps,
+    dict: _dict_dumps,
     datetime: _datetime_dumps
 }
 
