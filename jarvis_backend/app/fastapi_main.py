@@ -23,6 +23,8 @@ REQUEST_TIMEOUT_ERROR = 300
 
 origins = [
     "http://localhost:8300",
+    "https://mpjarvis.ru",
+    "http://mpjarvis.ru"
     "*"
 ]
 
@@ -30,7 +32,7 @@ fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
     allow_headers=["*"],
 )
 
