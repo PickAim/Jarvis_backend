@@ -1,13 +1,14 @@
 import asyncio
+import os
 import socket
 from typing import List, Optional
 
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from fastapi_main import fastapi_app
 from jarvis_backend.app.config.launch import LaunchConfigHolder
 from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS, WORKER_TO_STATUS
+from jarvis_backend.app.fastapi_main import fastapi_app
 from jarvis_backend.app.schedule.scheduler import create_scheduler
 from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
 
@@ -46,6 +47,7 @@ class Server(uvicorn.Server):
 
 async def main():
     db_context = db_context_depend()
+    os.mkdir("logs")
     with db_context.session() as session, session.begin():
         init_defaults(session)
     scheduler = create_scheduler()

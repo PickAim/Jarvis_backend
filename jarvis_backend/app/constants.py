@@ -14,7 +14,7 @@ __trace_getter = getattr(sys, 'gettrace', None)
 if __trace_getter is not None and __trace_getter():
     IS_DEBUG = True
 
-splitted: list[str] = os.getcwd().split(os.sep)[:-1]
+splitted: list[str] = os.getcwd().split(os.sep)
 splitted[0] += os.sep
 file_dir: str = os.path.join(*splitted)
 
@@ -28,7 +28,6 @@ def get_path(dir_to_search: str, file_to_search: str):
 
 
 COMMISSIONS_FILE = get_path(file_dir, 'commission.csv')
-
 LOG_CONFIGS = get_path(file_dir, 'log.ini')
 LAUNCH_CONFIGS = get_path(file_dir, 'launch.ini')
 BACKGROUND_CONFIGS = get_path(file_dir, 'background.ini')
