@@ -15,8 +15,15 @@ from jarvis_backend.sessions.dependencies import db_context_depend, init_default
 class Server(uvicorn.Server):
     def __init__(self, scheduler: AsyncIOScheduler, launch_config_path: str):
         self.config_holder = LaunchConfigHolder(launch_config_path)
-        config = uvicorn.Config(app=fastapi_app, port=self.config_holder.port,
-                                log_config=LOG_CONFIGS, loop="asyncio")
+        config = uvicorn.Config(
+            app=fastapi_app,
+            port=self.config_holder.port,
+            host="0.0.0.0",
+            log_config=LOG_CONFIGS,
+            loop="asyncio",
+            ssl_keyfile="certificate.key",
+            ssl_certfile="certificate.crt",
+        )
         super().__init__(config)
         self.scheduler = scheduler
 
