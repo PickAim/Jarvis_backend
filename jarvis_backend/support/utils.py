@@ -10,7 +10,7 @@ from jorm.support.utils import intersection
 from pydantic import BaseModel
 
 from jarvis_backend.controllers.session import JarvisSessionController
-from jarvis_backend.sessions.request_items import RequestInfoModel, ProductRequestModelWithMarketplaceId
+from jarvis_backend.sessions.request_items import RequestInfoModel
 
 T = TypeVar("T")
 
@@ -79,11 +79,11 @@ def transform_info(info: RequestInfoModel) -> JRequestInfo:
     return JRequestInfo(info.id, request_time, info.name)
 
 
-def extract_filtered_user_products_with_history(request_data: ProductRequestModelWithMarketplaceId,
-                                                user_id: int, session_controller: JarvisSessionController) \
-        -> dict[int, Product]:
-    ids_to_filter = request_data.product_ids if request_data is not None else []
-    user_products = session_controller.get_products_by_user_atomic(user_id, request_data.marketplace_id)
+def extract_filtered_user_products_with_history(marketplace_id: int,
+                                                user_id: int, session_controller: JarvisSessionController,
+                                                product_ids: list[int] = None) -> dict[int, Product]:
+    ids_to_filter = product_ids if product_ids is not None else []
+    user_products = session_controller.get_products_by_user_atomic(user_id, marketplace_id)
     filtered_ids = list(user_products.keys())
     if len(ids_to_filter) > 0:
         filtered_ids = intersection(filtered_ids, ids_to_filter)

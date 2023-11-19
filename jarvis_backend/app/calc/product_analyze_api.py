@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from fastapi import Depends
+from jarvis_factory.factories.jdu import JDUClassesFactory
 from jorm.market.person import User, UserPrivilege
+from jorm.server.providers.providers import UserMarketDataProvider
 
 from jarvis_backend.app.calc.calculation import CalculationController
 from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAPI
@@ -10,7 +12,7 @@ from jarvis_backend.app.tokens.dependencies import session_controller_depend, ac
 from jarvis_backend.sessions.dependencies import session_depend
 from jarvis_backend.sessions.request_items import ProductDownturnResultModel, ProductTurnoverResultModel, \
     AllProductCalculateResultObject, ProductRequestModelWithMarketplaceId, \
-    GetAllMarketplacesModel
+    GetAllMarketplacesModel, ProductKeywordsRequestModel
 from jarvis_backend.support.utils import extract_filtered_user_products_with_history
 
 
@@ -31,8 +33,10 @@ class ProductDownturnAPI(CalculationRequestAPI):
                                      session=Depends(session_depend)) -> ProductDownturnResultModel:
         session_controller = session_controller_depend(session)
         user: User = ProductDownturnAPI.check_and_get_user(session_controller, access_token)
-        filtered_user_products = extract_filtered_user_products_with_history(request_data, user.user_id,
-                                                                             session_controller)
+        marketplace_id = request_data.marketplace_id
+        product_ids = request_data.product_ids
+        filtered_user_products = extract_filtered_user_products_with_history(marketplace_id, user.user_id,
+                                                                             session_controller, product_ids)
         return ProductDownturnResultModel.model_validate({"result_dict": {
             product_id: CalculationController.calc_downturn_days(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
@@ -73,8 +77,10 @@ class ProductTurnoverAPI(CalculationRequestAPI):
                                      session=Depends(session_depend)) -> ProductTurnoverResultModel:
         session_controller = session_controller_depend(session)
         user: User = ProductTurnoverAPI.check_and_get_user(session_controller, access_token)
-        filtered_user_products = extract_filtered_user_products_with_history(request_data,
-                                                                             user.user_id, session_controller)
+        marketplace_id = request_data.marketplace_id
+        product_ids = request_data.product_ids
+        filtered_user_products = extract_filtered_user_products_with_history(marketplace_id, user.user_id,
+                                                                             session_controller, product_ids)
         return ProductTurnoverResultModel.model_validate({"result_dict": {
             product_id: CalculationController.calc_turnover(filtered_user_products[product_id], datetime.utcnow())
             for product_id in filtered_user_products
@@ -135,3 +141,66 @@ class AllProductCalculateAPI(CalculationRequestAPI):
             )
             for marketplace_id in id_to_marketplace
         }
+
+
+class NearestKeywordsAPI(CalculationRequestAPI):
+    NEAREST_KEYWORDS_URL_PART = "/nearest-keywords"
+
+    router = CalculationRequestAPI._router()
+    router.prefix += NEAREST_KEYWORDS_URL_PART
+
+    @classmethod
+    def get_minimum_privilege(cls) -> UserPrivilege:
+        return UserPrivilege.BASIC
+
+    @staticmethod
+    @router.post('/calculate/', response_model=list[str])
+    def calculate(request_data: ProductKeywordsRequestModel,
+                  access_token: str = Depends(access_token_correctness_post_depend),
+                  session=Depends(session_depend)) -> list[str]:
+        session_controller = session_controller_depend(session)
+        user = AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
+        user_market_data_provider = JDUClassesFactory.create_user_market_data_provider(session,
+                                                                                       request_data.marketplace_id,
+                                                                                       user.user_id)
+        marketplace_id = request_data.marketplace_id
+        product_ids = [request_data.product_id]
+        filtered_user_products = extract_filtered_user_products_with_history(marketplace_id, user.user_id,
+                                                                             session_controller, product_ids)
+        product = filtered_user_products[request_data.product_id]
+        selected_words = [product.name, product.niche_name, product.category_name]
+        selected_words = NearestKeywordsAPI.split_to_words(words=selected_words)
+        selected_word_to_words = NearestKeywordsAPI.get_nearest_keywords(selected_words,
+                                                                         user_market_data_provider)
+        sorted_words = []
+        for word in selected_words:
+            sorted_words.extend(CalculationController.sort_keywords(word, selected_word_to_words[word]))
+        return sorted_words
+
+    @staticmethod
+    def get_nearest_keywords(words: list[str],
+                             user_market_data_provider: UserMarketDataProvider) -> dict[str, set[str]]:
+        result: dict[str, set[str]] = {}
+        check_set = set()
+        for word in words:
+            result[word] = set()
+            try:
+                nearest_words = user_market_data_provider.get_nearest_keywords(word)
+            except Exception:
+                continue
+            for nearest_word in nearest_words:
+                if nearest_word not in check_set:
+                    result[word].add(nearest_word)
+                    check_set.add(nearest_word)
+        return result
+
+    @staticmethod
+    def split_to_words(words: list[str]) -> list[str]:
+        result: list[str] = []
+        for possible_word in words:
+            for word in possible_word.split(" "):
+                if word == "":
+                    continue
+                if word not in result:
+                    result.append(word)
+        return result

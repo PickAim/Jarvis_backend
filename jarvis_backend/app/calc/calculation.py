@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Iterable
 
 from jarvis_calc.calculators.economy_analyze import SimpleEconomyCalculateData, SimpleEconomyCalculator, \
     TransitEconomyCalculateData, TransitEconomyCalculator
 from jarvis_calc.calculators.niche_analyze import NicheCharacteristicsCalculator, \
     GreenTradeZoneCalculator
-from jarvis_calc.calculators.product_analyze import DownturnCalculator, TurnoverCalculator
+from jarvis_calc.calculators.product_analyze import DownturnCalculator, TurnoverCalculator, KeywordsCalculator
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User
@@ -83,3 +84,7 @@ class CalculationController:
     @staticmethod
     def calc_green_zone(niche: Niche, from_date: datetime) -> GreenTradeZoneCalculateResult:
         return GreenTradeZoneCalculator().calculate(niche, from_date)
+
+    @staticmethod
+    def sort_keywords(main_sentence: str, words: Iterable[str]) -> list[str]:
+        return KeywordsCalculator().calculate(main_sentence, words)

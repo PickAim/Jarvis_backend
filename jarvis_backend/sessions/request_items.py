@@ -233,6 +233,10 @@ class BasicProductRequestModel(BaseModel):
     product_ids: list[int] = []
 
 
+class ProductKeywordsRequestModel(BasicMarketplaceInfoModel):
+    product_id: int
+
+
 class ProductRequestModelWithMarketplaceId(BasicProductRequestModel, BasicMarketplaceInfoModel):
     pass
 
