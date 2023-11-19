@@ -237,6 +237,10 @@ class ProductKeywordsRequestModel(BasicMarketplaceInfoModel):
     product_id: int
 
 
+class KeywordsRequestModel(BasicMarketplaceInfoModel):
+    sentence: str
+
+
 class ProductRequestModelWithMarketplaceId(BasicProductRequestModel, BasicMarketplaceInfoModel):
     pass
 

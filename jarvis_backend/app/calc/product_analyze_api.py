@@ -12,7 +12,7 @@ from jarvis_backend.app.tokens.dependencies import session_controller_depend, ac
 from jarvis_backend.sessions.dependencies import session_depend
 from jarvis_backend.sessions.request_items import ProductDownturnResultModel, ProductTurnoverResultModel, \
     AllProductCalculateResultObject, ProductRequestModelWithMarketplaceId, \
-    GetAllMarketplacesModel, ProductKeywordsRequestModel
+    GetAllMarketplacesModel, ProductKeywordsRequestModel, KeywordsRequestModel
 from jarvis_backend.support.utils import extract_filtered_user_products_with_history
 
 
@@ -143,40 +143,7 @@ class AllProductCalculateAPI(CalculationRequestAPI):
         }
 
 
-class NearestKeywordsAPI(CalculationRequestAPI):
-    NEAREST_KEYWORDS_URL_PART = "/nearest-keywords"
-
-    router = CalculationRequestAPI._router()
-    router.prefix += NEAREST_KEYWORDS_URL_PART
-
-    @classmethod
-    def get_minimum_privilege(cls) -> UserPrivilege:
-        return UserPrivilege.BASIC
-
-    @staticmethod
-    @router.post('/calculate/', response_model=list[str])
-    def calculate(request_data: ProductKeywordsRequestModel,
-                  access_token: str = Depends(access_token_correctness_post_depend),
-                  session=Depends(session_depend)) -> list[str]:
-        session_controller = session_controller_depend(session)
-        user = AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
-        user_market_data_provider = JDUClassesFactory.create_user_market_data_provider(session,
-                                                                                       request_data.marketplace_id,
-                                                                                       user.user_id)
-        marketplace_id = request_data.marketplace_id
-        product_ids = [request_data.product_id]
-        filtered_user_products = extract_filtered_user_products_with_history(marketplace_id, user.user_id,
-                                                                             session_controller, product_ids)
-        product = filtered_user_products[request_data.product_id]
-        selected_words = [product.name, product.niche_name, product.category_name]
-        selected_words = NearestKeywordsAPI.split_to_words(words=selected_words)
-        selected_word_to_words = NearestKeywordsAPI.get_nearest_keywords(selected_words,
-                                                                         user_market_data_provider)
-        sorted_words = []
-        for word in selected_words:
-            sorted_words.extend(CalculationController.sort_keywords(word, selected_word_to_words[word]))
-        return sorted_words
-
+class KeywordsAPI:
     @staticmethod
     def get_nearest_keywords(words: list[str],
                              user_market_data_provider: UserMarketDataProvider) -> dict[str, set[str]]:
@@ -204,3 +171,65 @@ class NearestKeywordsAPI(CalculationRequestAPI):
                 if word not in result:
                     result.append(word)
         return result
+
+
+class NearestKeywordsForProductAPI(CalculationRequestAPI, KeywordsAPI):
+    NEAREST_KEYWORDS_URL_PART = "/nearest-keywords-for-product"
+
+    router = CalculationRequestAPI._router()
+    router.prefix += NEAREST_KEYWORDS_URL_PART
+
+    @classmethod
+    def get_minimum_privilege(cls) -> UserPrivilege:
+        return UserPrivilege.BASIC
+
+    @staticmethod
+    @router.post('/calculate/', response_model=list[str])
+    def calculate(request_data: ProductKeywordsRequestModel,
+                  access_token: str = Depends(access_token_correctness_post_depend),
+                  session=Depends(session_depend)) -> list[str]:
+        session_controller = session_controller_depend(session)
+        user = AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
+        user_market_data_provider = JDUClassesFactory.create_user_market_data_provider(session,
+                                                                                       request_data.marketplace_id,
+                                                                                       user.user_id)
+        marketplace_id = request_data.marketplace_id
+        product_ids = [request_data.product_id]
+        filtered_user_products = extract_filtered_user_products_with_history(marketplace_id, user.user_id,
+                                                                             session_controller, product_ids)
+        product = filtered_user_products[request_data.product_id]
+        selected_words = [product.name, product.niche_name, product.category_name]
+        selected_words = KeywordsAPI.split_to_words(words=selected_words)
+        selected_word_to_words = KeywordsAPI.get_nearest_keywords(selected_words, user_market_data_provider)
+        sorted_words = []
+        for word in selected_words:
+            sorted_words.extend(CalculationController.sort_keywords(word, selected_word_to_words[word]))
+        return sorted_words
+
+
+class NearestKeywordsAPI(CalculationRequestAPI, KeywordsAPI):
+    NEAREST_KEYWORDS_URL_PART = "/nearest-keywords"
+
+    router = CalculationRequestAPI._router()
+    router.prefix += NEAREST_KEYWORDS_URL_PART
+
+    @classmethod
+    def get_minimum_privilege(cls) -> UserPrivilege:
+        return UserPrivilege.BASIC
+
+    @staticmethod
+    @router.post('/calculate/', response_model=list[str])
+    def calculate(request_data: KeywordsRequestModel,
+                  access_token: str = Depends(access_token_correctness_post_depend),
+                  session=Depends(session_depend)) -> list[str]:
+        session_controller = session_controller_depend(session)
+        user = AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
+        user_market_data_provider = JDUClassesFactory.create_user_market_data_provider(session,
+                                                                                       request_data.marketplace_id,
+                                                                                       user.user_id)
+        selected_words = KeywordsAPI.split_to_words(words=request_data.sentence.split(" "))
+        selected_word_to_words = KeywordsAPI.get_nearest_keywords(selected_words, user_market_data_provider)
+        sorted_words = []
+        for word in selected_words:
+            sorted_words.extend(CalculationController.sort_keywords(word, selected_word_to_words[word]))
+        return sorted_words
