@@ -47,7 +47,8 @@ class Server(uvicorn.Server):
 
 async def main():
     db_context = db_context_depend()
-    os.mkdir("logs")
+    if not os.path.exists("logs"):
+        os.mkdir("logs")
     with db_context.session() as session, session.begin():
         init_defaults(session)
     scheduler = create_scheduler()
