@@ -16,6 +16,7 @@ from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
 from jarvis_backend.sessions.request_handler import RequestHandler
+from jarvis_backend.support.utils import get_environment_var
 
 __DB_CONTEXT = None
 
@@ -23,7 +24,7 @@ __DB_CONTEXT = None
 def db_context_depend() -> DbContext:
     global __DB_CONTEXT
     if __DB_CONTEXT is None:
-        __DB_CONTEXT = DbContext("sqlite:///test.db")
+        __DB_CONTEXT = DbContext(get_environment_var("DB_CONNECTION"))
     return __DB_CONTEXT
 
 

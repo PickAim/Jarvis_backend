@@ -32,4 +32,6 @@ LOG_CONFIGS = get_path(file_dir, 'log.ini')
 LAUNCH_CONFIGS = get_path(file_dir, 'launch.ini')
 BACKGROUND_CONFIGS = get_path(file_dir, 'background.ini')
 
+DOTENV_PATH = get_path(file_dir, '.env')
+
 WORKER_TO_STATUS: dict[str, bool] = {}

@@ -1,14 +1,17 @@
 import dataclasses
 import json
+import os
 from datetime import datetime
 from typing import TypeVar, Type, Callable
 
 from dacite import from_dict
+from dotenv import load_dotenv
 from jorm.market.items import Product
 from jorm.market.service import RequestInfo as JRequestInfo
 from jorm.support.utils import intersection
 from pydantic import BaseModel
 
+from jarvis_backend.app.constants import DOTENV_PATH
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.request_items import RequestInfoModel
 
@@ -91,3 +94,11 @@ def extract_filtered_user_products_with_history(marketplace_id: int,
         product_id: user_products[product_id]
         for product_id in filtered_ids
     }
+
+
+def get_environment_var(var_name: str) -> any:
+    candidate = os.getenv(var_name)
+    if candidate is not None:
+        return candidate
+    load_dotenv(DOTENV_PATH)
+    return os.getenv(var_name)

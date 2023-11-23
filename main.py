@@ -11,6 +11,7 @@ from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS, WORKER_TO_
 from jarvis_backend.app.fastapi_main import fastapi_app
 from jarvis_backend.app.schedule.scheduler import create_scheduler
 from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
+from jarvis_backend.support.utils import get_environment_var
 
 
 class Server(uvicorn.Server):
@@ -22,8 +23,8 @@ class Server(uvicorn.Server):
             host="0.0.0.0",
             log_config=LOG_CONFIGS,
             loop="asyncio",
-            ssl_keyfile="certificate.key",
-            ssl_certfile="certificate.crt",
+            ssl_keyfile=get_environment_var("CERTIFICATE_KEY_PATH"),
+            ssl_certfile=get_environment_var("CERTIFICATE_PATH"),
         )
         super().__init__(config)
         self.scheduler = scheduler
