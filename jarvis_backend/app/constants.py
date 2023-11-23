@@ -1,6 +1,10 @@
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 ACCESS_TOKEN_USAGE_URL_PART = "/access"
 UPDATE_TOKEN_USAGE_URL_PART = "/update"
 
@@ -35,3 +39,8 @@ BACKGROUND_CONFIGS = get_path(file_dir, 'background.ini')
 DOTENV_PATH = get_path(file_dir, '.env')
 
 WORKER_TO_STATUS: dict[str, bool] = {}
+
+DB_CONNECTION = os.getenv("DB_CONNECTION")
+
+CERTIFICATE_KEY_PATH = os.getenv("CERTIFICATE_KEY_PATH")
+CERTIFICATE_PATH = os.getenv("CERTIFICATE_PATH")
