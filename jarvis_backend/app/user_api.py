@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from jarvis_factory.factories.jdb import JDBClassesFactory
 from jorm.market.person import User
 from starlette.responses import JSONResponse
 
@@ -55,6 +56,10 @@ class UserAPI(RequestAPI):
                                              session=Depends(session_depend)):
         session_controller = session_controller_depend(session)
         user: User = session_controller.get_user(access_token)
+        jorm_changer = JDBClassesFactory.create_jorm_changer(session,
+                                                             marketplace_id=request_data.marketplace_id,
+                                                             user_id=user.user_id)
+        jorm_changer.load_user_products(user_id=user.user_id, marketplace_id=request_data.marketplace_id)
         user_products = session_controller.get_products_by_user(user.user_id, request_data.marketplace_id)
         return {
             product_id: {
