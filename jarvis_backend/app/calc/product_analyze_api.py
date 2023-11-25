@@ -167,7 +167,7 @@ class KeywordsAPI:
         result: list[str] = []
         for possible_word in words:
             for word in possible_word.split(" "):
-                if word == "":
+                if word == "" or len(word) < 3:
                     continue
                 if word not in result:
                     result.append(word)
@@ -206,7 +206,7 @@ class NearestKeywordsForProductAPI(CalculationRequestAPI, KeywordsAPI):
         for word in selected_words:
             sorted_words.extend(CalculationController.sort_keywords(word, selected_word_to_words[word]))
         return sorted_words
-    
+
     @staticmethod
     def __get_product_words(product: Product) -> list[str]:
         result = [product.name]
