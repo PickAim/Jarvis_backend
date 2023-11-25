@@ -65,8 +65,7 @@ class UserAPI(RequestAPI):
             product_id: {
                 "global_id": user_products[product_id].global_id,
                 "name": user_products[product_id].name,
-                "category": user_products[product_id].category_name,
-                "niche": user_products[product_id].niche_name,
+                "category_niche_list": user_products[product_id].category_niche_list,
                 "cost": user_products[product_id].cost,
                 "rating": user_products[product_id].rating,
                 "seller": user_products[product_id].seller,

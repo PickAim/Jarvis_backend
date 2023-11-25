@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import Depends
 from jarvis_factory.factories.jdu import JDUClassesFactory
+from jorm.market.items import Product
 from jorm.market.person import User, UserPrivilege
 from jorm.server.providers.providers import UserMarketDataProvider
 
@@ -198,13 +199,21 @@ class NearestKeywordsForProductAPI(CalculationRequestAPI, KeywordsAPI):
         filtered_user_products = extract_filtered_user_products_with_history(marketplace_id, user.user_id,
                                                                              session_controller, product_ids)
         product = filtered_user_products[request_data.product_id]
-        selected_words = [product.name, product.niche_name, product.category_name]
+        selected_words = NearestKeywordsForProductAPI.__get_product_words(product)
         selected_words = KeywordsAPI.split_to_words(words=selected_words)
         selected_word_to_words = KeywordsAPI.get_nearest_keywords(selected_words, user_market_data_provider)
         sorted_words = []
         for word in selected_words:
             sorted_words.extend(CalculationController.sort_keywords(word, selected_word_to_words[word]))
         return sorted_words
+    
+    @staticmethod
+    def __get_product_words(product: Product) -> list[str]:
+        result = [product.name]
+        for category_niche in product.category_niche_list:
+            result.append(category_niche[0])
+            result.append(category_niche[1])
+        return result
 
 
 class NearestKeywordsAPI(CalculationRequestAPI, KeywordsAPI):
