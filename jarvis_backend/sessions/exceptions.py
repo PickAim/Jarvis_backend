@@ -45,6 +45,8 @@ class JarvisExceptionsCode:
 
     TIMEOUT = 5040
 
+    INCORRECT_MARKETPLACE_API_KEY = 6010
+
     USER_FUCKS = 9090  # TODO think about naming
 
 
@@ -85,3 +87,6 @@ class JarvisExceptions:
 
     INCORRECT_WAREHOUSE: HTTPException = \
         create_exception_with_code(JarvisExceptionsCode.INCORRECT_WAREHOUSE, "Incorrect warehouse requested")
+
+    INCORRECT_MARKETPLACE_API_KEY: HTTPException = \
+        create_exception_with_code(JarvisExceptionsCode.INCORRECT_MARKETPLACE_API_KEY, "Incorrect marketplace API key")

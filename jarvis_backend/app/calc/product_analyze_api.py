@@ -11,6 +11,7 @@ from jarvis_backend.app.calc.calculation_request_api import CalculationRequestAP
 from jarvis_backend.app.info_api import InfoAPI
 from jarvis_backend.app.tokens.dependencies import session_controller_depend, access_token_correctness_post_depend
 from jarvis_backend.sessions.dependencies import session_depend
+from jarvis_backend.sessions.exceptions import JarvisExceptions
 from jarvis_backend.sessions.request_items import ProductDownturnResultModel, ProductTurnoverResultModel, \
     AllProductCalculateResultObject, ProductRequestModelWithMarketplaceId, \
     GetAllMarketplacesModel, ProductKeywordsRequestModel, KeywordsRequestModel
@@ -146,6 +147,10 @@ class AllProductCalculateAPI(CalculationRequestAPI):
 
 class KeywordsAPI:
     @staticmethod
+    def is_existing_api_key(user: User, marketplace_id: int) -> bool:
+        return marketplace_id in user.marketplace_keys
+
+    @staticmethod
     def get_nearest_keywords(words: list[str],
                              user_market_data_provider: UserMarketDataProvider) -> dict[str, set[str]]:
         result: dict[str, set[str]] = {}
@@ -191,6 +196,8 @@ class NearestKeywordsForProductAPI(CalculationRequestAPI, KeywordsAPI):
                   session=Depends(session_depend)) -> list[str]:
         session_controller = session_controller_depend(session)
         user = AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
+        if not KeywordsAPI.is_existing_api_key(user, marketplace_id=request_data.marketplace_id):
+            raise JarvisExceptions.INCORRECT_MARKETPLACE_API_KEY
         user_market_data_provider = JDUClassesFactory.create_user_market_data_provider(session,
                                                                                        request_data.marketplace_id,
                                                                                        user.user_id)
@@ -233,6 +240,8 @@ class NearestKeywordsAPI(CalculationRequestAPI, KeywordsAPI):
                   session=Depends(session_depend)) -> list[str]:
         session_controller = session_controller_depend(session)
         user = AllProductCalculateAPI.check_and_get_user(session_controller, access_token)
+        if not KeywordsAPI.is_existing_api_key(user, marketplace_id=request_data.marketplace_id):
+            raise JarvisExceptions.INCORRECT_MARKETPLACE_API_KEY
         user_market_data_provider = JDUClassesFactory.create_user_market_data_provider(session,
                                                                                        request_data.marketplace_id,
                                                                                        user.user_id)
