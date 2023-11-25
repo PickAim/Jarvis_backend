@@ -8,7 +8,6 @@ from jarvis_backend.app.tags import USER_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.controllers.cookie import CookieHandler
 from jarvis_backend.sessions.dependencies import session_controller_depend, session_depend
-from jarvis_backend.sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
 from jarvis_backend.sessions.request_items import AddApiKeyModel, BasicMarketplaceInfoModel, GetAllProductsModel
 from jarvis_backend.support.request_api import RequestAPI
 
@@ -28,8 +27,7 @@ class UserAPI(RequestAPI):
         session_controller = session_controller_depend(session)
         user: User = session_controller.get_user(access_token)
         if request_data.marketplace_id in user.marketplace_keys:
-            raise JarvisExceptions.create_exception_with_code(JarvisExceptionsCode.USER_FUCKS,
-                                                              "You already register api key for this marketplace")
+            session_controller.delete_marketplace_api_key(request_data, user.user_id)
         session_controller.add_marketplace_api_key(request_data, user.user_id)
 
     @staticmethod
