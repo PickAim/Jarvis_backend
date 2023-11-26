@@ -29,11 +29,14 @@ LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
 
 
 def is_correct_wildberries_api_key(api_key: str) -> bool:
-    headers = {
-        'Authorization': api_key
-    }
-    response = get_request_json("https://suppliers-api.wildberries.ru/api/v3/offices", requests.Session(), headers)
-    return len(response) > 0
+    try:
+        headers = {
+            'Authorization': api_key
+        }
+        response = get_request_json("https://suppliers-api.wildberries.ru/api/v3/offices", requests.Session(), headers)
+        return len(response) > 0
+    except Exception:
+        return False
 
 
 __MARKETPLACE_API_KEY_CORRECTNESS_CHECKS: dict[str, Callable[[str], bool]] = {
