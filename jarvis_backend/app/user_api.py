@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from jarvis_factory.factories.jdb import JDBClassesFactory
 from jorm.market.person import User
 from starlette.responses import JSONResponse
 
@@ -7,7 +8,6 @@ from jarvis_backend.app.tags import USER_TAG
 from jarvis_backend.app.tokens.dependencies import access_token_correctness_post_depend
 from jarvis_backend.controllers.cookie import CookieHandler
 from jarvis_backend.sessions.dependencies import session_controller_depend, session_depend
-from jarvis_backend.sessions.exceptions import JarvisExceptions, JarvisExceptionsCode
 from jarvis_backend.sessions.request_items import AddApiKeyModel, BasicMarketplaceInfoModel, GetAllProductsModel
 from jarvis_backend.support.request_api import RequestAPI
 
@@ -27,8 +27,7 @@ class UserAPI(RequestAPI):
         session_controller = session_controller_depend(session)
         user: User = session_controller.get_user(access_token)
         if request_data.marketplace_id in user.marketplace_keys:
-            raise JarvisExceptions.create_exception_with_code(JarvisExceptionsCode.USER_FUCKS,
-                                                              "You already register api key for this marketplace")
+            session_controller.delete_marketplace_api_key(request_data, user.user_id)
         session_controller.add_marketplace_api_key(request_data, user.user_id)
 
     @staticmethod
@@ -55,13 +54,16 @@ class UserAPI(RequestAPI):
                                              session=Depends(session_depend)):
         session_controller = session_controller_depend(session)
         user: User = session_controller.get_user(access_token)
+        jorm_changer = JDBClassesFactory.create_jorm_changer(session,
+                                                             marketplace_id=request_data.marketplace_id,
+                                                             user_id=user.user_id)
+        jorm_changer.load_user_products(user_id=user.user_id, marketplace_id=request_data.marketplace_id)
         user_products = session_controller.get_products_by_user(user.user_id, request_data.marketplace_id)
         return {
             product_id: {
                 "global_id": user_products[product_id].global_id,
                 "name": user_products[product_id].name,
-                "category": user_products[product_id].category_name,
-                "niche": user_products[product_id].niche_name,
+                "category_niche_list": user_products[product_id].category_niche_list,
                 "cost": user_products[product_id].cost,
                 "rating": user_products[product_id].rating,
                 "seller": user_products[product_id].seller,

@@ -1,15 +1,19 @@
 import logging
 import re
+from typing import Callable
 
+import requests
 from jarvis_calc.database_interactors.db_controller import DBController
 from jarvis_factory.factories.jdb import JDBClassesFactory
 from jarvis_factory.factories.jorm import JORMClassesFactory
+from jdu.support.constant import WILDBERRIES_NAME
 from jorm.market.infrastructure import Niche, Warehouse
 from jorm.market.items import Product
 from jorm.market.person import User, Account
 from jorm.server.token.types import TokenType
 from jorm.support.calculation import NicheCharacteristicsCalculateResult, GreenTradeZoneCalculateResult
 from jorm.support.types import EconomyConstants
+from jorm.support.utils import get_request_json
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -22,6 +26,26 @@ from jarvis_backend.sessions.request_items import AddApiKeyModel, BasicMarketpla
 from jarvis_backend.support.input import InputPreparer
 
 LOGGER = logging.getLogger(CONTROLLERS_LOGGER)
+
+
+def is_correct_wildberries_api_key(api_key: str) -> bool:
+    try:
+        headers = {
+            'Authorization': api_key
+        }
+        response = get_request_json("https://suppliers-api.wildberries.ru/api/v3/offices", requests.Session(), headers)
+        return len(response) > 0
+    except Exception:
+        return False
+
+
+__MARKETPLACE_API_KEY_CORRECTNESS_CHECKS: dict[str, Callable[[str], bool]] = {
+    WILDBERRIES_NAME: is_correct_wildberries_api_key
+}
+
+
+def is_correct_marketplace_api_key(api_key: str, marketplace_name: str) -> bool:
+    return __MARKETPLACE_API_KEY_CORRECTNESS_CHECKS[marketplace_name](api_key)
 
 
 class JarvisSessionController:
@@ -158,6 +182,8 @@ class JarvisSessionController:
         id_to_marketplace = self.__db_controller.get_all_marketplaces()
         if marketplace_id not in id_to_marketplace or self.__is_default_object(id_to_marketplace[marketplace_id].name):
             raise JarvisExceptions.INCORRECT_MARKETPLACE
+        if not is_correct_marketplace_api_key(api_key, id_to_marketplace[marketplace_id].name):
+            raise JarvisExceptions.INCORRECT_MARKETPLACE_API_KEY
         self.__db_controller.add_marketplace_api_key(api_key, user_id, marketplace_id)
 
     def delete_marketplace_api_key(self, api_key_request_data: BasicMarketplaceInfoModel, user_id: int) -> None:

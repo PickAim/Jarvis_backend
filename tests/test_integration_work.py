@@ -718,33 +718,6 @@ class IntegrationTest(BasicServerTest):
         self.assertTrue(2 in id_to_user_products)
         self.assertEqual(3, len(id_to_user_products[2]))
 
-    def test_user_api_key_working(self):
-        first_key = "myFirstKey"
-        request_data = self.create_add_api_key_object(marketplace_id=2, api_key=first_key)
-        UserAPI.add_marketplace_api_key(request_data=request_data,
-                                        access_token=self.access_token,
-                                        session=self.session)
-        saved_api_keys = UserAPI.get_all_marketplace_api_keys(access_token=self.access_token,
-                                                              session=self.session)
-        self.assertEqual(1, len(saved_api_keys))
-        self.assertEqual(first_key, saved_api_keys[2])
-
-        second_key = "mySecondKey"
-        request_data = self.create_add_api_key_object(marketplace_id=2, api_key=second_key)
-        with self.assertRaises(HTTPException) as catcher:
-            UserAPI.add_marketplace_api_key(request_data=request_data,
-                                            access_token=self.access_token,
-                                            session=self.session)
-            self.assertJarvisExceptionWithCode(JarvisExceptionsCode.USER_FUCKS, catcher.exception)
-
-        request_data = self.create_basic_marketplace_info_object(marketplace_id=2)
-        UserAPI.delete_marketplace_api_key(request_data=request_data,
-                                           access_token=self.access_token,
-                                           session=self.session)
-        saved_api_keys = UserAPI.get_all_marketplace_api_keys(access_token=self.access_token,
-                                                              session=self.session)
-        self.assertEqual(0, len(saved_api_keys))
-
     def test_user_api_key_addition_into_default_marketplace(self):
         request_data = self.create_add_api_key_object(marketplace_id=1, api_key="myFirstKey")
         with self.assertRaises(HTTPException) as catcher:

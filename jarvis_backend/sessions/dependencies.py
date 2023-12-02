@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from jarvis_backend.app.config.launch import LaunchConfigHolder
-from jarvis_backend.app.constants import LAUNCH_CONFIGS
+from jarvis_backend.app.constants import LAUNCH_CONFIGS, DB_CONNECTION
 from jarvis_backend.auth.hashing.hasher import PasswordHasher
 from jarvis_backend.controllers.session import JarvisSessionController
 from jarvis_backend.sessions.db_context import DbContext
@@ -23,7 +23,7 @@ __DB_CONTEXT = None
 def db_context_depend() -> DbContext:
     global __DB_CONTEXT
     if __DB_CONTEXT is None:
-        __DB_CONTEXT = DbContext("sqlite:///test.db")
+        __DB_CONTEXT = DbContext(DB_CONNECTION)
     return __DB_CONTEXT
 
 

@@ -54,6 +54,7 @@ class LoadWorker(DBWorker):
         with self._db_context.session() as session, session.begin():
             jorm_changer = JDBClassesFactory.create_jorm_changer(session, marketplace_id=marketplace_id, user_id=0)
             try:
+                _LOGGER.info(f"Start loading Niche \"{niche_name}\".")
                 start = time()
                 niche = jorm_changer.load_new_niche(niche_name, marketplace_id)
                 if niche is None:
