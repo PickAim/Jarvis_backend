@@ -7,8 +7,7 @@ import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from jarvis_backend.app.config.launch import LaunchConfigHolder
-from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS, WORKER_TO_STATUS, CERTIFICATE_KEY_PATH, \
-    CERTIFICATE_PATH
+from jarvis_backend.app.constants import LOG_CONFIGS, LAUNCH_CONFIGS, WORKER_TO_STATUS
 from jarvis_backend.app.fastapi_main import fastapi_app
 from jarvis_backend.app.schedule.scheduler import create_scheduler
 from jarvis_backend.sessions.dependencies import db_context_depend, init_defaults
@@ -20,11 +19,11 @@ class Server(uvicorn.Server):
         config = uvicorn.Config(
             app=fastapi_app,
             port=self.config_holder.port,
-            host="0.0.0.0",
+            host="127.0.0.1",
             log_config=LOG_CONFIGS,
             loop="asyncio",
-            ssl_keyfile=CERTIFICATE_KEY_PATH,
-            ssl_certfile=CERTIFICATE_PATH,
+            # ssl_keyfile=CERTIFICATE_KEY_PATH,
+            # ssl_certfile=CERTIFICATE_PATH,
         )
         super().__init__(config)
         self.scheduler = scheduler

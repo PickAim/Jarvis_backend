@@ -6,6 +6,7 @@ from jarvis_backend.app.schedule.simple_task import SimpleTask
 from jarvis_backend.app.schedule.workers.cache import CacheWorker
 from jarvis_backend.app.schedule.workers.load import LoadWorker
 from jarvis_backend.app.schedule.workers.update import UpdateWorker
+from jarvis_backend.app.schedule.workers.user_products import UserProductsLoadWorker
 from jarvis_backend.sessions.dependencies import db_context_depend
 
 
@@ -30,6 +31,13 @@ def __update_niches():
     load_worker.update_niches()
 
 
+def __update_user_products():
+    db_context = db_context_depend()
+    load_worker = UserProductsLoadWorker(db_context)
+    WORKER_TO_STATUS[UserProductsLoadWorker.get_identifier()] = True
+    load_worker.load_users_products()
+
+
 background_config = BackgroundConfigHolder(BACKGROUND_CONFIGS)
 SIMPLE_TASKS = []
 
@@ -42,3 +50,7 @@ if background_config.load_enabled:
 
 if background_config.update_enabled:
     SIMPLE_TASKS.append(SimpleTask(__update_niches, IntervalTrigger(days=1), identifier=UpdateWorker.get_identifier()))
+
+if background_config.user_prod_enabled:
+    SIMPLE_TASKS.append(SimpleTask(__update_user_products,
+                                   IntervalTrigger(hours=1), identifier=UserProductsLoadWorker.get_identifier()))

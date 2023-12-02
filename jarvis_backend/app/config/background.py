@@ -12,3 +12,5 @@ class BackgroundConfigHolder:
         self.load_skip: int = config_parser.getint('load', 'skip')
 
         self.update_enabled: bool = config_parser.getboolean('update', 'enabled')
+
+        self.user_prod_enabled: bool = config_parser.getboolean('user_prod', 'enabled')
