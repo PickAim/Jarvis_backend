@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from jarvis_factory.factories.jdb import JDBClassesFactory
 from jorm.market.person import User
 from starlette.responses import JSONResponse
 
@@ -45,6 +46,19 @@ class UserAPI(RequestAPI):
         session_controller = session_controller_depend(session)
         user: User = session_controller.get_user(access_token)
         session_controller.delete_marketplace_api_key(request_data, user.user_id)
+
+    @staticmethod
+    @router.post('/update-user-products/')
+    def update_user_products(access_token: str = Depends(access_token_correctness_post_depend),
+                             session=Depends(session_depend)):
+        session_controller = session_controller_depend(session)
+        user: User = session_controller.get_user(access_token)
+        user_id: int = user.user_id
+        for marketplace_id in user.marketplace_keys:
+            jorm_changer = JDBClassesFactory.create_jorm_changer(session,
+                                                                 marketplace_id=marketplace_id,
+                                                                 user_id=user_id)
+            jorm_changer.load_user_products(user_id=user_id, marketplace_id=marketplace_id)
 
     @staticmethod
     @router.post('/get-all-in-marketplace-user-products/')  # TODO add response model
