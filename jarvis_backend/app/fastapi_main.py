@@ -41,7 +41,7 @@ for router in routers:
 
 
 @fastapi_app.middleware("http")
-@fastapi_app.middleware("https")
+# @fastapi_app.middleware("https")
 async def timeout_middleware(request: Request, call_next):
     start_time = time.time()
     try:

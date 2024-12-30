@@ -23,8 +23,8 @@ class Server(uvicorn.Server):
             host="0.0.0.0",
             log_config=LOG_CONFIGS,
             loop="asyncio",
-            ssl_keyfile=CERTIFICATE_KEY_PATH,
-            ssl_certfile=CERTIFICATE_PATH,
+            # ssl_keyfile=CERTIFICATE_KEY_PATH,
+            # ssl_certfile=CERTIFICATE_PATH,
         )
         super().__init__(config)
         self.scheduler = scheduler
